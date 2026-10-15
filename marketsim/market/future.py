@@ -30,3 +30,40 @@ class Future(Security):
     def save(self):
         self.repository.save_future(self)
 
+    def fill_theoretical_value(self):
+        for t in self.traded_prices:
+            self.traded_prices[t]["theoretical"] = self.underlying.traded_prices[t]["close"]
+
+    def plot_history(self, traded_prices: dict):
+        # fill the theoretical - simply index value,
+        # TODO: add connrection on dividends and financing rate
+        self.fill_theoretical_value()
+
+        traded_prices_float = {t: {v: float(price_item) for v, price_item in item.items()}
+                               for t, item in traded_prices.items()}
+        df_candlestick = pd.DataFrame.from_dict(traded_prices_float,
+                                                orient="index"
+                                                )
+        df_candlestick.index.name = "time"
+        self.logger.info(f"Future candlestick to plot: {df_candlestick.head()}")
+
+        candlestick_filename = f"{self.output_dir}/candlestick_{str(self)}.png"
+        plot_candlestick_derivative(df=df_candlestick, output_file=candlestick_filename, title=self.name)
+
+
+    def sod(self):
+        if self.status == "active":
+            super().sod()
+
+            if self.eod_status == "open":
+                theoretical_price = self.underlying.last_traded_price
+                # TODO: adjust for dividends and financing
+                self.traded_prices = {0: {"open": Price(theoretical_price),
+                                          "low": Price(theoretical_price),
+                                          "high": Price(theoretical_price),
+                                          "close": Price(theoretical_price),
+                                          "theoretical": Price(theoretical_price),
+                                          "volume": 0, }}
+
+                self.logger.info(f"Futures SoD completed for day: {self.current_day}")
+

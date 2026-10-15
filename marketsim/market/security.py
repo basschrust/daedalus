@@ -573,7 +573,7 @@ class Security:
 
             matched_orders = []
             for order_id, matched_order in self.matched_orders_hashed.items():
-                matched_orders.append({ "asset_id": matched_order.asset_id,
+                matched_orders.append({ "asset_id": matched_order.order.asset_id,
                                         "order_id": order_id,
                                         "order_side": matched_order.order.order_type,
                                         "matched_with": matched_order.order.matched_with,
