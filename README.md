@@ -39,8 +39,8 @@ pip install -e .
 
 python -m run.simulation_main
 ```
-Simulation results are stored in the directory pymarketsim/marketsim/output/ - each simulation gets its own new directory run_YYYYMMDD_hhmm where you can inspect portfolio history of each agent, candlestick plots of each security (including options and their theoretical value) and flows of assets and cash between your defined agent groups.
-To run one different market structures take a look into following directory: pymarketsim/marketsim/input and use one of the predefined structures or create your own, then run it as below:
+- Simulation results are stored in the directory pymarketsim/marketsim/output/ - each simulation gets its own new directory run_YYYYMMDD_hhmm where you can inspect portfolio history of each agent, candlestick plots of each security (including options and their theoretical value) and flows of assets and cash between your defined agent groups.
+- To run one different market structures take a look into following directory: pymarketsim/marketsim/input and use one of the predefined structures or create your own, then run it as below:
 ```python
 python -m run.simulation_main market_structure_WT_3_markets.yaml
 
