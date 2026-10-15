@@ -6,6 +6,7 @@ from itertools import accumulate
 from loguru import logger
 from typing import TYPE_CHECKING
 import math
+from pathlib import Path
 
 from marketsim.event import EventQueue
 from marketsim.fundamental.fundamental_abc import Fundamental
@@ -13,22 +14,21 @@ from marketsim.utils.id_generator import id_generator
 from marketsim.plot.simple_plot import (plot_order_book, plot_volume_transfers, plot_cash_transfers
     , plot_realized_volatility, plot_agent_history_single_market, plot_by_type, plot_bid_ask)
 from marketsim.plot.candle import plot_candlestick
-# from marketsim.input import config
 from marketsim.loggers.basic import setup_logger, setup_subject_logger, setup_market_logger
-from marketsim.market.price import Price
-from marketsim.fourheap import FourHeap
+from marketsim.market import Price
 
 if TYPE_CHECKING:
     from marketsim.fourheap import Order, MatchedOrder
     from marketsim.agent import Agent
     from database.connectors.duckdb_storage import Repository
+    from marketsim.market import Index
 
 
 class Security:
     def __init__(self, *, reference_price: Price |None = None, name: str|None=None,
                  repository: Repository,
                  market_type: str = "discrete", instrument_class: str = "stock",
-                 short_name: str | None = None, output_dir: str = "tmp") -> None:
+                 short_name: str | None = None, output_dir: str|Path = "tmp") -> None:
         self.asset_id = id_generator.next()
         self.instrument_class = instrument_class
         if short_name is None:
@@ -58,6 +58,7 @@ class Security:
         self.status = "active"
         self.repository = repository
         self.output_dir = output_dir
+        self.indices_member = {} # index_id: Index
 
         self.save()
 
@@ -72,6 +73,8 @@ class Security:
             self.agents[agent.get_id()] = agent
             self.agent_groups.add(agent.group)
 
+    def add_to_index(self, index: Index):
+        self.indices_member[index.index_id] = Index
 
     def get_fundamental_value(self, current_time: int) -> float:
         return self.fundamental.get_value_at(current_time)
@@ -213,6 +216,7 @@ class Security:
                                                  "high": price,
                                                  "close": price,
                                                  "volume": volume,}
+        # TODO: update indices which this security is a component of
 
 
     def record_trade(self, matched_order: MatchedOrder) -> None:
@@ -442,6 +446,7 @@ class Security:
 
 
     def sod(self):
+        from marketsim.fourheap import FourHeap # TODO: beware of circular imports
         if self.status == "active":
             self.logger.info(f"Starting Start-of-Day procedure for {self.name}, day: {self.current_day}")
             self.eod_status = "open"

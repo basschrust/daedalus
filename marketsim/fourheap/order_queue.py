@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 import heapq
 import math
-#from loguru import logger
+from typing import TYPE_CHECKING
+from marketsim.fourheap.order import MatchedOrder
 
-from marketsim.fourheap.order import Order, MatchedOrder
-from marketsim.market.price import Price
+if TYPE_CHECKING:
+    from marketsim.fourheap.order import Order
+    from marketsim.market.price import Price
 
 class OrderQueue:
     def __init__(self, is_max_heap: bool = False, is_matched: bool = False, logger = None):

@@ -1,8 +1,11 @@
 import pytest
+from typing import TYPE_CHECKING
 
 from marketsim.agent import (Agent, NoiseAgent, HBLAgent, MMZOHAgent, MomentumAgent, OptionMMZOHAgent, SpoofingAgent,
         WashTradingAgent, ZIAgentNotInformed)
 
+if TYPE_CHECKING:
+    from marketsim.market import Price
 
 #######   testing functions   #######
 
