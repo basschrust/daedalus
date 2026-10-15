@@ -30,7 +30,6 @@ class Index(Security):
                          , instrument_class=self.instrument_class, repository=repository,
                          short_name=short_name, output_dir=output_dir)
 
-        self.index_id = self.asset_id
 
     def validate_components(self):
         weights_sum = 0.0
@@ -48,7 +47,8 @@ class Index(Security):
 
     def save(self):
         # save the index definition to DB
-        # def
+        self.index_id = self.asset_id # it looks strange, but this is the first place this value is
+        # available and needed
         self.repository.save_index(index=self)
 
         # components
@@ -68,5 +68,19 @@ class Index(Security):
             return
         elif self.eod_status == "open":
             super().eod()
-            index_values_df = pd.DataFrame()
-            self.repository.save_eod_index_values(index_values_df=index_values_df)
+            self.repository.calculate_index_values(day=self.current_day-1)
+            self.repository.calculate_eod_index_values(day=self.current_day-1)
+
+
+    def show_summary(self):
+        self.logger.info(f"\n\nIndex {str(self)} summary:")
+        # self.logger.info(f"Orders matched: {len(self.matched_orders)}")
+        # self.logger.info(f"Last index value: {self.last_traded_price}")
+
+        # plot the security values history for all period - take data from DB:
+        # TODO: for one day simulations plot the daily candlestick
+        eod_prices_df = self.repository.get_eod_index_values(index_id=self.index_id)
+        self.logger.info(f"EoD prices DF: {eod_prices_df}")
+        eod_prices = eod_prices_df.set_index("day").to_dict(orient="index")
+        self.logger.info(f"EOD prices: {eod_prices}")
+        self.plot_history(traded_prices=eod_prices)
