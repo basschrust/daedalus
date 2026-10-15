@@ -6,7 +6,7 @@ from pathlib import Path
 from marketsim.database.connectors.duckdb_storage import Repository
 from marketsim.loggers.basic import terminal
 from marketsim.fundamental.mean_reverting import GaussianMeanReverting
-from marketsim.market import Security, Option
+from marketsim.market import Security, Option, Index
 from marketsim.agent import Agent, WashTradingAgent, MomentumAgent, SpoofingAgent, NoiseAgent
 from marketsim.agent import ZIAgentNotInformed, MMZOHAgent, HBLAgent, OptionMMZOHAgent
 from marketsim.agent.washtrading import WashTradingPool
@@ -98,6 +98,19 @@ class Simulator:
                                                              }
                     for group_name, agent_group in m_conf.get("agent_groups", {}).items():
                         self.add_agent_group(agent_group=agent_group, markets=[market], group_name=group_name)
+            elif instrument_class == "index":
+                components = {}
+                for comp in m_conf.get("components", []):
+                    components[self.markets[self.market_map[comp["security"]]].asset_id] = {
+                            "weight": comp["weight"],
+                            "security": self.markets[self.market_map[comp["security"]]] }
+                market = Index(name=m_conf.get("name"), short_name=m_conf.get("short_name"),
+                               repository=self.repository, output_dir=self.output_dir,
+                               components=components)
+                self.market_map[m_key] = market.asset_id
+                self.markets[market.asset_id] = market
+                self.asset_names_map[market.asset_id] = { "name": market.name,
+                                                         }
             elif instrument_class == "stock":
                 market = Security(market_type=m_conf.get("market_type"), name=m_conf.get("name")
                                   , repository=self.repository, short_name=m_conf.get("short_name"),

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .agent import Agent
 from .market_maker_zoh import MMZOHAgent
 from .zi_not_informed import ZIAgentNotInformed

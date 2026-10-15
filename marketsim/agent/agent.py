@@ -13,13 +13,14 @@ from marketsim.loggers.basic import setup_logger, setup_agent_logger
 from marketsim.input import config
 from marketsim.utils.id_generator import id_generator
 from marketsim.loggers.basic import terminal
-from marketsim.market.price import Price
 from marketsim.plot.simple_plot import plot_agent_history_many_markets
+from marketsim.market.price import Price
 
 if TYPE_CHECKING:
     from marketsim.fourheap import MatchedOrder
     from marketsim.market import Security
     from database.connectors.duckdb_storage import Repository
+
 
 
 def validate_update(quantity: int, cash: Price) -> None:

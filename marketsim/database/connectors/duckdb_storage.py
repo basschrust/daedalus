@@ -4,11 +4,14 @@ import duckdb
 import pandas as pd
 from sympy.core import parameters
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from marketsim.agent import Agent
-from marketsim.market import Security
 from marketsim.input import config
 from marketsim.loggers.basic import terminal
+
+if TYPE_CHECKING:
+    from marketsim.agent import Agent
+    from marketsim.market import Security, Index
 
 # TODO: create some base class with abstract methods, use instances depending on the configuration
 class Repository:
@@ -31,10 +34,31 @@ class Repository:
                     instrument_class STRING,
                     market_type STRING,
                     name STRING,
+                    short_name STRING,
                     eod_status STRING,
-                    reference_price DOUBLE,
-            )
-        """)   # TODO: configuration STRING, for options and other derivatives
+                    reference_price DOUBLE
+                )
+            """)   # TODO: configuration STRING, for options and other derivatives
+
+        # indices
+        self.connection.execute("""
+            CREATE TABLE IF NOT EXISTS indices (
+                    index_id INTEGER,
+                    name STRING,
+                    short_name STRING
+                )
+            """)
+
+        # components of each index
+        # TODO: watch out, this may change through time!
+        self.connection.execute("""
+            CREATE TABLE IF NOT EXISTS index_components (
+                    index_id INTEGER,
+                    asset_id INTEGER,
+                    weight DOUBLE,
+                )
+            """)
+
 
         # derivatives
         self.connection.execute("""
@@ -148,6 +172,31 @@ class Repository:
                     )
                 """)
 
+        # index values
+        self.connection.execute("""
+                            CREATE TABLE IF NOT EXISTS index_values (
+                                day       INTEGER,
+                                time_tick INTEGER,
+                                index_id  INTEGER,
+                                open      DOUBLE,
+                                high      DOUBLE,
+                                low       DOUBLE,
+                                close     DOUBLE,
+                            )
+                        """)
+
+        #
+        self.connection.execute("""
+                            CREATE TABLE IF NOT EXISTS eod_index_values (
+                                day       INTEGER,
+                                index_id  INTEGER,
+                                open      DOUBLE,
+                                high      DOUBLE,
+                                low       DOUBLE,
+                                close     DOUBLE,
+                            )
+                        """)
+
         ##### granular tables - may contain significant volumes of data ######################
 
         # orders
@@ -197,7 +246,6 @@ class Repository:
     ############# methods for making data persistent ###############################
 
     def save_security(self, security: Security) -> None:
-        # with duckdb.connect(self.localdb) as conn:
         self.connection.execute("""
             INSERT INTO securities (
                 asset_id,
@@ -217,8 +265,27 @@ class Repository:
             security.reference_price,
         ])
 
+    def save_index(self, index: Index) -> None:
+        self.connection.execute("""
+            INSERT INTO indices (
+                index_id,
+                name,
+                short_name
+            ) VALUES (?, ?, ?)
+        """, parameters=[index.index_id, index.name, index.short_name])
+
+    def save_index_components(self, components_df: pd.DataFrame) -> None:
+        self.connection.register("components_df", components_df)
+        self.connection.execute("""
+            INSERT INTO index_components (
+                index_id, asset_id, weight
+            ) 
+            SELECT index_id, asset_id, weight
+            FROM index_components_df
+        """)
+        self.connection.unregister("components_df")
+
     def save_agent(self, agent: Agent) -> None:
-        # with duckdb.connect(self.localdb) as conn:
         self.connection.execute("""
             INSERT INTO agents (
                 agent_id,
@@ -330,6 +397,17 @@ class Repository:
             """)
 
         self.connection.unregister("eod_prices_df")
+
+    def save_eod_index_values(self, index_values_df: pd.DataFrame) -> None:
+        self.connection.register("eod_index_values_df", index_values_df)
+        # TODO: volume as cumulated weighted volume of stocks?
+        self.connection.execute("""
+            INSERT INTO eod_index_values (day, open, high, low, close)
+            SELECT day, open, high, low, close
+            FROM eod_index_values_df
+        """)
+        
+        self.connection.unregister("eod_index_values_df")
 
     def save_orders(self, orders_df: pd.DataFrame) -> None:
         # with duckdb.connect(self.localdb) as conn:

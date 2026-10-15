@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 from pathlib import Path
 
 from marketsim.agent.agent import Agent
-from marketsim.market.security import Security, Price
 from marketsim.fourheap.order import Order
 from marketsim.private_values.private_values import PrivateValues
 from marketsim.fourheap.constants import BUY, SELL
@@ -17,6 +16,7 @@ from typing import List
 #from fastcubicspline import FCS
 
 if TYPE_CHECKING:
+    from marketsim.market.security import Security, Price
     from database.connectors.duckdb_storage import Repository
 
 class Custom_cs:
