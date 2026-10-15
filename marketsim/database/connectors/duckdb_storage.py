@@ -281,7 +281,7 @@ class Repository:
                 index_id, asset_id, weight
             ) 
             SELECT index_id, asset_id, weight
-            FROM index_components_df
+            FROM components_df
         """)
         self.connection.unregister("components_df")
 
@@ -484,6 +484,13 @@ class Repository:
                 WHERE asset_id = ?
             """, parameters=[asset_id]).fetchdf()
 
+    def get_eod_index_values(self, index_id: int) -> pd.DataFrame:
+        return self.connection.execute(query="""
+                SELECT day, open, high, low, close
+                FROM eod_index_values
+                WHERE index_id = ?
+            """, parameters=[index_id]).fetchdf()
+
     def get_eod_cash(self, agent_id: int) -> pd.DataFrame:
         return self.connection.execute(query="""
                 SELECT day, cash
@@ -498,10 +505,34 @@ class Repository:
                 WHERE agent_id = ?
             """, parameters=[agent_id]).fetchdf()
 
+    #################################################################################################
+    ##          calculations in the DB
+    #################################################################################################
+
+    def calculate_index_values(self, day: int) -> None:
+        # calculate intraday index values for all indices
+        self.connection.execute(query="""
+                INSERT INTO
+                    index_values (day, time_tick, index_id, close)
+                SELECT tp.day, tp.time_tick, ic.index_id, sum(ic.weight * tp."close" )
+                FROM index_components ic
+                LEFT JOIN traded_prices tp
+                    ON ic.asset_id = tp.asset_id
+                WHERE tp.day = ?
+                GROUP BY tp.day, tp.time_tick, ic.index_id
+            """, parameters=[day])
+
+
     # combine eod_prices into eod_index_values:
-    # def calculate_eod_index_values(self, index_id: int, day: int, components: dict) -> pd.DataFrame:
-    #     SELECT open, high, low, close
-    #
-    #     FROM traded_prices tp
-    #     WHERE tp.day = ?
-    #         AND asset_id in (?)
+    def calculate_eod_index_values(self, day: int) -> pd.DataFrame:
+        self.connection.execute(query="""
+                INSERT INTO eod_index_values (day, index_id, open, high, low, close)
+                SELECT iv.day, iv.index_id, 
+                    FIRST(iv."close" ORDER BY iv.time_tick) AS open,
+                    MAX(iv."close" ) as high,
+                    MIN(iv."close" ) as low,
+                    LAST(iv."close" ORDER BY iv.time_tick) AS close,
+                FROM main.index_values iv 
+                WHERE iv."day" = ?
+                GROUP BY iv.day, iv.index_id""", parameters=[day])
+

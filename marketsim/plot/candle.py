@@ -70,7 +70,7 @@ def plot_candlestick(df: pd.DataFrame,
         # Volume
         ax_volume.bar(
             t,
-            row["volume"],
+            row.get("volume",0), # for indices it is 0
             width=candle_width,
             color=color,
             align="center",
