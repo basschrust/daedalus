@@ -283,7 +283,7 @@ def test_save_trades(repository: Repository):
     ret = repository.connection.execute("""SELECT *
                     FROM trades""").fetchdf()
 
-    assert ret.shape == (0, 10)
+    assert ret.shape == (0, 11)
 
 
 def test_save_option_expiration(repository: Repository,

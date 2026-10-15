@@ -13,10 +13,11 @@ from marketsim.fourheap.order import Order
 from marketsim.private_values.private_values import PrivateValues
 from marketsim.fourheap.constants import BUY, SELL
 from typing import List
+from marketsim.market import Price
 #from fastcubicspline import FCS
 
 if TYPE_CHECKING:
-    from marketsim.market.security import Security, Price
+    from marketsim.market.security import Security
     from database.connectors.duckdb_storage import Repository
 
 class Custom_cs:

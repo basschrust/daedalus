@@ -35,7 +35,7 @@ class Security:
             self.short_name = f"{self.instrument_class} {self.asset_id}"
         else:
             self.short_name = short_name
-        self.reference_price = reference_price if reference_price is not None else Price(100)
+        self.reference_price = Price(reference_price) if reference_price is not None else Price(100)
         self.last_traded_price = self.reference_price
 
         self.agent_groups = set()
@@ -573,7 +573,8 @@ class Security:
 
             matched_orders = []
             for order_id, matched_order in self.matched_orders_hashed.items():
-                matched_orders.append({ "order_id": order_id,
+                matched_orders.append({ "asset_id": matched_order.asset_id,
+                                        "order_id": order_id,
                                         "order_side": matched_order.order.order_type,
                                         "matched_with": matched_order.order.matched_with,
                                         "executed_mode": matched_order.order.executed_mode,
@@ -584,7 +585,8 @@ class Security:
                                         "phase": matched_order.phase,
                                         "day": self.current_day-1, })
             matched_orders_df = pd.DataFrame(matched_orders,
-                                             columns=["order_id",
+                                             columns=["asset_id",
+                                                      "order_id",
                                                     "order_side",
                                                     "matched_with",
                                                     "executed_mode",
@@ -597,6 +599,7 @@ class Security:
                                                 ])
             # adding conversion to powerful numbers to avoid exceeding range in DuckDB:
             matched_orders_df = matched_orders_df.astype({
+                "asset_id": "int64",
                 "order_id": "int64",
                 "order_side": "int64",
                 "matched_with": "int64",

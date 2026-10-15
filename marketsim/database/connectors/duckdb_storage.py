@@ -11,7 +11,7 @@ from marketsim.loggers.basic import terminal
 
 if TYPE_CHECKING:
     from marketsim.agent import Agent
-    from marketsim.market import Security, Index
+    from marketsim.market import Security, Index, Future
 
 # TODO: create some base class with abstract methods, use instances depending on the configuration
 class Repository:
@@ -59,6 +59,18 @@ class Repository:
                 )
             """)
 
+        # future contracts on indices / underlying_type stock/index
+        self.connection.execute("""
+            CREATE TABLE IF NOT EXISTS future (
+                    contract_id INTEGER,
+                    underlying_type STRING,
+                    underlying_id INTEGER,
+                    expiration_day INTEGER,
+                    multiplier DOUBLE,
+                    name STRING,
+                    short_name STRING
+                )
+            """)
 
         # derivatives
         self.connection.execute("""
@@ -223,6 +235,7 @@ class Repository:
         self.connection.execute("""
                     CREATE TABLE IF NOT EXISTS trades (
                         day INTEGER,
+                        asset_id INTEGER,
                         matched_with INTEGER,
                         executed_mode STRING,
                         executed_time INTEGER,
@@ -285,6 +298,21 @@ class Repository:
         """)
         self.connection.unregister("components_df")
 
+    def save_future(self, future: Future) -> None:
+        self.connection.execute(query="""
+            INSERT INTO future (contract_id, underlying_type, underlying_id,
+                                expiration_day, multiplier, name, short_name)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """, parameters=[future.asset_id,
+                                     "index",
+                                     future.underlying.asset_id,
+                                     future.expiration,
+                                     future.multiplier,
+                                     future.name,
+                                     future.short_name
+                                     ])
+
+    # the players :)
     def save_agent(self, agent: Agent) -> None:
         self.connection.execute("""
             INSERT INTO agents (
@@ -438,9 +466,10 @@ class Repository:
         self.connection.register("trades_df", trades_df)
         # terminal.write(f"Columns: {str(trades_df.columns())}")
         self.connection.execute("""
-            INSERT INTO trades (day, executed_time, matched_with, executed_mode, executed_price,
+            INSERT INTO trades (day, asset_id, executed_time, matched_with, executed_mode, executed_price,
                     order_id, order_side, executed_volume, cash, phase)
             SELECT day,
+                    asset_id,
                     executed_time,
                     matched_with,
                     executed_mode,
