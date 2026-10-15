@@ -497,3 +497,11 @@ class Repository:
                 FROM eod_portfolio_value
                 WHERE agent_id = ?
             """, parameters=[agent_id]).fetchdf()
+
+    # combine eod_prices into eod_index_values:
+    # def calculate_eod_index_values(self, index_id: int, day: int, components: dict) -> pd.DataFrame:
+    #     SELECT open, high, low, close
+    #
+    #     FROM traded_prices tp
+    #     WHERE tp.day = ?
+    #         AND asset_id in (?)
