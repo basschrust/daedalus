@@ -117,7 +117,8 @@ class Simulator:
                                repository=self.repository, output_dir=self.output_dir,
                                 underlying=self.markets[self.market_map[m_conf.get("underlying")]],
                                 expiration=m_conf.get("expiration"),
-                                multiplier=m_conf.get("multiplier"))
+                                multiplier=m_conf.get("multiplier"),
+                                margin_rate=m_conf.get("margin_rate"))
                 self.market_map[m_key] = market.asset_id
                 self.markets[market.asset_id] = market
                 self.asset_names_map[market.asset_id] = {"name": market.name,

@@ -67,6 +67,7 @@ class Repository:
                     underlying_id INTEGER,
                     expiration_day INTEGER,
                     multiplier DOUBLE,
+                    margin_rate DOUBLE,
                     name STRING,
                     short_name STRING
                 )
@@ -458,6 +459,7 @@ class Repository:
         self.connection.unregister("eod_prices_df")
 
     def save_eod_index_values(self, index_values_df: pd.DataFrame) -> None:
+        raise # TODO: moved to calculate
         self.connection.register("eod_index_values_df", index_values_df)
         # TODO: volume as cumulated weighted volume of stocks?
         self.connection.execute("""
@@ -551,6 +553,13 @@ class Repository:
                 WHERE index_id = ?
             """, parameters=[index_id]).fetchdf()
 
+    def get_eod_future_rates(self, contract_id: int) -> pd.DataFrame:
+        return self.connection.execute(query="""
+                SELECT day, open, high, low, close, volume, theoretical, lop
+                FROM eod_future_rates
+                WHERE contract_id = ?
+            """, parameters=[contract_id]).fetchdf()
+
     def get_eod_cash(self, agent_id: int) -> pd.DataFrame:
         return self.connection.execute(query="""
                 SELECT day, cash
@@ -573,8 +582,12 @@ class Repository:
         # calculate intraday index values for all indices
         self.connection.execute(query="""
                 INSERT INTO
-                    index_values (day, time_tick, index_id, close)
-                SELECT tp.day, tp.time_tick, ic.index_id, sum(ic.weight * tp."close" )
+                    index_values (day, time_tick, index_id, open, high, low, close)
+                SELECT tp.day, tp.time_tick, ic.index_id,
+                        sum(ic.weight * tp."open" ),
+                        sum(ic.weight * tp."close" ),
+                        sum(ic.weight * tp."close" ),
+                        sum(ic.weight * tp."close" ),
                 FROM index_components ic
                 LEFT JOIN traded_prices tp
                     ON ic.asset_id = tp.asset_id
@@ -585,14 +598,14 @@ class Repository:
 
     # combine eod_prices into eod_index_values:
     def calculate_eod_index_values(self, day: int) -> pd.DataFrame:
-        self.connection.execute(query="""
+        return self.connection.execute(query="""
                 INSERT INTO eod_index_values (day, index_id, open, high, low, close)
                 SELECT iv.day, iv.index_id, 
-                    FIRST(iv."close" ORDER BY iv.time_tick) AS open,
+                    FIRST(iv."open" ORDER BY iv.time_tick) AS open,
                     MAX(iv."close" ) as high,
                     MIN(iv."close" ) as low,
                     LAST(iv."close" ORDER BY iv.time_tick) AS close,
                 FROM main.index_values iv 
                 WHERE iv."day" = ?
-                GROUP BY iv.day, iv.index_id""", parameters=[day])
+                GROUP BY iv.day, iv.index_id""", parameters=[day]).fetchdf()
 

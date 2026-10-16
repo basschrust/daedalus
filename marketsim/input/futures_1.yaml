@@ -41,6 +41,7 @@ markets:
     underlying: genius_index
     expiration: 30
     multiplier: 20  # as in WIG20  - 20 PLN/index point
+    margin_rate: 0.1  # for collateral calculation
 
   call_on_tnt:
     name: "First derivative - European CALL option on stock TNT with strike 100"

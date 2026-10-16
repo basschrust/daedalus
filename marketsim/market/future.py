@@ -18,17 +18,29 @@ if TYPE_CHECKING:
 
 class Future(Security):
     def __init__(self, *, underlying: Index, expiration: int, multiplier: float,
+                 margin_rate: float,
                  repository: Repository, market_type: str = "continuous",
                  name: str| None = None, short_name: str|None=None, output_dir: Path|str="tmp"):
         self.instrument_class = "future"
         self.underlying = underlying
         self.expiration = expiration
         self.multiplier = multiplier
+        self.margin_rate = margin_rate
+
         super().__init__(market_type=market_type, repository=repository, instrument_class="future",
-                 name=name, short_name=short_name, output_dir=output_dir)
+                 name=name, short_name=short_name, output_dir=output_dir, reference_price=underlying.last_traded_price)
 
     def save(self):
         self.repository.save_future(self)
+
+    def record_trade(self, matched_order: MatchedOrder) -> None:
+        self.last_traded_price = matched_order.price
+        self.record_volume_and_price(matched_order=matched_order)
+
+        agent_id = matched_order.order.agent_id
+        self.agents[agent_id].record_futures_trade(
+            matched_order=matched_order,
+        )
 
     def fill_theoretical_value(self):
         for t in self.traded_prices:
@@ -74,7 +86,7 @@ class Future(Security):
             self.exercise()
             super().eod()
 
-            self.fill_theoretical_price()
+            self.fill_theoretical_value()
             self.traded_prices_df = (
                 pd.DataFrame.from_dict(self.traded_prices, orient="index")
                 .rename_axis("time_tick")
@@ -101,7 +113,7 @@ class Future(Security):
                 "volume": self.traded_prices_df["volume"].sum(),
                 "asset_id": self.asset_id,
                 "day": self.current_day - 1,
-                "theoretical": self.get_theoretical_price(as_of_day=self.current_day-1),
+                "theoretical": self.underlying.last_traded_price,
             }])
 
             self.repository.save_eod_prices(eod_prices_df=eod_prices_df)

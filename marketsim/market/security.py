@@ -91,7 +91,6 @@ class Security:
         for matched_order in newly_matched_orders:
             inner_order = matched_order.order
             self.matched_orders_hashed[inner_order.order_id] =  matched_order
-                                                         # TODO: it requires change in the HBL agents implementation
             # the limit from the order is needed, not the executed price
         return newly_matched_orders
 

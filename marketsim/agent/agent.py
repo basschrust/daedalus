@@ -18,7 +18,7 @@ from marketsim.market.price import Price
 
 if TYPE_CHECKING:
     from marketsim.fourheap import MatchedOrder
-    from marketsim.market import Security
+    from marketsim.market import Security, Future
     from database.connectors.duckdb_storage import Repository
 
 
@@ -56,6 +56,20 @@ class Agent(ABC):
         self.portfolio_value_history = defaultdict(Price)
 
         self.position = { m_id: 0 for m_id  in self.markets }
+        # for the MtM daily contracts:
+        self.futures_position = { m_id: 0 for m_id, m
+                                  in self.markets.items() if m.instrument_class == "future" }
+        self.futures_value = {
+            m_id: {
+                "avg_initial_price": Price(0),
+                "settlement_price": Price(0),
+                "collateral": Price(0),
+                "unsettled_pnl": Price(0),
+            }
+            for m_id in self.futures_position
+        }
+        # self.futures_value = {}  # asset_id -> current unsettled P&L
+
 
         self.position_history = defaultdict(dict)
         self.position_history[0] = { m_id:0  for m_id  in self.markets }  # valid one day! {time: {asset_id: number_of_shares}}
@@ -107,6 +121,34 @@ class Agent(ABC):
         self.position[asset_id] += quantity
         self.cash += cash
 
+    def update_futures_position(self, *,
+                                quantity: int,
+                                contract: Future,
+                                # collateral: Price,
+                                ) -> None:
+        # update the derivatives position of the agent
+        # validate_update(quantity=quantity, cash=cash)
+        # "avg_initial_price": Price(0),
+        # "settlement_price": Price(0),
+        # "collateral": Price(0),
+        # "unsettled_pnl": Price(0),
+        if contract.asset_id not in self.futures_position:
+            raise ValueError(f"Position:  {self.futures_position}. {asset_id} not in position")
+        if self.futures_position[contract.asset_id] == 0:
+            # initiating position on this contract
+            collateral = contract.last_traded_price * contract.margin_rate * contract.multiplier
+            self.futures_value[contract.asset_id] = {
+                "avg_initial_price": contract.last_traded_price, # the current price
+                "settlement_price": contract.last_traded_price,
+                "collateral": collateral,
+                "unsettled_pnl": Price(0),
+            }
+        else:
+            # changing contract position -
+            # TODO: check if squaring position
+            self.futures_position[contract.asset_id] += quantity
+            self.cash -= collateral
+
     def reset(self) -> None:
         self.position = { m_id: 0 for m_id  in self.markets}
         self.cash = Price(0)
@@ -133,6 +175,39 @@ class Agent(ABC):
         cash = - Price(matched_order.price * matched_order.order.quantity * matched_order.order.order_type)
 
         self.update_position(quantity=quantity, cash=cash, asset_id=matched_order.order.asset_id)
+        self.position_history[matched_order.time][matched_order.order.asset_id] = (
+                self.position_history.get(matched_order.time, {}).get(matched_order.order.asset_id, 0) + quantity)
+
+        if matched_order.time in self.trade_history:
+            # just add info
+            old = self.trade_history.get(matched_order.time, {}).get(matched_order.order.asset_id, {})
+            if old:
+                self.trade_history[matched_order.time][matched_order.order.asset_id] = {"trades": old["trades"]+1,
+                                                               "volume": old["volume"] + abs(matched_order.order.quantity),}
+            else:
+                # first trade on this security on this date:
+                self.trade_history[matched_order.time][matched_order.order.asset_id] =\
+                            {"trades": 1, "volume": abs(matched_order.order.quantity),
+                                                }
+        else:
+            # first trade this day
+            self.trade_history[matched_order.time] = { matched_order.order.asset_id:
+                                                {"trades": 1, "volume": abs(matched_order.order.quantity),
+                                                 } }
+
+
+    def record_futures_trade(self, matched_order: MatchedOrder) -> None:
+        # TODO: fill this properly for trading futures
+        quantity = matched_order.order.order_type * matched_order.order.quantity
+        #cash = - Price(matched_order.price * matched_order.order.quantity * matched_order.order.order_type)
+        # cash to collateral, both sides - so no matter if bought or sold
+        contract_id = matched_order.order.asset_id
+        contract = self.markets[contract_id]
+        cash = - contract.multiplier * contract.last_traded_price * contract.margin_rate
+        # make sure the key will exist now:
+        self.futures_value.setdefault(matched_order.order.asset_id, {})[matched_order.order.asset_id] = {}
+
+        self.update_futures_position(quantity=quantity, contract=self.markets[matched_order.order.asset_id])
         self.position_history[matched_order.time][matched_order.order.asset_id] = (
                 self.position_history.get(matched_order.time, {}).get(matched_order.order.asset_id, 0) + quantity)
 
