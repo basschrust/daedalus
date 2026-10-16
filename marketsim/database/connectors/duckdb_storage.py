@@ -197,7 +197,7 @@ class Repository:
                             )
                         """)
 
-        #
+        # eod index
         self.connection.execute("""
                             CREATE TABLE IF NOT EXISTS eod_index_values (
                                 day       INTEGER,
@@ -208,6 +208,37 @@ class Repository:
                                 close     DOUBLE,
                             )
                         """)
+
+        # futures intraday
+        self.connection.execute("""
+                    CREATE TABLE IF NOT EXISTS future_rates (
+                            contract_id INTEGER,
+                            day INTEGER,
+                            time_tick INTEGER,
+                            open DOUBLE,
+                            high DOUBLE,
+                            low DOUBLE,
+                            close DOUBLE,
+                            volume DOUBLE,
+                            lop INTEGER,
+                            theoretical DOUBLE
+                        )
+                    """)
+
+        # eod future rates
+        self.connection.execute("""
+                            CREATE TABLE IF NOT EXISTS eod_future_rates (
+                                    contract_id INTEGER,
+                                    day INTEGER,
+                                    open DOUBLE,
+                                    high DOUBLE,
+                                    low DOUBLE,
+                                    close DOUBLE,
+                                    volume DOUBLE,
+                                    lop INTEGER,
+                                    theoretical DOUBLE
+                            )
+                    """)
 
         ##### granular tables - may contain significant volumes of data ######################
 

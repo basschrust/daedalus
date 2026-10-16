@@ -67,3 +67,55 @@ class Future(Security):
 
                 self.logger.info(f"Futures SoD completed for day: {self.current_day}")
 
+    def eod(self):
+        if self.eod_status == "closed":
+            return
+        elif self.eod_status == "open":
+            self.exercise()
+            super().eod()
+
+            self.fill_theoretical_price()
+            self.traded_prices_df = (
+                pd.DataFrame.from_dict(self.traded_prices, orient="index")
+                .rename_axis("time_tick")
+                .reset_index()
+                [["time_tick", "open", "high", "low", "close", "volume", "theoretical"]]
+            )
+
+            self.traded_prices_df["asset_id"] = self.asset_id
+            self.traded_prices_df["day"] = self.current_day - 1
+
+            self.logger.info(f"Traded_prices_df: {self.traded_prices_df.head()}")
+            self.repository.save_traded_prices(self.traded_prices_df)
+
+            # eod_prices
+            eod_prices_df = pd.DataFrame([{
+                "open": self.traded_prices_df.loc[
+                    self.traded_prices_df["time_tick"] == 0, "open"
+                ].iloc[0],
+                "high": self.traded_prices_df["high"].max(),
+                "low": self.traded_prices_df["low"].min(),
+                "close": self.traded_prices_df.loc[
+                    self.traded_prices_df["time_tick"].idxmax(), "close"
+                ],
+                "volume": self.traded_prices_df["volume"].sum(),
+                "asset_id": self.asset_id,
+                "day": self.current_day - 1,
+                "theoretical": self.get_theoretical_price(as_of_day=self.current_day-1),
+            }])
+
+            self.repository.save_eod_prices(eod_prices_df=eod_prices_df)
+
+            if self.status != "active":
+                self.cleanup()
+
+            self.logger.info(f"Option EoD completed for day: {self.current_day-1}")
+
+    def exercise(self):
+        self.logger.info(f"Checking Future Expiration: {self.name}")
+        if self.expiration == self.current_day:
+            pass
+            # TODO: calculate final settlement
+        else:
+            return 0
+
