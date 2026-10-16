@@ -48,8 +48,8 @@ class Future(Security):
 
     def plot_history(self, traded_prices: dict):
         # fill the theoretical - simply index value,
-        # TODO: add connrection on dividends and financing rate
-        self.fill_theoretical_value()
+        # TODO: add correction on dividends and financing rate
+        # self.fill_theoretical_value()
 
         traded_prices_float = {t: {v: float(price_item) for v, price_item in item.items()}
                                for t, item in traded_prices.items()}
@@ -121,11 +121,12 @@ class Future(Security):
             if self.status != "active":
                 self.cleanup()
 
-            self.logger.info(f"Option EoD completed for day: {self.current_day-1}")
+            self.logger.info(f"Future {self} EoD completed for day: {self.current_day-1}")
 
     def exercise(self):
         self.logger.info(f"Checking Future Expiration: {self.name}")
         if self.expiration == self.current_day:
+            self.logger.info(f"Final settlement day!")
             # TODO: calculate final settlement
             self.status = "expired"
             # for all agents that had open positions make final settlement, give them cash back :)

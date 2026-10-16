@@ -403,8 +403,6 @@ class Security:
         plot_candlestick(df=df_candlestick, output_file=candlestick_filename, title=self.name)
 
     def show_summary(self):
-        # self.eod()  # End of Day for the Security - not needed, simulator takes care of it
-
         self.logger.info(f"\n\nMarket {str(self)} summary:")
         # self.logger.info(f"Orders matched: {len(self.matched_orders)}")
         self.logger.info(f"Last traded price: {self.last_traded_price}")

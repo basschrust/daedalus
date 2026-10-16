@@ -185,7 +185,7 @@ class Agent(ABC):
             self.portfolio_value += int(self.position[asset_id]) * market.last_traded_price
 
         # TODO: add futures - collateral + unsettled_pnl
-        for contract_id, ft_val in self.futures_values.items():
+        for contract_id, ft_val in self.futures_value.items():
             self.portfolio_value += ft_val["collateral"]
             self.portfolio_value += ft_val["unsettled_pnl"]
 
