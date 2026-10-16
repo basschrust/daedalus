@@ -124,17 +124,12 @@ class Agent(ABC):
     def update_futures_position(self, *,
                                 quantity: int,
                                 contract: Future,
-                                # collateral: Price,
                                 ) -> None:
         # update the derivatives position of the agent
-        # validate_update(quantity=quantity, cash=cash)
-        # "avg_initial_price": Price(0),
-        # "settlement_price": Price(0),
-        # "collateral": Price(0),
-        # "unsettled_pnl": Price(0),
         if contract.asset_id not in self.futures_position:
-            raise ValueError(f"Position:  {self.futures_position}. {asset_id} not in position")
-        if self.futures_position[contract.asset_id] == 0:
+            raise ValueError(f"Position:  {self.futures_position}. {contract.asset_id} not in position")
+        current_position = self.futures_position[contract.asset_id]
+        if current_position == 0:
             # initiating position on this contract
             collateral = contract.last_traded_price * contract.margin_rate * contract.multiplier
             self.futures_value[contract.asset_id] = {
@@ -143,11 +138,35 @@ class Agent(ABC):
                 "collateral": collateral,
                 "unsettled_pnl": Price(0),
             }
+        elif current_position == - quantity:
+            # squaring /closing the position
+            freed_collateral = self.futures_value[contract.asset_id]["collateral"]
+            self.cash += freed_collateral
+            # TODO: depending on the price, there might be some unsettled_pnl to add to cash?
+            self.futures_position[contract.asset_id] = 0
+            self.futures_value[contract.asset_id] = {
+                "avg_initial_price": contract.last_traded_price,  # the current price
+                "settlement_price": contract.last_traded_price,
+                "collateral": Price(0),
+                "unsettled_pnl": Price(0),
+            }
         else:
-            # changing contract position -
-            # TODO: check if squaring position
+            existing_collateral = self.futures_value[contract.asset_id]["collateral"]
+            target_collateral = contract.last_traded_price * contract.margin_rate * contract.multiplier
+            # changing contract position - keeping it open with different size
             self.futures_position[contract.asset_id] += quantity
-            self.cash -= collateral
+            self.cash -= target_collateral - existing_collateral
+
+            total_pos = current_position + quantity
+            old_price = self.futures_value[contract.asset_id]["avg_initial_price"]
+            avg_initial_price = (old_price * current_position + contract.last_traded_price * quantity) / total_pos
+            # TODO: calculate this
+            self.futures_value[contract.asset_id] = {
+                "avg_initial_price": avg_initial_price,  # the current price
+                "settlement_price": contract.last_traded_price,
+                "collateral": target_collateral,
+                "unsettled_pnl": Price(0),
+            }
 
     def reset(self) -> None:
         self.position = { m_id: 0 for m_id  in self.markets}
@@ -203,12 +222,10 @@ class Agent(ABC):
         # cash to collateral, both sides - so no matter if bought or sold
         contract_id = matched_order.order.asset_id
         contract = self.markets[contract_id]
-        cash = - contract.multiplier * contract.last_traded_price * contract.margin_rate
         # make sure the key will exist now:
-        self.futures_value.setdefault(matched_order.order.asset_id, {})[matched_order.order.asset_id] = {}
 
-        self.update_futures_position(quantity=quantity, contract=self.markets[matched_order.order.asset_id])
-        self.position_history[matched_order.time][matched_order.order.asset_id] = (
+        self.update_futures_position(quantity=quantity, contract=contract)
+        self.position_history[matched_order.time][contract_id] = (
                 self.position_history.get(matched_order.time, {}).get(matched_order.order.asset_id, 0) + quantity)
 
         if matched_order.time in self.trade_history:

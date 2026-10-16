@@ -270,7 +270,9 @@ class Simulator:
 
             # plot the LOB
             if self.current_time > 0 and self.current_time % self.lob_plot_interval == 0:
-                market.plot_lob(self.current_time)
+                if market.instrument_class != "index":
+                    # plot the LOB only for tradable intruments
+                    market.plot_lob(self.current_time)
 
             buy_matched_queue_length = 0 if market.order_book is None else len(market.order_book.buy_matched.heap)
             sell_matched_queue_length = 0 if market.order_book is None else len(market.order_book.sell_matched.heap)
