@@ -184,6 +184,11 @@ class Agent(ABC):
         for asset_id, market in self.markets.items():
             self.portfolio_value += int(self.position[asset_id]) * market.last_traded_price
 
+        # TODO: add futures - collateral + unsettled_pnl
+        for contract_id, ft_val in self.futures_values.items():
+            self.portfolio_value += ft_val["collateral"]
+            self.portfolio_value += ft_val["unsettled_pnl"]
+
         # save valuation:
         self.portfolio_value_history[current_time] = self.portfolio_value
         self.position_history[current_time] = copy.deepcopy(self.position)
@@ -245,6 +250,22 @@ class Agent(ABC):
                                                 {"trades": 1, "volume": abs(matched_order.order.quantity),
                                                  } }
 
+    def settle(self, contract):
+        # final day settlement
+        # "avg_initial_price": avg_initial_price,  # the current price
+        # "settlement_price": contract.last_traded_price,
+        # "collateral": target_collateral,
+        # "unsettled_pnl": Price(0),
+        ft_val = self.futures_value[contract.asset_id]
+        self.cash += ft_val["collateral"] + ft_val["unsettled_pnl"]
+        # what about settlement_price?
+        self.futures_position[contract.asset_id] = 0
+        self.futures_value.pop(contract.asset_id) # delete the contract from analysis
+        self.abandoned_markets[contract.asset_id] = contract
+        self.markets.pop(contract.asset_id)
+        # TODO: porftolio value
+
+
 
     def sod(self):
         self.logger.info(f"Starting agent {self.agent_id} Start-of-Day procedure of day: {self.current_day}")
@@ -281,7 +302,6 @@ class Agent(ABC):
             self.eod_status = "closed"
             self.current_day += 1
 
-            # run the EoD procedure
             # make position history a DF to enable quick filtering
             # self.position_history
             self.position_history_df = (
@@ -359,6 +379,8 @@ class Agent(ABC):
 
         positions_df = self.repository.get_eod_positions(agent_id=self.agent_id)
         positions_df.rename(columns={"day": "time_step"}, inplace=True)
+
+        # TODO: for futures take from futures_position
 
         self.logger.info(f"Plotting eod positions for {self.agent_id} ...")
         # self.logger.info(f"{positions_df.head(100)}")

@@ -126,8 +126,11 @@ class Future(Security):
     def exercise(self):
         self.logger.info(f"Checking Future Expiration: {self.name}")
         if self.expiration == self.current_day:
-            pass
             # TODO: calculate final settlement
+            self.status = "expired"
+            # for all agents that had open positions make final settlement, give them cash back :)
+            for agent_id, agent in self.agents.items():
+                agent.settle(self)
         else:
             return 0
 

@@ -39,7 +39,7 @@ markets:
     short_name: "FGeN30"
 #    derivatives_config:
     underlying: genius_index
-    expiration: 30
+    expiration: 10
     multiplier: 20  # as in WIG20  - 20 PLN/index point
     margin_rate: 0.1  # for collateral calculation
 
