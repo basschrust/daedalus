@@ -10,12 +10,12 @@ from marketsim.agent import Agent
 EXPECTED_TABLES = {"securities",
                    "options",
                    "agents",
-                    "position_history",
-                    "eod_positions",
-                    "portfolio_value_history",
-                    "eod_portfolio_value",
-                    "cash_history",
-                    "eod_cash",
+                    "agent_position_history",
+                    "agent_eod_positions",
+                    "agent_portfolio_value_history",
+                    "agent_eod_portfolio_value",
+                    "agent_cash_history",
+                    "agent_eod_cash",
                     "traded_prices",
                     "eod_prices",
                     "orders",
@@ -160,7 +160,7 @@ def test_save_position_history(repository: Repository,
     agent.eod()
 
     ret = repository.connection.execute("""SELECT *
-                        FROM position_history 
+                        FROM agent_position_history 
                         ORDER BY time_tick, asset_id""").fetchdf()
 
     assert ret.shape == (4, 5)
@@ -178,7 +178,7 @@ def test_save_eod_position(repository: Repository,
     agent.eod()
 
     ret = repository.connection.execute("""SELECT day, asset_id, agent_id, position
-                FROM eod_positions 
+                FROM agent_eod_positions 
                 ORDER BY day DESC, agent_id, asset_id""").fetchdf()
 
     assert ret.shape == (4, 4)
@@ -198,7 +198,7 @@ def test_save_portfolio_value_history(repository: Repository,
     agent.eod()
 
     ret = repository.connection.execute("""SELECT *
-                FROM portfolio_value_history""").fetchdf()
+                FROM agent_portfolio_value_history""").fetchdf()
 
     assert ret.shape == (0,4)
 
@@ -209,7 +209,7 @@ def test_save_eod_portfolio_value(repository: Repository,
     agent.eod()
 
     ret = repository.connection.execute("""SELECT *
-                FROM eod_portfolio_value 
+                FROM agent_eod_portfolio_value 
                 ORDER BY day DESC""").fetchdf()
 
     row = ret.iloc[0]
@@ -225,7 +225,7 @@ def test_save_cash_history(repository: Repository,
     agent = agent_sophisticated_1
     agent.eod()
     ret = repository.connection.execute("""SELECT *
-            FROM cash_history""").fetchdf()
+            FROM agent_cash_history""").fetchdf()
 
     row = ret.iloc[0]
     assert ret.shape == (1, 4)
@@ -241,7 +241,7 @@ def test_save_eod_cash(repository: Repository,
     agent.eod()
 
     ret = repository.connection.execute("""SELECT *
-            FROM eod_cash""").fetch_df()
+            FROM agent_eod_cash""").fetch_df()
 
     assert ret.shape == (2, 3)
 
@@ -254,7 +254,7 @@ def test_save_eod_cash_2(repository: Repository,
     agent.eod()
 
     ret = repository.connection.execute("""SELECT *
-            FROM eod_cash""").fetch_df()
+            FROM agent_eod_cash""").fetch_df()
 
     assert ret.shape == (3, 3)
 

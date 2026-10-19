@@ -70,21 +70,27 @@ class Agent(ABC):
         }
         # self.futures_value = {}  # asset_id -> current unsettled P&L
 
-
+        # all assets:
         self.position_history = defaultdict(dict)
         self.position_history[0] = { m_id:0  for m_id  in self.markets }  # valid one day! {time: {asset_id: number_of_shares}}
                 # at the end of tick
         self.position_history_df = None # TODO: is needed as attribute - local var suffices?
+        # futures (or derivatives):
         self.futures_position_history = defaultdict(dict)
         self.futures_position_history[0] = {m_id: 0 for m_id, m
                                  in self.markets.items() if m.instrument_class == "future"}
+        self.futures_value_history = defaultdict(dict)
+
+        # cash
         self.cash = Price(0)
         self.cash_history = defaultdict(Price)
 
         self.repository = repository
 
         self.eod_status = "open" # open/closed  to make eod procedure idempotent
+        # TODO: start with closed - no trading before sod() is finished !
         self.current_day = 0
+        self.current_time = 0
 
         self.output_dir = output_dir
         # setup_logger(subject="agent", subject_id=self.agent_id)
@@ -172,6 +178,7 @@ class Agent(ABC):
                 "collateral": target_collateral,
                 "unsettled_pnl": Price(0),
             }
+        self.futures_value_history[self.current_time] = copy.deepcopy(self.futures_value)
 
     def reset(self) -> None:
         self.position = { m_id: 0 for m_id  in self.markets}
@@ -182,6 +189,7 @@ class Agent(ABC):
         return False
 
     def record_valuation(self, current_time: int) -> None:
+        self.current_time = current_time
         # saving value of agents portfolio
 
         # valuation by last trade:
@@ -201,6 +209,7 @@ class Agent(ABC):
         self.cash_history[current_time] = self.cash
 
     def record_trade(self, matched_order: MatchedOrder) -> None:
+        self.current_time = matched_order.time
         quantity = matched_order.order.order_type * matched_order.order.quantity
         cash = - Price(matched_order.price * matched_order.order.quantity * matched_order.order.order_type)
 
@@ -277,6 +286,7 @@ class Agent(ABC):
 
     def sod(self):
         self.logger.info(f"Starting agent {self.agent_id} Start-of-Day procedure of day: {self.current_day}")
+        self.current_time = 0
 
         self.portfolio_value_history = defaultdict(Price)
         self.cash_history = defaultdict(Price)
@@ -297,6 +307,7 @@ class Agent(ABC):
 
         self.futures_position_history[0] = { m_id: 0 for m_id, market in self.markets.items()
                                              if market.instrument_class == "future" }
+        self.futures_value_history[0] = {}
 
         self.eod_status = "open"
         self.logger.info(f"Start-of-Day agent {self.agent_id} procedure of day: {self.current_day} completed.")
@@ -359,6 +370,35 @@ class Agent(ABC):
             self.logger.info(f"")
             self.repository.save_eod_futures_position(eod_position_df=futures_position_df)
 
+            # saving the values of futures
+            rows = []
+            for time_tick, contracts in self.futures_value_history.items():
+                for asset_id, values in contracts.items():
+                    rows.append({
+                        "day": self.current_day-1,
+                        "time_tick": time_tick,
+                        "agent_id": self.agent_id,
+                        "asset_id": asset_id,
+                        "position": self.futures_position_history.get(time_tick, {}).get(asset_id, 0),
+                        **values,
+                    })
+            if rows:
+                # unbelievable - can this happen for agents not trading futures?
+                futures_value_history_df = pd.DataFrame(rows)
+                self.repository.save_futures_value_history(futures_value_df=futures_value_history_df)
+
+                eod_futures_value_df = pd.DataFrame([
+                    {
+                        "day": self.current_day - 1,
+                        "agent_id": self.agent_id,
+                        "asset_id": asset_id,
+                        "position": self.futures_position.get(asset_id, 0),
+                        **values,
+                    }
+                    for asset_id, values in self.futures_value.items()
+                ])
+                # self.repository.save_eod_futures_value(eod_futures_value_df=eod_futures_value_df)
+
             eod_position_df = pd.DataFrame(
                 self.position.items(),
                 columns=["asset_id", "position"],
@@ -418,7 +458,16 @@ class Agent(ABC):
         positions_df = self.repository.get_eod_positions(agent_id=self.agent_id)
         positions_df.rename(columns={"day": "time_step"}, inplace=True)
 
-        # TODO: for futures take from futures_position
+        futures_positions_df = self.repository.get_eod_futures_positions(agent_id=self.agent_id)
+        futures_positions_df.rename(columns={"day": "time_step"}, inplace=True)
+
+        # overwriting futures_position as in positions_df they are zeros
+        positions_df = (
+            pd.concat([futures_positions_df, positions_df], ignore_index=True)
+            .drop_duplicates(subset=["time_step", "asset_id"], keep="first")
+            .sort_values(["time_step", "asset_id"])
+            .reset_index(drop=True)
+        )
 
         self.logger.info(f"Plotting eod positions for {self.agent_id} ...")
         # self.logger.info(f"{positions_df.head(100)}")
