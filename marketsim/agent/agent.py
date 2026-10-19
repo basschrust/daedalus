@@ -387,17 +387,19 @@ class Agent(ABC):
                 futures_value_history_df = pd.DataFrame(rows)
                 self.repository.save_futures_value_history(futures_value_df=futures_value_history_df)
 
-                eod_futures_value_df = pd.DataFrame([
-                    {
-                        "day": self.current_day - 1,
-                        "agent_id": self.agent_id,
-                        "asset_id": asset_id,
-                        "position": self.futures_position.get(asset_id, 0),
-                        **values,
-                    }
-                    for asset_id, values in self.futures_value.items()
-                ])
-                # self.repository.save_eod_futures_value(eod_futures_value_df=eod_futures_value_df)
+            eod_futures_value_df = pd.DataFrame([
+                {
+                    "day": self.current_day - 1,
+                    "agent_id": self.agent_id,
+                    "asset_id": asset_id,
+                    "position": self.futures_position.get(asset_id, 0),
+                    **values,
+                }
+                for asset_id, values in self.futures_value.items()
+            ])
+            if not eod_futures_value_df.empty:
+                self.logger.info(f"Save eod_futures_value_df: {eod_futures_value_df}")
+                self.repository.save_eod_futures_value(eod_futures_value_df=eod_futures_value_df)
 
             eod_position_df = pd.DataFrame(
                 self.position.items(),

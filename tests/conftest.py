@@ -3,7 +3,7 @@ from pathlib import Path
 
 from marketsim.database.connectors.duckdb_storage import Repository
 from marketsim.fourheap.order import Order
-from marketsim.market import Price, Security, Option
+from marketsim.market import Price, Security, Option, Index
 from marketsim.agent import Agent, MMZOHAgent, NoiseAgent, HBLAgent
 
 
@@ -443,4 +443,16 @@ def agent_after_expiry_put_otm(agent_long_put_option_expiration_day_otm: Agent,
     agent_long_put_option_expiration_day_otm.eod()
 
     return agent_long_put_option_expiration_day_otm
+
+##################
+# index
+
+@pytest.fixture
+def index_genius(stock_tnt: Security, stock_mit: Security, repository: Repository):
+    index = Index(repository=repository, short_name="GeNiUs", name="GeNiUS Index",
+                  components={ stock_tnt.asset_id: { "weight": 0.4, "security": stock_tnt },
+                               stock_mit.asset_id: { "weight": 0.6, "security": stock_mit }
+                               })
+    return index
+
 

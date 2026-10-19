@@ -34,9 +34,13 @@ class Index(Security):
     def validate_components(self):
         weights_sum = 0.0
         for weight in self.components.values():
-            weights_sum += weight.weight
-        if weights_sum == 1:
-            self.logger(f"Index components of {self.name} are properly configured")
+            if weight <= 0:
+                self.logger(f"Index components of {self.name} are broken - weights have to be positive, not: {weight}")
+                return False
+        self.logger(f"Index components of {self.name} are properly configured")
+        # it doesn't need to be 100% in total
+        # if weights_sum == 1:
+        #     self.logger(f"Index components of {self.name} are properly configured")
 
     def calculate_value(self):
         value = 0
@@ -55,7 +59,7 @@ class Index(Security):
         components_table = []
         for asset_id, component in self.components.items():
             components_table.append({  "index_id": self.index_id,
-                                        "asset_id": asset_id,
+                                        "asset_id": component["security"].asset_id,
                                         "weight": component["weight"],
                                        })
 
