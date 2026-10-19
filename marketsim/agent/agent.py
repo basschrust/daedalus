@@ -139,20 +139,30 @@ class Agent(ABC):
         if contract.asset_id not in self.futures_position:
             raise ValueError(f"Position:  {self.futures_position}. {contract.asset_id} not in position")
         current_position = self.futures_position[contract.asset_id]
-        self.futures_position[contract.asset_id] = current_position + quantity
+        new_position = current_position + quantity
+        self.futures_position[contract.asset_id] = new_position
+        required_collateral = (
+                abs(new_position)
+                * contract.last_traded_price
+                * contract.multiplier
+                * contract.margin_rate
+        )
+        old_collateral = self.futures_value[contract.asset_id]["collateral"]
+        collateral_change = required_collateral - old_collateral
+        self.cash -= collateral_change
         if current_position == 0:
             # initiating position on this contract
-            collateral = contract.last_traded_price * contract.margin_rate * contract.multiplier
+            # collateral = contract.last_traded_price * contract.margin_rate * contract.multiplier
             self.futures_value[contract.asset_id] = {
                 "avg_initial_price": contract.last_traded_price, # the current price
                 "settlement_price": contract.last_traded_price,
-                "collateral": collateral,
+                "collateral": required_collateral,
                 "unsettled_pnl": Price(0),
             }
         elif current_position == - quantity:
             # squaring /closing the position
-            freed_collateral = self.futures_value[contract.asset_id]["collateral"]
-            self.cash += freed_collateral
+            # freed_collateral = self.futures_value[contract.asset_id]["collateral"]
+            # self.cash += freed_collateral
             # TODO: depending on the price, there might be some unsettled_pnl to add to cash?
             self.futures_position[contract.asset_id] = 0
             self.futures_value[contract.asset_id] = {
@@ -162,11 +172,11 @@ class Agent(ABC):
                 "unsettled_pnl": Price(0),
             }
         else:
-            existing_collateral = self.futures_value[contract.asset_id]["collateral"]
-            target_collateral = contract.last_traded_price * contract.margin_rate * contract.multiplier
+            # existing_collateral = self.futures_value[contract.asset_id]["collateral"]
+            # target_collateral = contract.last_traded_price * contract.margin_rate * contract.multiplier
             # changing contract position - keeping it open with different size
             self.futures_position[contract.asset_id] += quantity
-            self.cash -= target_collateral - existing_collateral
+            # self.cash -= target_collateral - existing_collateral
 
             total_pos = current_position + quantity
             old_price = self.futures_value[contract.asset_id]["avg_initial_price"]
@@ -175,7 +185,7 @@ class Agent(ABC):
             self.futures_value[contract.asset_id] = {
                 "avg_initial_price": avg_initial_price,  # the current price
                 "settlement_price": contract.last_traded_price,
-                "collateral": target_collateral,
+                "collateral": required_collateral,
                 "unsettled_pnl": Price(0),
             }
         self.futures_value_history[self.current_time] = copy.deepcopy(self.futures_value)
@@ -282,7 +292,37 @@ class Agent(ABC):
         self.markets.pop(contract.asset_id)
         # TODO: porftolio value
 
+    def settle_futures_mtm(self) -> None:
+        """
+        Settle daily variation margin for all active futures.
 
+        Each contract is settled against its previous
+        settlement reference price.
+        """
+        for asset_id, position in self.futures_position.items():
+            if position == 0:
+                continue
+
+            contract = self.markets[asset_id]
+            values = self.futures_value[asset_id]
+
+            previous_price = values["settlement_price"]
+            current_price = contract.last_traded_price
+
+            vm = Price(
+                position
+                * contract.multiplier
+                * (current_price - previous_price)
+            )
+
+            # Daily cash settlement
+            self.cash += vm
+
+            # Roll the reference price forward
+            values["settlement_price"] = current_price
+
+            # Variation margin has been paid
+            values["unsettled_pnl"] = Price(0)
 
     def sod(self):
         self.logger.info(f"Starting agent {self.agent_id} Start-of-Day procedure of day: {self.current_day}")
@@ -323,6 +363,9 @@ class Agent(ABC):
 
             self.eod_status = "closed"
             self.current_day += 1
+
+            # settle all mtm to know the collateral, cash and PnL
+            self.settle_futures_mtm()
 
             # make position history a DF to enable quick filtering
             # self.position_history
