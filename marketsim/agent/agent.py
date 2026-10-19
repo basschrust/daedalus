@@ -55,7 +55,7 @@ class Agent(ABC):
         self.portfolio_value = Price(0)
         self.portfolio_value_history = defaultdict(Price)
 
-        self.position = { m_id: 0 for m_id  in self.markets }
+        self.position = { m_id: 0 for m_id  in self.markets } #TODO: stocks or all instruments?
         # for the MtM daily contracts:
         self.futures_position = { m_id: 0 for m_id, m
                                   in self.markets.items() if m.instrument_class == "future" }
@@ -74,7 +74,10 @@ class Agent(ABC):
         self.position_history = defaultdict(dict)
         self.position_history[0] = { m_id:0  for m_id  in self.markets }  # valid one day! {time: {asset_id: number_of_shares}}
                 # at the end of tick
-        self.position_history_df = None
+        self.position_history_df = None # TODO: is needed as attribute - local var suffices?
+        self.futures_position_history = defaultdict(dict)
+        self.futures_position_history[0] = {m_id: 0 for m_id, m
+                                 in self.markets.items() if m.instrument_class == "future"}
         self.cash = Price(0)
         self.cash_history = defaultdict(Price)
 
@@ -230,8 +233,9 @@ class Agent(ABC):
         # make sure the key will exist now:
 
         self.update_futures_position(quantity=quantity, contract=contract)
-        self.position_history[matched_order.time][contract_id] = (
-                self.position_history.get(matched_order.time, {}).get(matched_order.order.asset_id, 0) + quantity)
+        # TODO: the below history update encapsulate in the above function
+        self.futures_position_history[matched_order.time][contract_id] = (
+                self.futures_position_history.get(matched_order.time, {}).get(matched_order.order.asset_id, 0) + quantity)
 
         if matched_order.time in self.trade_history:
             # just add info
@@ -287,6 +291,9 @@ class Agent(ABC):
         self.position_history = defaultdict(dict)
         self.position_history[0] = { m_id: 0 for m_id in self.markets }
 
+        self.futures_position_history[0] = { m_id: 0 for m_id, market in self.markets.items()
+                                             if market.instrument_class == "future" }
+
         self.eod_status = "open"
         self.logger.info(f"Start-of-Day agent {self.agent_id} procedure of day: {self.current_day} completed.")
 
@@ -320,6 +327,32 @@ class Agent(ABC):
 
             self.logger.info(f"Position_history_df: {self.position_history_df.head()}")
             self.repository.save_position_history(position_history_df=self.position_history_df)
+
+            # and futures history
+            self.futures_position_history_df = (
+                pd.DataFrame.from_dict(self.futures_position_history, orient="index")
+                .rename_axis("time_tick")
+                .reset_index()
+                .melt(
+                    id_vars="time_tick",
+                    var_name="asset_id",
+                    value_name="position",
+                )
+            )
+
+            self.futures_position_history_df["agent_id"] = self.agent_id
+            self.futures_position_history_df["day"] = self.current_day - 1
+
+            self.logger.info(f"futures_position_history_df: {self.futures_position_history_df.head()}")
+            self.repository.save_futures_position_history(position_history_df=self.futures_position_history_df)
+
+            futures_position_df = pd.DataFrame(
+                self.futures_position.items(),
+                columns=["asset_id", "position"],
+            )
+            futures_position_df["agent_id"] = self.agent_id
+            futures_position_df["day"] = self.current_day - 1
+            self.repository.save_eod_futures_position(eod_position_df=futures_position_df)
 
             position_df = pd.DataFrame(
                 self.position.items(),
@@ -388,6 +421,7 @@ class Agent(ABC):
         eod_cash_df.rename(columns={"day": "time_step"}, inplace=True)
 
         eod_portfolio_values_df = self.repository.get_eod_portfolio_values(agent_id=self.agent_id)
+        # TODO: for futures contracts valuate using self.futures_value
         eod_portfolio_values_df.rename(columns={"day": "time_step"}, inplace=True)
 
         labels_map = { asset_id: security.short_name for asset_id, security

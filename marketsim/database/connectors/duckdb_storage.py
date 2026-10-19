@@ -98,15 +98,39 @@ class Repository:
 
         # End-of-Tick position (portfolio) of each agent, lowercase columns please!
         self.connection.execute("""
-            CREATE TABLE IF NOT EXISTS position_history (
-                day       INTEGER,
-                time_tick INTEGER,
-                agent_id  INTEGER,
-                asset_id  INTEGER,
-                position  INTEGER
-            )
-        """)
+                CREATE TABLE IF NOT EXISTS position_history (
+                    day       INTEGER,
+                    time_tick INTEGER,
+                    agent_id  INTEGER,
+                    asset_id  INTEGER,
+                    position  INTEGER
+                )
+            """)
         # deleted column: position_value DOUBLE
+
+        self.connection.execute("""
+                CREATE TABLE IF NOT EXISTS futures_position_history (
+                    day       INTEGER,
+                    time_tick INTEGER,
+                    agent_id  INTEGER,
+                    asset_id  INTEGER,
+                    position  INTEGER
+                )
+            """)
+
+        self.connection.execute("""
+                CREATE TABLE IF NOT EXISTS futures_value_history (
+                    day       INTEGER,
+                    time_tick INTEGER,
+                    agent_id  INTEGER,
+                    asset_id  INTEGER,
+                    position  INTEGER,
+                    avg_initial_price DOUBLE,
+                    collateral DOUBLE,
+                    unsettled_pnl DOUBLE,
+                    settlement_price DOUBLE,
+                )
+            """)
 
         # EoD position (portfolio) of each agent, lowercase columns please!
         self.connection.execute("""
@@ -118,6 +142,28 @@ class Repository:
                     )
                 """)
         # deleted column: position_value DOUBLE
+
+        self.connection.execute("""
+                    CREATE TABLE IF NOT EXISTS eod_futures_position (
+                        day       INTEGER,
+                        agent_id  INTEGER,
+                        asset_id  INTEGER,
+                        position  INTEGER
+                    )
+                """)
+
+        self.connection.execute("""
+                CREATE TABLE IF NOT EXISTS eod_futures_value (
+                    day       INTEGER,
+                    agent_id  INTEGER,
+                    asset_id  INTEGER,
+                    position  INTEGER,
+                    avg_initial_price DOUBLE,
+                    collateral DOUBLE,
+                    unsettled_pnl DOUBLE,
+                    settlement_price DOUBLE,
+                )
+            """)
 
         # portfolio value history
         self.connection.execute("""
@@ -344,6 +390,8 @@ class Repository:
                                      future.short_name
                                      ])
 
+    ###########################################################################################
+
     # the players :)
     def save_agent(self, agent: Agent) -> None:
         self.connection.execute("""
@@ -368,6 +416,19 @@ class Repository:
 
         self.connection.unregister("position_history_df")
 
+    def save_futures_position_history(self, position_history_df: pd.DataFrame) -> None:
+        # the same as position_history, but for the futures or derivatives as value calculation differs
+        self.connection.register("position_history_df", position_history_df)
+
+        self.connection.execute("""
+            INSERT INTO futures_position_history (day, time_tick, agent_id, asset_id, position)
+            SELECT day, time_tick, agent_id, asset_id, position
+            FROM position_history_df
+        """)
+        # deleted column: position_value
+
+        self.connection.unregister("position_history_df")
+
     def save_eod_position(self, eod_position_df: pd.DataFrame) -> None:
         self.connection.register("eod_position_df", eod_position_df)
 
@@ -379,6 +440,19 @@ class Repository:
         # deleted column: position_value
 
         self.connection.unregister("eod_position_df")
+
+    def save_eod_futures_position(self, eod_position_df: pd.DataFrame) -> None:
+        self.connection.register("eod_position_df", eod_position_df)
+
+        self.connection.execute("""
+            INSERT INTO eod_futures_position (day, agent_id, asset_id, position)
+            SELECT day, agent_id, asset_id, position
+            FROM eod_position_df
+        """)
+        # deleted column: position_value
+
+        self.connection.unregister("eod_position_df")
+
 
     def save_portfolio_value_history(self, portfolio_value_history_df: pd.DataFrame) -> None:
         self.connection.register("portfolio_value_history_df", portfolio_value_history_df)
@@ -458,17 +532,6 @@ class Repository:
 
         self.connection.unregister("eod_prices_df")
 
-    def save_eod_index_values(self, index_values_df: pd.DataFrame) -> None:
-        raise # TODO: moved to calculate
-        self.connection.register("eod_index_values_df", index_values_df)
-        # TODO: volume as cumulated weighted volume of stocks?
-        self.connection.execute("""
-            INSERT INTO eod_index_values (day, open, high, low, close)
-            SELECT day, open, high, low, close
-            FROM eod_index_values_df
-        """)
-        
-        self.connection.unregister("eod_index_values_df")
 
     def save_orders(self, orders_df: pd.DataFrame) -> None:
         # with duckdb.connect(self.localdb) as conn:

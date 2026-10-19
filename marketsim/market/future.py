@@ -47,10 +47,6 @@ class Future(Security):
             self.traded_prices[t]["theoretical"] = self.underlying.traded_prices[t]["close"]
 
     def plot_history(self, traded_prices: dict):
-        # fill the theoretical - simply index value,
-        # TODO: add correction on dividends and financing rate
-        # self.fill_theoretical_value()
-
         traded_prices_float = {t: {v: float(price_item) for v, price_item in item.items()}
                                for t, item in traded_prices.items()}
         df_candlestick = pd.DataFrame.from_dict(traded_prices_float,
