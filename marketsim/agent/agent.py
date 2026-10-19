@@ -128,10 +128,12 @@ class Agent(ABC):
                                 quantity: int,
                                 contract: Future,
                                 ) -> None:
+        self.logger.info(f"Updating futures position agent: {self} contract: {contract} quantity: {quantity}")
         # update the derivatives position of the agent
         if contract.asset_id not in self.futures_position:
             raise ValueError(f"Position:  {self.futures_position}. {contract.asset_id} not in position")
         current_position = self.futures_position[contract.asset_id]
+        self.futures_position[contract.asset_id] = current_position + quantity
         if current_position == 0:
             # initiating position on this contract
             collateral = contract.last_traded_price * contract.margin_rate * contract.multiplier
@@ -195,6 +197,7 @@ class Agent(ABC):
         # save valuation:
         self.portfolio_value_history[current_time] = self.portfolio_value
         self.position_history[current_time] = copy.deepcopy(self.position)
+        self.futures_position_history[current_time] = copy.deepcopy(self.futures_position)
         self.cash_history[current_time] = self.cash
 
     def record_trade(self, matched_order: MatchedOrder) -> None:
@@ -224,6 +227,7 @@ class Agent(ABC):
 
 
     def record_futures_trade(self, matched_order: MatchedOrder) -> None:
+        self.logger.info(f"Recording futures trade on futures {matched_order}")
         # TODO: fill this properly for trading futures
         quantity = matched_order.order.order_type * matched_order.order.quantity
         #cash = - Price(matched_order.price * matched_order.order.quantity * matched_order.order.order_type)
@@ -352,15 +356,16 @@ class Agent(ABC):
             )
             futures_position_df["agent_id"] = self.agent_id
             futures_position_df["day"] = self.current_day - 1
+            self.logger.info(f"")
             self.repository.save_eod_futures_position(eod_position_df=futures_position_df)
 
-            position_df = pd.DataFrame(
+            eod_position_df = pd.DataFrame(
                 self.position.items(),
                 columns=["asset_id", "position"],
             )
-            position_df["agent_id"] = self.agent_id
-            position_df["day"] = self.current_day - 1
-            self.repository.save_eod_position(eod_position_df=position_df)
+            eod_position_df["agent_id"] = self.agent_id
+            eod_position_df["day"] = self.current_day - 1
+            self.repository.save_eod_position(eod_position_df=eod_position_df)
 
             # portfolio_value_history:
             # by SQL or in Python?

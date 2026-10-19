@@ -34,6 +34,7 @@ class Future(Security):
         self.repository.save_future(self)
 
     def record_trade(self, matched_order: MatchedOrder) -> None:
+        self.logger.info(f"Recording trade on futures {matched_order}")
         self.last_traded_price = matched_order.price
         self.record_volume_and_price(matched_order=matched_order)
 
