@@ -1,5 +1,6 @@
 import pytest
 from typing import TYPE_CHECKING
+from decimal import Decimal
 
 from marketsim.agent import (Agent, NoiseAgent, HBLAgent, MMZOHAgent, MomentumAgent, OptionMMZOHAgent, SpoofingAgent,
         WashTradingAgent, ZIAgentNotInformed)
@@ -67,7 +68,7 @@ def test_sod_noise_agent(agent_noise: Agent):
 
     assert agent_noise is not None
     assert type(agent_noise) == NoiseAgent
-    assert agent_noise.cash == 0
+    assert agent_noise.cash == {'USD': Decimal('0.00'), 'EUR': Decimal('0.00'), 'PLN': Decimal('0.00')}
 
 
 # eod for each type:
@@ -77,7 +78,7 @@ def test_eod_noise_agent(agent_noise: Agent):
 
     assert agent_noise is not None
     assert type(agent_noise) == NoiseAgent
-    assert agent_noise.cash == 0
+    assert agent_noise.cash == {'USD': Decimal('0.00'), 'EUR': Decimal('0.00'), 'PLN': Decimal('0.00')}
 
 
 

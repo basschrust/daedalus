@@ -7,7 +7,7 @@ def test_expiration_removes_only_expired_future(
     futures_agents: dict[str, Agent], future_short: Future, future_long: Future
 ):
     agent = futures_agents["buyer"]
-    agent.cash = Price(100_000)
+    agent.cash = { "PLN": Price(100_000) }
 
     agent.update_futures_position(
         quantity=2, contract=future_short
@@ -35,7 +35,7 @@ def test_final_settlement_returns_collateral_and_pnl(
     futures_agents: dict[str, Agent], future_short: Future
 ):
     agent = futures_agents["buyer"]
-    agent.cash = Price(100_000)
+    agent.cash = { "PLN": Price(100_000) }
 
     agent.update_futures_position(
         quantity=2, contract=future_short
@@ -46,12 +46,12 @@ def test_final_settlement_returns_collateral_and_pnl(
 
     values["unsettled_pnl"] = Price(200)
 
-    cash_before = agent.cash
+    cash_before = agent.cash["PLN"]
     collateral = values["collateral"]
 
     agent.settle(future_short)
 
-    assert agent.cash == pytest.approx(
+    assert agent.cash["PLN"] == pytest.approx(
         cash_before + collateral + 200
     )
     assert agent.futures_position[contract_id] == 0

@@ -36,7 +36,8 @@ class Repository:
                     name STRING,
                     short_name STRING,
                     eod_status STRING,
-                    reference_price DOUBLE
+                    reference_price DOUBLE,
+                    currency STRING
                 )
             """)   # TODO: configuration STRING, for options and other derivatives
 
@@ -189,7 +190,8 @@ class Repository:
                 day       INTEGER,
                 time_tick INTEGER,
                 agent_id  INTEGER,
-                cash DOUBLE
+                cash DOUBLE,
+                currency STRING
             )
         """)
 
@@ -197,7 +199,8 @@ class Repository:
             CREATE TABLE IF NOT EXISTS agent_eod_cash (
                 day       INTEGER,
                 agent_id  INTEGER,
-                cash DOUBLE
+                cash DOUBLE,
+                currency STRING
             )
         """)
 
@@ -344,9 +347,10 @@ class Repository:
                 market_type,
                 name,
                 eod_status,
-                reference_price
+                reference_price,
+                currency
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """, parameters=[
             security.asset_id,
             security.instrument_class,
@@ -354,6 +358,7 @@ class Repository:
             security.name,
             security.eod_status,
             security.reference_price,
+            security.currency
         ])
 
     def save_index(self, index: Index) -> None:
@@ -503,8 +508,8 @@ class Repository:
     def save_cash_history(self, cash_history_df: pd.DataFrame) -> None:
         self.connection.register("cash_history_df", cash_history_df)
         self.connection.execute("""
-            INSERT INTO agent_cash_history (day, time_tick, agent_id, cash)
-            SELECT day, time_tick, agent_id, cash
+            INSERT INTO agent_cash_history (day, time_tick, agent_id, cash, currency)
+            SELECT day, time_tick, agent_id, cash, currency
             FROM cash_history_df
         """)
 
@@ -513,8 +518,8 @@ class Repository:
     def save_eod_cash(self, eod_cash_df: pd.DataFrame) -> None:
         self.connection.register("eod_cash_df", eod_cash_df)
         self.connection.execute("""
-            INSERT INTO agent_eod_cash (day, agent_id, cash)
-            SELECT day, agent_id, cash
+            INSERT INTO agent_eod_cash (day, agent_id, cash, currency)
+            SELECT day, agent_id, cash, currency
             FROM eod_cash_df
         """)
 

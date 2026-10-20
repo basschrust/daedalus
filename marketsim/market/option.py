@@ -70,12 +70,16 @@ class Option(Security):
                 pass
             else:
                 if self.option_side == "CALL":
-                    call_option = BSCall(S=price_row.get("close"), K=self.strike, r=self.r,
+                    call_option = BSCall(#S=price_row.get("close"),
+                                         S=self.underlying.traded_prices.get(t, {}).get("close"),
+                                         K=self.strike, r=self.r,
                                          volatility=self.volatility,
                                          Time=(self.expiration-self.current_day-1)/248, d=0.0)
                     price_row["theoretical"] = call_option.get("price", 100)
                 elif self.option_side == "PUT":
-                    put_option = BSPut(S=price_row.get("close"), K=self.strike, r=self.r,
+                    put_option = BSPut(# S=price_row.get("close"),
+                                        S=self.underlying.traded_prices.get(t,{}).get("close"),
+                                       K=self.strike, r=self.r,
                                          volatility=self.volatility,
                                          Time=(self.expiration-self.current_day-1)/248, d=0.0)
                     # TODO: check if this is called as of D (today) or as of D-1 (yesterday) during EoD
