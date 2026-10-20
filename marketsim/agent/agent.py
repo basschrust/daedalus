@@ -303,7 +303,7 @@ class Agent(ABC):
         self.portfolio_value_history[current_time] = self.portfolio_value
         self.position_history[current_time] = copy.deepcopy(self.position)
         self.futures_position_history[current_time] = copy.deepcopy(self.futures_position)
-        self.cash_history[current_time] = self.cash
+        self.cash_history[current_time] = copy.deepcopy(self.cash)
 
     def record_trade(self, matched_order: MatchedOrder) -> None:
         self.current_time = matched_order.time
