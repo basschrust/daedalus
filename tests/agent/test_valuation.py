@@ -1,5 +1,7 @@
 import pytest
 
+from decimal import Decimal
+
 from marketsim.market import Security, Price
 from marketsim.fourheap import Order
 from marketsim.agent import MMZOHAgent
@@ -48,8 +50,8 @@ def test_valuation_after_two_trades(stock_tnt: Security,
     for agent in [agent_mm, agent_noise]:
         agent.record_valuation(current_time=2)
 
-    assert agent_noise.cash == - Price(2025.00)
-    assert agent_mm.cash == Price(2025.00)
+    assert agent_noise.cash == {'USD': Decimal('0.00'), 'EUR': Decimal('0.00'), 'PLN': Decimal('-2025.00')}
+    assert agent_mm.cash == {'USD': Decimal('0.00'), 'EUR': Decimal('0.00'), 'PLN': Decimal('2025.00')}
     assert agent_mm.position.get(stock_tnt.asset_id) == -10
     assert agent_mm.position.get(stock_mit.asset_id) == -10
     assert agent_noise.position.get(stock_mit.asset_id) == 10

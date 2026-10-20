@@ -8,9 +8,9 @@ def test_opening_future_reserves_collateral(
     futures_agents, future_short
 ):
     buyer = futures_agents["buyer"]
-    buyer.cash = Price(100_000)
+    buyer.cash = { "PLN": Price(100_000) }
 
-    initial_cash = buyer.cash
+    initial_cash = buyer.cash["PLN"]
     buyer.update_futures_position(
         quantity=2,
         contract=future_short,
@@ -27,7 +27,7 @@ def test_opening_future_reserves_collateral(
     )
 
     assert collateral == pytest.approx(expected_collateral)
-    assert buyer.cash == pytest.approx(
+    assert buyer.cash["PLN"] == pytest.approx(
         initial_cash - expected_collateral
     )
     assert buyer.futures_position[contract_id] == 2
@@ -47,7 +47,7 @@ def test_opening_long_and_short_positions(
     quantity, expected_position,
 ):
     agent = futures_agents["buyer"]
-    agent.cash = Price(100_000)
+    agent.cash = { "PLN": Price(100_000) }
 
     agent.update_futures_position(
         quantity=quantity,
@@ -64,7 +64,7 @@ def test_increasing_position_does_not_double_count(
     futures_agents, future_short
 ):
     agent = futures_agents["buyer"]
-    agent.cash = Price(100_000)
+    agent.cash = { "PLN": Price(100_000) }
 
     agent.update_futures_position(
         quantity=2, contract=future_short
@@ -80,7 +80,7 @@ def test_closing_position_releases_collateral(
     futures_agents, future_short
 ):
     agent = futures_agents["buyer"]
-    initial_cash = Price(100_000)
+    initial_cash = { "PLN": Price(100_000) }
     agent.cash = initial_cash
 
     agent.update_futures_position(

@@ -11,7 +11,7 @@ def mtm_agents(futures_agents: dict[str, Agent], future_short: Future):
     seller = futures_agents["seller"]
 
     for agent in (buyer, seller):
-        agent.cash = Price(100_000)
+        agent.cash = { "PLN": Price(100_000) }
         agent.sod()
 
     buyer.update_futures_position(
@@ -55,7 +55,7 @@ def test_daily_mtm_long_profit(mtm_scenario):
     old_price = s["initial_price"]
     new_price = Price(old_price + 5)
 
-    cash_before = buyer.cash
+    cash_before = buyer.cash["PLN"]
     contract.last_traded_price = new_price
 
     buyer.eod()
@@ -65,7 +65,7 @@ def test_daily_mtm_long_profit(mtm_scenario):
         old_price, new_price,
     )
 
-    assert buyer.cash == cash_before + vm
+    assert buyer.cash["PLN"] == cash_before + vm
 
 
 def test_daily_mtm_short_loss(mtm_scenario):
@@ -76,7 +76,7 @@ def test_daily_mtm_short_loss(mtm_scenario):
     old_price = s["initial_price"]
     new_price = Price(old_price + 5)
 
-    cash_before = seller.cash
+    cash_before = seller.get_cash_balance(currency="PLN")
     contract.last_traded_price = new_price
 
     seller.eod()
@@ -86,7 +86,7 @@ def test_daily_mtm_short_loss(mtm_scenario):
         old_price, new_price,
     )
 
-    assert seller.cash == cash_before + vm
+    assert seller.cash["PLN"] == cash_before + vm
 
 
 def test_daily_mtm_zero_sum(mtm_scenario):
@@ -94,7 +94,7 @@ def test_daily_mtm_zero_sum(mtm_scenario):
     buyer, seller = s["buyer"], s["seller"]
     contract = s["contract"]
 
-    cash_before = buyer.cash + seller.cash
+    cash_before = buyer.cash["PLN"] + seller.cash["PLN"]
 
     contract.last_traded_price = Price(
         s["initial_price"] + 7
@@ -103,7 +103,7 @@ def test_daily_mtm_zero_sum(mtm_scenario):
     buyer.eod()
     seller.eod()
 
-    assert buyer.cash + seller.cash == cash_before
+    assert buyer.cash["PLN"] + seller.cash["PLN"] == cash_before
 
 
 def test_mtm_resets_unsettled_pnl(mtm_scenario):
@@ -178,7 +178,7 @@ def test_mtm_over_multiple_days(mtm_scenario):
     contract = s["contract"]
 
     initial_price = s["initial_price"]
-    initial_cash = buyer.cash
+    initial_cash = buyer.cash["PLN"]
 
     # Price movements relative to opening price
     daily_changes = [5, -3, 8]
@@ -200,7 +200,7 @@ def test_mtm_over_multiple_days(mtm_scenario):
 
         buyer.eod()
 
-        assert buyer.cash == (
+        assert buyer.cash["PLN"] == (
             initial_cash + expected_cumulative_vm
         )
 
@@ -227,7 +227,7 @@ def test_settlement_is_independent_between_contracts(
     future_long,
 ):
     buyer = futures_agents["buyer"]
-    buyer.cash = Price(100_000)
+    buyer.cash = { "PLN": Price(100_000) }
     buyer.sod()
 
     buyer.update_futures_position(
@@ -243,7 +243,7 @@ def test_settlement_is_independent_between_contracts(
     short_price = Price(future_short.last_traded_price)
     long_price = Price(future_long.last_traded_price)
 
-    cash_before = buyer.cash
+    cash_before = buyer.cash["PLN"]
 
     future_short.last_traded_price = Price(short_price + 5)
     future_long.last_traded_price = Price(long_price - 3)
@@ -255,7 +255,7 @@ def test_settlement_is_independent_between_contracts(
         - future_long.multiplier * 3
     )
 
-    assert buyer.cash == (
+    assert buyer.cash["PLN"] == (
         cash_before + Price(expected_cash_change)
     )
 

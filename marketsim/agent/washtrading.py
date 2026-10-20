@@ -217,7 +217,7 @@ class WashTradingAgent(Agent):
 
     def reset(self):
         self.position = 0
-        self.cash = 0
+        # self.cash = 0
 
     def get_pos_value(self) -> float:
         return 0

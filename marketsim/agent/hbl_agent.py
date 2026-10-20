@@ -54,7 +54,7 @@ class HBLAgent(Agent):
         else:
             self.pv = PrivateValues(final_configuration["q_max"], float(final_configuration["pv_var"]))
         self.shade = final_configuration["shade"]
-        self.cash = 0
+        # self.cash = 0
         self.L = final_configuration["L"]
         self.grace_period = 1 / final_configuration["arrival_rate"]
         self.lower_bound_mem = 0

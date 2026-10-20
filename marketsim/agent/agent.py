@@ -68,7 +68,6 @@ class Agent(ABC):
             }
             for m_id in self.futures_position
         }
-        # self.futures_value = {}  # asset_id -> current unsettled P&L
 
         # all assets:
         self.position_history = defaultdict(dict)
@@ -82,8 +81,14 @@ class Agent(ABC):
         self.futures_value_history = defaultdict(dict)
 
         # cash
-        self.cash = Price(0)
-        self.cash_history = defaultdict(Price)
+        # self.cash = Price(0)
+        # self.cash_history = defaultdict(Price)
+        self.cash = {
+            "USD": Price(0),
+            "EUR": Price(0),
+            "PLN": Price(0),
+        }
+        self.cash_history = defaultdict(dict)
 
         self.repository = repository
 
@@ -123,12 +128,88 @@ class Agent(ABC):
     def get_pos_value(self) -> float:
         pass
 
-    def update_position(self, quantity: int, cash: Price, asset_id: int) -> None:
+    ##################################################################################
+    ##              cash manipulation methods
+    ##################################################################################
+
+    def get_cash_balance(self, *, currency: str="PLN") -> Price:
+        """Return cash balance in the specified currency."""
+        return self.cash.get(currency, Price(0))
+
+    def get_cash_balance_all_currencies(self):
+        return self.cash
+
+    def credit_cash(self, *, amount: Price, currency: str="PLN") -> None:
+        """Credit cash in the specified currency."""
+        amount = Price(amount)
+
+        if amount < 0:
+            raise ValueError("Credit amount cannot be negative")
+
+        self.cash[currency] = (
+                self.get_cash_balance(currency=currency) + amount
+        )
+
+    def debit_cash(
+            self,
+            *,
+            amount: Price,
+            currency: str="PLN",
+            allow_negative: bool = True,
+    ) -> None:
+        """Debit cash in the specified currency."""
+        amount = Price(amount)
+
+        if amount < 0:
+            raise ValueError("Debit amount cannot be negative")
+
+        balance = self.get_cash_balance(currency=currency)
+
+        if not allow_negative and balance < amount:
+            raise ValueError(
+                f"Insufficient {currency} cash: "
+                f"available={balance}, required={amount}"
+            )
+
+        self.cash[currency] = balance - amount
+
+    def transfer_cash(
+            self,
+            *,
+            recipient: "Agent",
+            currency: str,
+            amount: Price,
+            allow_negative: bool = True,
+    ) -> None:
+        """Transfer cash between two agents."""
+        amount = Price(amount)
+
+        if amount < 0:
+            raise ValueError("Transfer amount cannot be negative")
+
+        self.debit_cash(
+            currency=currency,
+            amount=amount,
+            allow_negative=allow_negative,
+        )
+
+        recipient.credit_cash(
+            currency=currency,
+            amount=amount,
+        )
+
+    #### position manipulation
+
+    def update_position(self, *, quantity: int, cash: Price, asset_id: int, currency: str = 'PLN') -> None:
         validate_update(quantity=quantity, cash=cash)
         if asset_id not in self.position:
             raise ValueError(f"Position:  {self.position}. {asset_id} not in position")
         self.position[asset_id] += quantity
-        self.cash += cash
+        #self.cash += cash
+        if cash > 0:
+            self.credit_cash(currency=currency, amount=cash)
+        else:
+            self.debit_cash(currency=currency, amount=-cash)
 
     def update_futures_position(self, *,
                                 quantity: int,
@@ -149,7 +230,11 @@ class Agent(ABC):
         )
         old_collateral = self.futures_value[contract.asset_id]["collateral"]
         collateral_change = required_collateral - old_collateral
-        self.cash -= collateral_change
+        # self.cash -= collateral_change
+        if collateral_change > 0:
+            self.debit_cash(currency=contract.currency, amount=collateral_change)
+        else:
+            self.credit_cash(currency=contract.currency, amount=-collateral_change)
         if current_position == 0:
             # initiating position on this contract
             # collateral = contract.last_traded_price * contract.margin_rate * contract.multiplier
@@ -192,7 +277,7 @@ class Agent(ABC):
 
     def reset(self) -> None:
         self.position = { m_id: 0 for m_id  in self.markets}
-        self.cash = Price(0)
+        # self.cash = Price(0) # TODO: is it ever needed?
 
     def is_market_maker(self) -> bool:
         raise # this is utterly deprecated
@@ -203,7 +288,9 @@ class Agent(ABC):
         # saving value of agents portfolio
 
         # valuation by last trade:
-        self.portfolio_value = self.cash
+        # self.portfolio_value = self.cash
+        # TODO: add multiccy valuation
+        self.portfolio_value = self.get_cash_balance()
         for asset_id, market in self.markets.items():
             self.portfolio_value += int(self.position[asset_id]) * market.last_traded_price
 
@@ -216,7 +303,7 @@ class Agent(ABC):
         self.portfolio_value_history[current_time] = self.portfolio_value
         self.position_history[current_time] = copy.deepcopy(self.position)
         self.futures_position_history[current_time] = copy.deepcopy(self.futures_position)
-        self.cash_history[current_time] = self.cash
+        self.cash_history[current_time] = copy.deepcopy(self.cash)
 
     def record_trade(self, matched_order: MatchedOrder) -> None:
         self.current_time = matched_order.time
@@ -284,7 +371,12 @@ class Agent(ABC):
         # "collateral": target_collateral,
         # "unsettled_pnl": Price(0),
         ft_val = self.futures_value[contract.asset_id]
-        self.cash += ft_val["collateral"] + ft_val["unsettled_pnl"]
+        # self.cash += ft_val["collateral"] + ft_val["unsettled_pnl"]
+        freed_cash = ft_val["collateral"] + ft_val["unsettled_pnl"]
+        if freed_cash > 0:
+            self.credit_cash(currency=contract.currency, amount=freed_cash)
+        else:
+            self.debit_cash(currency=contract.currency, amount=-freed_cash)
         # what about settlement_price?
         self.futures_position[contract.asset_id] = 0
         self.futures_value.pop(contract.asset_id) # delete the contract from analysis
@@ -316,7 +408,11 @@ class Agent(ABC):
             )
 
             # Daily cash settlement
-            self.cash += vm
+            # self.cash += vm
+            if vm > 0 :
+                self.credit_cash(amount=vm, currency=contract.currency)
+            else:
+                self.debit_cash(amount=-vm, currency=contract.currency)
 
             # Roll the reference price forward
             values["settlement_price"] = current_price
@@ -329,7 +425,7 @@ class Agent(ABC):
         self.current_time = 0
 
         self.portfolio_value_history = defaultdict(Price)
-        self.cash_history = defaultdict(Price)
+        self.cash_history = defaultdict(dict)
 
         # drop expired securities from portfolio
         expired_securities = { m_id: market for m_id, market in self.markets.items()
@@ -464,7 +560,7 @@ class Agent(ABC):
             self.repository.save_portfolio_value_history(portfolio_value_history_df=value_history_df)
 
             # cash history
-            cash_history_df = pd.DataFrame.from_dict(self.cash_history, orient="index", columns=["cash"])
+            cash_history_df = pd.DataFrame.from_dict(self.cash_history, orient="index", columns=["cash", "currency"])
             cash_history_df["time_tick"] = cash_history_df.index
             cash_history_df["day"] = self.current_day - 1
             cash_history_df["agent_id"] = self.agent_id
@@ -474,15 +570,19 @@ class Agent(ABC):
             self.repository.save_cash_history(cash_history_df=cash_history_df)
 
             # save eod_cash and eod_portfolio_value
-            eod_cash_df = pd.DataFrame([{ "day": self.current_day-1,
-                                                        "agent_id": self.agent_id,
-                                                        "cash": self.cash,
-                                                        }])
+            rows = []
+            for ccy, amount in self.get_cash_balance_all_currencies().items():
+                rows.append({"day": self.current_day - 1,
+                          "agent_id": self.agent_id,
+                          "cash": amount,
+                          "currency": ccy
+                          })
+            eod_cash_df = pd.DataFrame(rows)
             self.logger.info(f"eod_cash_df: {eod_cash_df.head()}")
             self.repository.save_eod_cash(eod_cash_df=eod_cash_df)
 
             # calculate and save portfolio value
-            self.portfolio_value = self.cash  # cash already includes today's option premiums
+            self.portfolio_value = self.get_cash_balance() # cash  # cash already includes today's option premiums
             for asset_id, market in self.markets.items():
                 self.portfolio_value += self.position[asset_id] * market.last_traded_price
 

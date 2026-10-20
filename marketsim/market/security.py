@@ -28,7 +28,7 @@ class Security:
     def __init__(self, *, reference_price: Price |None = None, name: str|None=None,
                  repository: Repository,
                  market_type: str = "discrete", instrument_class: str = "stock",
-                 short_name: str | None = None, output_dir: str|Path = "tmp") -> None:
+                 short_name: str | None = None, output_dir: str|Path = "tmp", currency: str = "PLN") -> None:
         self.asset_id = id_generator.next()
         self.instrument_class = instrument_class
         if short_name is None:
@@ -58,6 +58,7 @@ class Security:
         self.status = "active"
         self.repository = repository
         self.output_dir = output_dir
+        self.currency = currency
         self.indices_member = {} # index_id: Index
 
         self.save()

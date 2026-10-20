@@ -243,7 +243,7 @@ def test_save_eod_cash(repository: Repository,
     ret = repository.connection.execute("""SELECT *
             FROM agent_eod_cash""").fetch_df()
 
-    assert ret.shape == (2, 3)
+    assert ret.shape == (6, 4)
 
 def test_save_eod_cash_2(repository: Repository,
                        agent_sophisticated_1: Agent):
@@ -256,7 +256,7 @@ def test_save_eod_cash_2(repository: Repository,
     ret = repository.connection.execute("""SELECT *
             FROM agent_eod_cash""").fetch_df()
 
-    assert ret.shape == (3, 3)
+    assert ret.shape == (9, 4)
 
 
 def test_save_traded_prices(repository: Repository):

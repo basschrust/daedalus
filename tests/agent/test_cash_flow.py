@@ -1,12 +1,13 @@
 import pytest
 
+from decimal import Decimal
+
 from marketsim.market import Security, Price
 from marketsim.fourheap import Order
 from marketsim.agent import MMZOHAgent
 from marketsim.market import Security
 from marketsim.agent import NoiseAgent, Agent
 from tests.conftest import stock_tnt
-
 
 
 
@@ -30,10 +31,10 @@ def test_cf_1(stock_tnt: Security,
     for matched_order in new_orders_matched:
         stock_tnt.record_trade(matched_order=matched_order)
 
-    assert agent_noise.cash == Price(- 1010.00)
+    assert agent_noise.cash == {'USD': Decimal('0.00'), 'EUR': Decimal('0.00'), 'PLN': Decimal('-1010.00')}
     assert agent_noise.agent_id == buy_order_101_tnt.agent_id
     assert agent_noise.position.get(stock_tnt.asset_id) == 10, "Inventory should be 10 - equal to the order volume"
-    assert agent_mm.cash == Price(1010.00)
+    assert agent_mm.cash == {'USD': Decimal('0.00'), 'EUR': Decimal('0.00'), 'PLN': Decimal('1010.00')}
     assert agent_mm.agent_id == sell_order_99_tnt.agent_id
     assert agent_mm.position.get(stock_tnt.asset_id) == -10, "Inventory should be -10 - equal to the order volume but negative"
     # TODO: inspect the security stats, too
@@ -49,8 +50,8 @@ def test_cf_after_sod(stock_tnt: Security,
     stock_mit.sod()
     stock_tnt.sod()
 
-    assert agent_noise.cash == Price(0.00)
-    assert agent_mm.cash == Price(0.00)
+    assert agent_noise.cash == {'USD': Decimal('0.00'), 'EUR': Decimal('0.00'), 'PLN': Decimal('0.00')}
+    assert agent_mm.cash == {'USD': Decimal('0.00'), 'EUR': Decimal('0.00'), 'PLN': Decimal('0.00')}
     assert agent_mm.position.get(stock_tnt.asset_id) == 0
     assert agent_mm.position.get(stock_mit.asset_id) == 0
     assert agent_noise.position.get(stock_mit.asset_id) == 0
@@ -91,8 +92,8 @@ def test_cf_after_two_trades(stock_tnt: Security,
     for matched_order in new_orders_matched:
         stock_mit.record_trade(matched_order=matched_order)
 
-    assert agent_noise.cash == - Price(2025.00)
-    assert agent_mm.cash == Price(2025.00)
+    assert agent_noise.cash == {'USD': Decimal('0.00'), 'EUR': Decimal('0.00'), 'PLN': Decimal('-2025.00')}
+    assert agent_mm.cash == {'USD': Decimal('0.00'), 'EUR': Decimal('0.00'), 'PLN': Decimal('2025.00')}
     assert agent_mm.position.get(stock_tnt.asset_id) == -10
     assert agent_mm.position.get(stock_mit.asset_id) == -10
     assert agent_noise.position.get(stock_mit.asset_id) == 10

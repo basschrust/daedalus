@@ -111,7 +111,7 @@ class ZIAgentNotInformed(Agent):
 
     def reset(self) -> None:
         self.position = 0
-        self.cash = 0
+        # self.cash = 0
         self.pv = PrivateValues(self.q_max, self.pv_var)
         self._order_counter = 0
 

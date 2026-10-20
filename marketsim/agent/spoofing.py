@@ -122,7 +122,7 @@ class SpoofingAgent(Agent):
     def reset(self):
         self.pv = PrivateValues(self.q_max, self.pv_var)
         self.position = 0
-        self.cash = 0
+        # self.cash = 0
         self.last_value = 0
 
 
