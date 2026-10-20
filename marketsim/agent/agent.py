@@ -18,7 +18,7 @@ from marketsim.market.price import Price
 
 if TYPE_CHECKING:
     from marketsim.fourheap import MatchedOrder
-    from marketsim.market import Security
+    from marketsim.market import Security, Future
     from database.connectors.duckdb_storage import Repository
 
 
@@ -55,19 +55,42 @@ class Agent(ABC):
         self.portfolio_value = Price(0)
         self.portfolio_value_history = defaultdict(Price)
 
-        self.position = { m_id: 0 for m_id  in self.markets }
+        self.position = { m_id: 0 for m_id  in self.markets } #TODO: stocks or all instruments?
+        # for the MtM daily contracts:
+        self.futures_position = { m_id: 0 for m_id, m
+                                  in self.markets.items() if m.instrument_class == "future" }
+        self.futures_value = {
+            m_id: {
+                "avg_initial_price": Price(0),
+                "settlement_price": Price(0),
+                "collateral": Price(0),
+                "unsettled_pnl": Price(0),
+            }
+            for m_id in self.futures_position
+        }
+        # self.futures_value = {}  # asset_id -> current unsettled P&L
 
+        # all assets:
         self.position_history = defaultdict(dict)
         self.position_history[0] = { m_id:0  for m_id  in self.markets }  # valid one day! {time: {asset_id: number_of_shares}}
                 # at the end of tick
-        self.position_history_df = None
+        self.position_history_df = None # TODO: is needed as attribute - local var suffices?
+        # futures (or derivatives):
+        self.futures_position_history = defaultdict(dict)
+        self.futures_position_history[0] = {m_id: 0 for m_id, m
+                                 in self.markets.items() if m.instrument_class == "future"}
+        self.futures_value_history = defaultdict(dict)
+
+        # cash
         self.cash = Price(0)
         self.cash_history = defaultdict(Price)
 
         self.repository = repository
 
         self.eod_status = "open" # open/closed  to make eod procedure idempotent
+        # TODO: start with closed - no trading before sod() is finished !
         self.current_day = 0
+        self.current_time = 0
 
         self.output_dir = output_dir
         # setup_logger(subject="agent", subject_id=self.agent_id)
@@ -107,6 +130,66 @@ class Agent(ABC):
         self.position[asset_id] += quantity
         self.cash += cash
 
+    def update_futures_position(self, *,
+                                quantity: int,
+                                contract: Future,
+                                ) -> None:
+        self.logger.info(f"Updating futures position agent: {self} contract: {contract} quantity: {quantity}")
+        # update the derivatives position of the agent
+        if contract.asset_id not in self.futures_position:
+            raise ValueError(f"Position:  {self.futures_position}. {contract.asset_id} not in position")
+        current_position = self.futures_position[contract.asset_id]
+        new_position = current_position + quantity
+        self.futures_position[contract.asset_id] = new_position
+        required_collateral = (
+                abs(new_position)
+                * contract.last_traded_price
+                * contract.multiplier
+                * contract.margin_rate
+        )
+        old_collateral = self.futures_value[contract.asset_id]["collateral"]
+        collateral_change = required_collateral - old_collateral
+        self.cash -= collateral_change
+        if current_position == 0:
+            # initiating position on this contract
+            # collateral = contract.last_traded_price * contract.margin_rate * contract.multiplier
+            self.futures_value[contract.asset_id] = {
+                "avg_initial_price": contract.last_traded_price, # the current price
+                "settlement_price": contract.last_traded_price,
+                "collateral": required_collateral,
+                "unsettled_pnl": Price(0),
+            }
+        elif current_position == - quantity:
+            # squaring /closing the position
+            # freed_collateral = self.futures_value[contract.asset_id]["collateral"]
+            # self.cash += freed_collateral
+            # TODO: depending on the price, there might be some unsettled_pnl to add to cash?
+            self.futures_position[contract.asset_id] = 0
+            self.futures_value[contract.asset_id] = {
+                "avg_initial_price": contract.last_traded_price,  # the current price
+                "settlement_price": contract.last_traded_price,
+                "collateral": Price(0),
+                "unsettled_pnl": Price(0),
+            }
+        else:
+            # existing_collateral = self.futures_value[contract.asset_id]["collateral"]
+            # target_collateral = contract.last_traded_price * contract.margin_rate * contract.multiplier
+            # changing contract position - keeping it open with different size
+            # self.futures_position[contract.asset_id] += quantity
+            # self.cash -= target_collateral - existing_collateral
+
+            total_pos = current_position + quantity
+            old_price = self.futures_value[contract.asset_id]["avg_initial_price"]
+            avg_initial_price = (old_price * current_position + contract.last_traded_price * quantity) / total_pos
+            # TODO: calculate this
+            self.futures_value[contract.asset_id] = {
+                "avg_initial_price": avg_initial_price,  # the current price
+                "settlement_price": contract.last_traded_price,
+                "collateral": required_collateral,
+                "unsettled_pnl": Price(0),
+            }
+        self.futures_value_history[self.current_time] = copy.deepcopy(self.futures_value)
+
     def reset(self) -> None:
         self.position = { m_id: 0 for m_id  in self.markets}
         self.cash = Price(0)
@@ -116,6 +199,7 @@ class Agent(ABC):
         return False
 
     def record_valuation(self, current_time: int) -> None:
+        self.current_time = current_time
         # saving value of agents portfolio
 
         # valuation by last trade:
@@ -123,12 +207,19 @@ class Agent(ABC):
         for asset_id, market in self.markets.items():
             self.portfolio_value += int(self.position[asset_id]) * market.last_traded_price
 
+        # TODO: add futures - collateral + unsettled_pnl
+        for contract_id, ft_val in self.futures_value.items():
+            self.portfolio_value += ft_val["collateral"]
+            self.portfolio_value += ft_val["unsettled_pnl"]
+
         # save valuation:
         self.portfolio_value_history[current_time] = self.portfolio_value
         self.position_history[current_time] = copy.deepcopy(self.position)
+        self.futures_position_history[current_time] = copy.deepcopy(self.futures_position)
         self.cash_history[current_time] = self.cash
 
     def record_trade(self, matched_order: MatchedOrder) -> None:
+        self.current_time = matched_order.time
         quantity = matched_order.order.order_type * matched_order.order.quantity
         cash = - Price(matched_order.price * matched_order.order.quantity * matched_order.order.order_type)
 
@@ -154,8 +245,88 @@ class Agent(ABC):
                                                  } }
 
 
+    def record_futures_trade(self, matched_order: MatchedOrder) -> None:
+        self.logger.info(f"Recording futures trade on futures {matched_order}")
+        # TODO: fill this properly for trading futures
+        quantity = matched_order.order.order_type * matched_order.order.quantity
+        #cash = - Price(matched_order.price * matched_order.order.quantity * matched_order.order.order_type)
+        # cash to collateral, both sides - so no matter if bought or sold
+        contract_id = matched_order.order.asset_id
+        contract = self.markets[contract_id]
+        # make sure the key will exist now:
+
+        self.update_futures_position(quantity=quantity, contract=contract)
+        # TODO: the below history update encapsulate in the above function
+        self.futures_position_history[matched_order.time][contract_id] = (
+                self.futures_position_history.get(matched_order.time, {}).get(matched_order.order.asset_id, 0) + quantity)
+
+        if matched_order.time in self.trade_history:
+            # just add info
+            old = self.trade_history.get(matched_order.time, {}).get(matched_order.order.asset_id, {})
+            if old:
+                self.trade_history[matched_order.time][matched_order.order.asset_id] = {"trades": old["trades"]+1,
+                                                               "volume": old["volume"] + abs(matched_order.order.quantity),}
+            else:
+                # first trade on this security on this date:
+                self.trade_history[matched_order.time][matched_order.order.asset_id] =\
+                            {"trades": 1, "volume": abs(matched_order.order.quantity),
+                                                }
+        else:
+            # first trade this day
+            self.trade_history[matched_order.time] = { matched_order.order.asset_id:
+                                                {"trades": 1, "volume": abs(matched_order.order.quantity),
+                                                 } }
+
+    def settle(self, contract):
+        # final day settlement
+        # "avg_initial_price": avg_initial_price,  # the current price
+        # "settlement_price": contract.last_traded_price,
+        # "collateral": target_collateral,
+        # "unsettled_pnl": Price(0),
+        ft_val = self.futures_value[contract.asset_id]
+        self.cash += ft_val["collateral"] + ft_val["unsettled_pnl"]
+        # what about settlement_price?
+        self.futures_position[contract.asset_id] = 0
+        self.futures_value.pop(contract.asset_id) # delete the contract from analysis
+        self.abandoned_markets[contract.asset_id] = contract
+        self.markets.pop(contract.asset_id)
+        # TODO: porftolio value
+
+    def settle_futures_mtm(self) -> None:
+        """
+        Settle daily variation margin for all active futures.
+
+        Each contract is settled against its previous
+        settlement reference price.
+        """
+        for asset_id, position in self.futures_position.items():
+            if position == 0:
+                continue
+
+            contract = self.markets[asset_id]
+            values = self.futures_value[asset_id]
+
+            previous_price = values["settlement_price"]
+            current_price = contract.last_traded_price
+
+            vm = Price(
+                position
+                * contract.multiplier
+                * (current_price - previous_price)
+            )
+
+            # Daily cash settlement
+            self.cash += vm
+
+            # Roll the reference price forward
+            values["settlement_price"] = current_price
+
+            # Variation margin has been paid
+            values["unsettled_pnl"] = Price(0)
+
     def sod(self):
         self.logger.info(f"Starting agent {self.agent_id} Start-of-Day procedure of day: {self.current_day}")
+        self.current_time = 0
 
         self.portfolio_value_history = defaultdict(Price)
         self.cash_history = defaultdict(Price)
@@ -174,6 +345,10 @@ class Agent(ABC):
         self.position_history = defaultdict(dict)
         self.position_history[0] = { m_id: 0 for m_id in self.markets }
 
+        self.futures_position_history[0] = { m_id: 0 for m_id, market in self.markets.items()
+                                             if market.instrument_class == "future" }
+        self.futures_value_history[0] = {}
+
         self.eod_status = "open"
         self.logger.info(f"Start-of-Day agent {self.agent_id} procedure of day: {self.current_day} completed.")
 
@@ -189,7 +364,9 @@ class Agent(ABC):
             self.eod_status = "closed"
             self.current_day += 1
 
-            # run the EoD procedure
+            # settle all mtm to know the collateral, cash and PnL
+            self.settle_futures_mtm()
+
             # make position history a DF to enable quick filtering
             # self.position_history
             self.position_history_df = (
@@ -209,13 +386,71 @@ class Agent(ABC):
             self.logger.info(f"Position_history_df: {self.position_history_df.head()}")
             self.repository.save_position_history(position_history_df=self.position_history_df)
 
-            position_df = pd.DataFrame(
+            # and futures history
+            self.futures_position_history_df = (
+                pd.DataFrame.from_dict(self.futures_position_history, orient="index")
+                .rename_axis("time_tick")
+                .reset_index()
+                .melt(
+                    id_vars="time_tick",
+                    var_name="asset_id",
+                    value_name="position",
+                )
+            )
+
+            self.futures_position_history_df["agent_id"] = self.agent_id
+            self.futures_position_history_df["day"] = self.current_day - 1
+
+            self.logger.info(f"futures_position_history_df: {self.futures_position_history_df.head()}")
+            self.repository.save_futures_position_history(position_history_df=self.futures_position_history_df)
+
+            futures_position_df = pd.DataFrame(
+                self.futures_position.items(),
+                columns=["asset_id", "position"],
+            )
+            futures_position_df["agent_id"] = self.agent_id
+            futures_position_df["day"] = self.current_day - 1
+            self.logger.info(f"")
+            self.repository.save_eod_futures_position(eod_position_df=futures_position_df)
+
+            # saving the values of futures
+            rows = []
+            for time_tick, contracts in self.futures_value_history.items():
+                for asset_id, values in contracts.items():
+                    rows.append({
+                        "day": self.current_day-1,
+                        "time_tick": time_tick,
+                        "agent_id": self.agent_id,
+                        "asset_id": asset_id,
+                        "position": self.futures_position_history.get(time_tick, {}).get(asset_id, 0),
+                        **values,
+                    })
+            if rows:
+                # unbelievable - can this happen for agents not trading futures?
+                futures_value_history_df = pd.DataFrame(rows)
+                self.repository.save_futures_value_history(futures_value_df=futures_value_history_df)
+
+            eod_futures_value_df = pd.DataFrame([
+                {
+                    "day": self.current_day - 1,
+                    "agent_id": self.agent_id,
+                    "asset_id": asset_id,
+                    "position": self.futures_position.get(asset_id, 0),
+                    **values,
+                }
+                for asset_id, values in self.futures_value.items()
+            ])
+            if not eod_futures_value_df.empty:
+                self.logger.info(f"Save eod_futures_value_df: {eod_futures_value_df}")
+                self.repository.save_eod_futures_value(eod_futures_value_df=eod_futures_value_df)
+
+            eod_position_df = pd.DataFrame(
                 self.position.items(),
                 columns=["asset_id", "position"],
             )
-            position_df["agent_id"] = self.agent_id
-            position_df["day"] = self.current_day - 1
-            self.repository.save_eod_position(eod_position_df=position_df)
+            eod_position_df["agent_id"] = self.agent_id
+            eod_position_df["day"] = self.current_day - 1
+            self.repository.save_eod_position(eod_position_df=eod_position_df)
 
             # portfolio_value_history:
             # by SQL or in Python?
@@ -268,12 +503,24 @@ class Agent(ABC):
         positions_df = self.repository.get_eod_positions(agent_id=self.agent_id)
         positions_df.rename(columns={"day": "time_step"}, inplace=True)
 
+        futures_positions_df = self.repository.get_eod_futures_positions(agent_id=self.agent_id)
+        futures_positions_df.rename(columns={"day": "time_step"}, inplace=True)
+
+        # overwriting futures_position as in positions_df they are zeros
+        positions_df = (
+            pd.concat([futures_positions_df, positions_df], ignore_index=True)
+            .drop_duplicates(subset=["time_step", "asset_id"], keep="first")
+            .sort_values(["time_step", "asset_id"])
+            .reset_index(drop=True)
+        )
+
         self.logger.info(f"Plotting eod positions for {self.agent_id} ...")
         # self.logger.info(f"{positions_df.head(100)}")
         eod_cash_df = self.repository.get_eod_cash(agent_id=self.agent_id)
         eod_cash_df.rename(columns={"day": "time_step"}, inplace=True)
 
         eod_portfolio_values_df = self.repository.get_eod_portfolio_values(agent_id=self.agent_id)
+        # TODO: for futures contracts valuate using self.futures_value
         eod_portfolio_values_df.rename(columns={"day": "time_step"}, inplace=True)
 
         labels_map = { asset_id: security.short_name for asset_id, security

@@ -77,7 +77,10 @@ class MMZOHAgent(Agent):
         return False
 
     def take_action(self, current_time: int):
+        # TODO: the current_time argument should be replaced to take the self.current_time
         for asset_id, market in self.markets.items():
+            if market.instrument_class == "index":
+                continue
             orders = []
             # add orders only in rebalance periods:
             if self.should_rebalance(current_time):

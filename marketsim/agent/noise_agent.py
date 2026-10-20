@@ -47,6 +47,8 @@ class NoiseAgent(Agent):
 
     def take_action(self, current_time: int) -> None:
         for asset_id, market in self.markets.items():
+            if market.instrument_class == "index":
+                continue
             orders = []
             if random.random() < self.lam:
                 if self.withdraw_old:

@@ -11,7 +11,7 @@ from marketsim.loggers.basic import terminal
 
 if TYPE_CHECKING:
     from marketsim.agent import Agent
-    from marketsim.market import Security, Index
+    from marketsim.market import Security, Index, Future
 
 # TODO: create some base class with abstract methods, use instances depending on the configuration
 class Repository:
@@ -59,6 +59,19 @@ class Repository:
                 )
             """)
 
+        # future contracts on indices / underlying_type stock/index
+        self.connection.execute("""
+            CREATE TABLE IF NOT EXISTS futures (
+                    contract_id INTEGER,
+                    underlying_type STRING,
+                    underlying_id INTEGER,
+                    expiration_day INTEGER,
+                    multiplier DOUBLE,
+                    margin_rate DOUBLE,
+                    name STRING,
+                    short_name STRING
+                )
+            """)
 
         # derivatives
         self.connection.execute("""
@@ -85,19 +98,43 @@ class Repository:
 
         # End-of-Tick position (portfolio) of each agent, lowercase columns please!
         self.connection.execute("""
-            CREATE TABLE IF NOT EXISTS position_history (
-                day       INTEGER,
-                time_tick INTEGER,
-                agent_id  INTEGER,
-                asset_id  INTEGER,
-                position  INTEGER
-            )
-        """)
+                CREATE TABLE IF NOT EXISTS agent_position_history (
+                    day       INTEGER,
+                    time_tick INTEGER,
+                    agent_id  INTEGER,
+                    asset_id  INTEGER,
+                    position  INTEGER
+                )
+            """)
         # deleted column: position_value DOUBLE
+
+        self.connection.execute("""
+                CREATE TABLE IF NOT EXISTS agent_futures_position_history (
+                    day       INTEGER,
+                    time_tick INTEGER,
+                    agent_id  INTEGER,
+                    asset_id  INTEGER,
+                    position  INTEGER
+                )
+            """)
+
+        self.connection.execute("""
+                CREATE TABLE IF NOT EXISTS agent_futures_value_history (
+                    day       INTEGER,
+                    time_tick INTEGER,
+                    agent_id  INTEGER,
+                    asset_id  INTEGER,
+                    position  INTEGER,
+                    avg_initial_price DOUBLE,
+                    collateral DOUBLE,
+                    unsettled_pnl DOUBLE,
+                    settlement_price DOUBLE,
+                )
+            """)
 
         # EoD position (portfolio) of each agent, lowercase columns please!
         self.connection.execute("""
-                    CREATE TABLE IF NOT EXISTS eod_positions (
+                    CREATE TABLE IF NOT EXISTS agent_eod_positions (
                         day       INTEGER,
                         agent_id  INTEGER,
                         asset_id  INTEGER,
@@ -106,9 +143,31 @@ class Repository:
                 """)
         # deleted column: position_value DOUBLE
 
+        self.connection.execute("""
+                    CREATE TABLE IF NOT EXISTS agent_eod_futures_position (
+                        day       INTEGER,
+                        agent_id  INTEGER,
+                        asset_id  INTEGER,
+                        position  INTEGER
+                    )
+                """)
+
+        self.connection.execute("""
+                CREATE TABLE IF NOT EXISTS agent_eod_futures_value (
+                    day       INTEGER,
+                    agent_id  INTEGER,
+                    asset_id  INTEGER,
+                    position  INTEGER,
+                    avg_initial_price DOUBLE,
+                    collateral DOUBLE,
+                    unsettled_pnl DOUBLE,
+                    settlement_price DOUBLE,
+                )
+            """)
+
         # portfolio value history
         self.connection.execute("""
-            CREATE TABLE IF NOT EXISTS portfolio_value_history (
+            CREATE TABLE IF NOT EXISTS agent_portfolio_value_history (
                 day       INTEGER,
                 time_tick INTEGER,
                 agent_id  INTEGER,
@@ -117,7 +176,7 @@ class Repository:
         """)
 
         self.connection.execute("""
-            CREATE TABLE IF NOT EXISTS eod_portfolio_value (
+            CREATE TABLE IF NOT EXISTS agent_eod_portfolio_value (
                 day       INTEGER,
                 agent_id  INTEGER,
                 portfolio_value DOUBLE
@@ -126,7 +185,7 @@ class Repository:
 
         # cash history
         self.connection.execute("""
-            CREATE TABLE IF NOT EXISTS cash_history (
+            CREATE TABLE IF NOT EXISTS agent_cash_history (
                 day       INTEGER,
                 time_tick INTEGER,
                 agent_id  INTEGER,
@@ -135,7 +194,7 @@ class Repository:
         """)
 
         self.connection.execute("""
-            CREATE TABLE IF NOT EXISTS eod_cash (
+            CREATE TABLE IF NOT EXISTS agent_eod_cash (
                 day       INTEGER,
                 agent_id  INTEGER,
                 cash DOUBLE
@@ -185,7 +244,7 @@ class Repository:
                             )
                         """)
 
-        #
+        # eod index
         self.connection.execute("""
                             CREATE TABLE IF NOT EXISTS eod_index_values (
                                 day       INTEGER,
@@ -196,6 +255,37 @@ class Repository:
                                 close     DOUBLE,
                             )
                         """)
+
+        # futures intraday
+        self.connection.execute("""
+                    CREATE TABLE IF NOT EXISTS future_rates (
+                            contract_id INTEGER,
+                            day INTEGER,
+                            time_tick INTEGER,
+                            open DOUBLE,
+                            high DOUBLE,
+                            low DOUBLE,
+                            close DOUBLE,
+                            volume DOUBLE,
+                            lop INTEGER,
+                            theoretical DOUBLE
+                        )
+                    """)
+
+        # eod future rates
+        self.connection.execute("""
+                            CREATE TABLE IF NOT EXISTS eod_future_rates (
+                                    contract_id INTEGER,
+                                    day INTEGER,
+                                    open DOUBLE,
+                                    high DOUBLE,
+                                    low DOUBLE,
+                                    close DOUBLE,
+                                    volume DOUBLE,
+                                    lop INTEGER,
+                                    theoretical DOUBLE
+                            )
+                    """)
 
         ##### granular tables - may contain significant volumes of data ######################
 
@@ -223,6 +313,7 @@ class Repository:
         self.connection.execute("""
                     CREATE TABLE IF NOT EXISTS trades (
                         day INTEGER,
+                        asset_id INTEGER,
                         matched_with INTEGER,
                         executed_mode STRING,
                         executed_time INTEGER,
@@ -285,6 +376,23 @@ class Repository:
         """)
         self.connection.unregister("components_df")
 
+    def save_future(self, future: Future) -> None:
+        self.connection.execute(query="""
+            INSERT INTO futures (contract_id, underlying_type, underlying_id,
+                                expiration_day, multiplier, name, short_name)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """, parameters=[future.asset_id,
+                                     "index",
+                                     future.underlying.asset_id,
+                                     future.expiration,
+                                     future.multiplier,
+                                     future.name,
+                                     future.short_name
+                                     ])
+
+    ###########################################################################################
+
+    # the players :)
     def save_agent(self, agent: Agent) -> None:
         self.connection.execute("""
             INSERT INTO agents (
@@ -300,7 +408,7 @@ class Repository:
         self.connection.register("position_history_df", position_history_df)
 
         self.connection.execute("""
-            INSERT INTO position_history (day, time_tick, agent_id, asset_id, position)
+            INSERT INTO agent_position_history (day, time_tick, agent_id, asset_id, position)
             SELECT day, time_tick, agent_id, asset_id, position
             FROM position_history_df
         """)
@@ -308,11 +416,37 @@ class Repository:
 
         self.connection.unregister("position_history_df")
 
+    def save_futures_position_history(self, position_history_df: pd.DataFrame) -> None:
+        # the same as position_history, but for the futures or derivatives as value calculation differs
+        self.connection.register("position_history_df", position_history_df)
+
+        self.connection.execute("""
+            INSERT INTO agent_futures_position_history (day, time_tick, agent_id, asset_id, position)
+            SELECT day, time_tick, agent_id, asset_id, position
+            FROM position_history_df
+        """)
+        # deleted column: position_value
+
+        self.connection.unregister("position_history_df")
+
+    def save_futures_value_history(self, futures_value_df: pd.DataFrame) -> None:
+        self.connection.register("futures_value_df", futures_value_df)
+
+        self.connection.execute("""
+            INSERT INTO agent_futures_value_history (day, time_tick, agent_id, asset_id,
+                                                    position, avg_initial_price, collateral, unsettled_pnl)
+            SELECT day, time_tick, agent_id, asset_id, position, avg_initial_price,
+                collateral, unsettled_pnl
+            FROM futures_value_df
+        """)
+
+        self.connection.unregister("futures_value_df")
+
     def save_eod_position(self, eod_position_df: pd.DataFrame) -> None:
         self.connection.register("eod_position_df", eod_position_df)
 
         self.connection.execute("""
-            INSERT INTO eod_positions (day, agent_id, asset_id, position)
+            INSERT INTO agent_eod_positions (day, agent_id, asset_id, position)
             SELECT day, agent_id, asset_id, position
             FROM eod_position_df
         """)
@@ -320,10 +454,36 @@ class Repository:
 
         self.connection.unregister("eod_position_df")
 
+    def save_eod_futures_position(self, eod_position_df: pd.DataFrame) -> None:
+        self.connection.register("eod_position_df", eod_position_df)
+
+        self.connection.execute("""
+            INSERT INTO agent_eod_futures_position (day, agent_id, asset_id, position)
+            SELECT day, agent_id, asset_id, position
+            FROM eod_position_df
+        """)
+        # deleted column: position_value
+
+        self.connection.unregister("eod_position_df")
+
+    def save_eod_futures_value(self, eod_futures_value_df: pd.DataFrame) -> None:
+        self.connection.register("eod_futures_value_df", eod_futures_value_df)
+
+        self.connection.execute("""
+            INSERT INTO agent_eod_futures_value (day, agent_id, asset_id,
+                                                    position, avg_initial_price, collateral, unsettled_pnl)
+            SELECT day, agent_id, asset_id, position, avg_initial_price,
+                collateral, unsettled_pnl
+            FROM eod_futures_value_df
+        """)
+
+        self.connection.unregister("eod_futures_value_df")
+
+
     def save_portfolio_value_history(self, portfolio_value_history_df: pd.DataFrame) -> None:
         self.connection.register("portfolio_value_history_df", portfolio_value_history_df)
         self.connection.execute("""
-                INSERT INTO portfolio_value_history (day, time_tick, agent_id, portfolio_value)
+                INSERT INTO agent_portfolio_value_history (day, time_tick, agent_id, portfolio_value)
                 SELECT day, time_tick, agent_id, portfolio_value
                 FROM portfolio_value_history_df
         """)
@@ -333,7 +493,7 @@ class Repository:
     def save_eod_portfolio_value(self, eod_portfolio_value_df: pd.DataFrame) -> None:
         self.connection.register("eod_portfolio_value_df", eod_portfolio_value_df)
         self.connection.execute("""
-                INSERT INTO eod_portfolio_value (day, agent_id, portfolio_value)
+                INSERT INTO agent_eod_portfolio_value (day, agent_id, portfolio_value)
                 SELECT day, agent_id, portfolio_value
                 FROM eod_portfolio_value_df
         """)
@@ -343,7 +503,7 @@ class Repository:
     def save_cash_history(self, cash_history_df: pd.DataFrame) -> None:
         self.connection.register("cash_history_df", cash_history_df)
         self.connection.execute("""
-            INSERT INTO cash_history (day, time_tick, agent_id, cash)
+            INSERT INTO agent_cash_history (day, time_tick, agent_id, cash)
             SELECT day, time_tick, agent_id, cash
             FROM cash_history_df
         """)
@@ -353,7 +513,7 @@ class Repository:
     def save_eod_cash(self, eod_cash_df: pd.DataFrame) -> None:
         self.connection.register("eod_cash_df", eod_cash_df)
         self.connection.execute("""
-            INSERT INTO eod_cash (day, agent_id, cash)
+            INSERT INTO agent_eod_cash (day, agent_id, cash)
             SELECT day, agent_id, cash
             FROM eod_cash_df
         """)
@@ -398,16 +558,6 @@ class Repository:
 
         self.connection.unregister("eod_prices_df")
 
-    def save_eod_index_values(self, index_values_df: pd.DataFrame) -> None:
-        self.connection.register("eod_index_values_df", index_values_df)
-        # TODO: volume as cumulated weighted volume of stocks?
-        self.connection.execute("""
-            INSERT INTO eod_index_values (day, open, high, low, close)
-            SELECT day, open, high, low, close
-            FROM eod_index_values_df
-        """)
-        
-        self.connection.unregister("eod_index_values_df")
 
     def save_orders(self, orders_df: pd.DataFrame) -> None:
         # with duckdb.connect(self.localdb) as conn:
@@ -438,9 +588,10 @@ class Repository:
         self.connection.register("trades_df", trades_df)
         # terminal.write(f"Columns: {str(trades_df.columns())}")
         self.connection.execute("""
-            INSERT INTO trades (day, executed_time, matched_with, executed_mode, executed_price,
+            INSERT INTO trades (day, asset_id, executed_time, matched_with, executed_mode, executed_price,
                     order_id, order_side, executed_volume, cash, phase)
             SELECT day,
+                    asset_id,
                     executed_time,
                     matched_with,
                     executed_mode,
@@ -473,7 +624,14 @@ class Repository:
     def get_eod_positions(self, agent_id: int) -> pd.DataFrame:
         return self.connection.execute(query="""
                 SELECT day, asset_id, position
-                FROM eod_positions
+                FROM agent_eod_positions
+                WHERE agent_id = ?
+            """, parameters=[agent_id]).fetchdf()
+
+    def get_eod_futures_positions(self, agent_id: int) -> pd.DataFrame:
+        return self.connection.execute(query="""
+                SELECT day, asset_id, position
+                FROM agent_eod_futures_position
                 WHERE agent_id = ?
             """, parameters=[agent_id]).fetchdf()
 
@@ -491,17 +649,24 @@ class Repository:
                 WHERE index_id = ?
             """, parameters=[index_id]).fetchdf()
 
+    def get_eod_future_rates(self, contract_id: int) -> pd.DataFrame:
+        return self.connection.execute(query="""
+                SELECT day, open, high, low, close, volume, theoretical, lop
+                FROM eod_future_rates
+                WHERE contract_id = ?
+            """, parameters=[contract_id]).fetchdf()
+
     def get_eod_cash(self, agent_id: int) -> pd.DataFrame:
         return self.connection.execute(query="""
                 SELECT day, cash
-                FROM eod_cash
+                FROM agent_eod_cash
                 WHERE agent_id = ?
             """, parameters=[agent_id]).fetchdf()
 
     def get_eod_portfolio_values(self, agent_id: int) -> pd.DataFrame:
         return self.connection.execute(query="""
                 SELECT day, portfolio_value
-                FROM eod_portfolio_value
+                FROM agent_eod_portfolio_value
                 WHERE agent_id = ?
             """, parameters=[agent_id]).fetchdf()
 
@@ -513,8 +678,12 @@ class Repository:
         # calculate intraday index values for all indices
         self.connection.execute(query="""
                 INSERT INTO
-                    index_values (day, time_tick, index_id, close)
-                SELECT tp.day, tp.time_tick, ic.index_id, sum(ic.weight * tp."close" )
+                    index_values (day, time_tick, index_id, open, high, low, close)
+                SELECT tp.day, tp.time_tick, ic.index_id,
+                        sum(ic.weight * tp."open" ),
+                        sum(ic.weight * tp."close" ),
+                        sum(ic.weight * tp."close" ),
+                        sum(ic.weight * tp."close" ),
                 FROM index_components ic
                 LEFT JOIN traded_prices tp
                     ON ic.asset_id = tp.asset_id
@@ -525,14 +694,14 @@ class Repository:
 
     # combine eod_prices into eod_index_values:
     def calculate_eod_index_values(self, day: int) -> pd.DataFrame:
-        self.connection.execute(query="""
+        return self.connection.execute(query="""
                 INSERT INTO eod_index_values (day, index_id, open, high, low, close)
                 SELECT iv.day, iv.index_id, 
-                    FIRST(iv."close" ORDER BY iv.time_tick) AS open,
+                    FIRST(iv."open" ORDER BY iv.time_tick) AS open,
                     MAX(iv."close" ) as high,
                     MIN(iv."close" ) as low,
                     LAST(iv."close" ORDER BY iv.time_tick) AS close,
                 FROM main.index_values iv 
                 WHERE iv."day" = ?
-                GROUP BY iv.day, iv.index_id""", parameters=[day])
+                GROUP BY iv.day, iv.index_id""", parameters=[day]).fetchdf()
 

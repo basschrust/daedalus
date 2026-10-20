@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from fontTools.varLib.instancer import instantiateTupleVariationStore
 from loguru import logger
 from pathlib import Path
 
 from marketsim.database.connectors.duckdb_storage import Repository
 from marketsim.loggers.basic import terminal
 from marketsim.fundamental.mean_reverting import GaussianMeanReverting
-from marketsim.market import Security, Option, Index
+from marketsim.market import Security, Option, Index, Future
 from marketsim.agent import Agent, WashTradingAgent, MomentumAgent, SpoofingAgent, NoiseAgent
 from marketsim.agent import ZIAgentNotInformed, MMZOHAgent, HBLAgent, OptionMMZOHAgent
 from marketsim.agent.washtrading import WashTradingPool
@@ -111,10 +112,21 @@ class Simulator:
                 self.markets[market.asset_id] = market
                 self.asset_names_map[market.asset_id] = { "name": market.name,
                                                          }
+            elif instrument_class == "future":
+                market = Future(name=m_conf.get("name"), short_name=m_conf.get("short_name"),
+                               repository=self.repository, output_dir=self.output_dir,
+                                underlying=self.markets[self.market_map[m_conf.get("underlying")]],
+                                expiration=m_conf.get("expiration"),
+                                multiplier=m_conf.get("multiplier"),
+                                margin_rate=m_conf.get("margin_rate"))
+                self.market_map[m_key] = market.asset_id
+                self.markets[market.asset_id] = market
+                self.asset_names_map[market.asset_id] = {"name": market.name,
+                                                         }
             elif instrument_class == "stock":
                 market = Security(market_type=m_conf.get("market_type"), name=m_conf.get("name")
                                   , repository=self.repository, short_name=m_conf.get("short_name"),
-                                  output_dir=self.output_dir)
+                                  output_dir=self.output_dir, reference_price=m_conf.get("reference_price"))
                 self.market_map[m_key] = market.asset_id
                 self.markets[market.asset_id] = market
                 self.asset_names_map[market.asset_id] = {"name": market.name,
@@ -258,7 +270,9 @@ class Simulator:
 
             # plot the LOB
             if self.current_time > 0 and self.current_time % self.lob_plot_interval == 0:
-                market.plot_lob(self.current_time)
+                if market.instrument_class != "index":
+                    # plot the LOB only for tradable intruments
+                    market.plot_lob(self.current_time)
 
             buy_matched_queue_length = 0 if market.order_book is None else len(market.order_book.buy_matched.heap)
             sell_matched_queue_length = 0 if market.order_book is None else len(market.order_book.sell_matched.heap)

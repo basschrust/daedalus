@@ -7,10 +7,11 @@ from pathlib import Path
 from marketsim.agent.agent import Agent
 from marketsim.fourheap.order import Order
 from marketsim.private_values.private_values import PrivateValues
+from marketsim.market import Price
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
-    from marketsim.market.security import Security, Price
+    from marketsim.market.security import Security
 
 class SpoofingAgent(Agent):
     def __init__(self, *, markets: list[Security], repository: Repository,

@@ -170,6 +170,7 @@ class OptionMMZOHAgent(Agent):
         self.hedge(current_time=current_time)
 
             # TODO: add orders to the underlying market
+            # TODO: if the underlying is an index then hedge with futures, other options, stocks, etc.
 
 
 
