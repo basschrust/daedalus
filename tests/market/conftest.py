@@ -39,3 +39,63 @@ def derivatives_config1(stock: Security):
     return config1
 
 
+
+@pytest.fixture
+def option_call_short(index_genius, repository):
+    return Option(
+        repository=repository,
+        underlying=index_genius,
+        short_name="GeNiUS-C",
+        derivatives_config={
+            "strike": 75,
+            "expiration": 3,
+            "option_side": "CALL",
+            "option_type": "European",
+        },
+    )
+
+
+@pytest.fixture
+def option_put_short(index_genius, repository):
+    return Option(
+        repository=repository,
+        underlying=index_genius,
+        short_name="GeNiUS-P",
+        derivatives_config={
+            "strike": 75,
+            "expiration": 3,
+            "option_side": "PUT",
+            "option_type": "European",
+        },
+    )
+
+
+@pytest.fixture
+def option_call_long(index_genius, repository):
+    return Option(
+        repository=repository,
+        underlying=index_genius,
+        short_name="GeNiUS-C",
+        derivatives_config={
+            "strike": 85,
+            "expiration": 10,
+            "option_side": "CALL",
+            "option_type": "European",
+        },
+    )
+
+
+@pytest.fixture
+def option_put_long(index_genius, repository):
+    return Option(
+        repository=repository,
+        underlying=index_genius,
+        short_name="GeNiUS-P",
+        derivatives_config={
+            "strike": 85,
+            "expiration": 10,
+            "option_side": "PUT",
+            "option_type": "European",
+        },
+    )
+
