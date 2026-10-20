@@ -175,7 +175,7 @@ class Agent(ABC):
             # existing_collateral = self.futures_value[contract.asset_id]["collateral"]
             # target_collateral = contract.last_traded_price * contract.margin_rate * contract.multiplier
             # changing contract position - keeping it open with different size
-            self.futures_position[contract.asset_id] += quantity
+            # self.futures_position[contract.asset_id] += quantity
             # self.cash -= target_collateral - existing_collateral
 
             total_pos = current_position + quantity
