@@ -232,9 +232,9 @@ class Agent(ABC):
         collateral_change = required_collateral - old_collateral
         # self.cash -= collateral_change
         if collateral_change > 0:
-            self.credit_cash(currency=contract.currency, amount=collateral_change)
+            self.debit_cash(currency=contract.currency, amount=collateral_change)
         else:
-            self.debit_cash(currency=contract.currency, amount=-collateral_change)
+            self.credit_cash(currency=contract.currency, amount=-collateral_change)
         if current_position == 0:
             # initiating position on this contract
             # collateral = contract.last_traded_price * contract.margin_rate * contract.multiplier

@@ -10,7 +10,7 @@ def test_opening_future_reserves_collateral(
     buyer = futures_agents["buyer"]
     buyer.cash = { "PLN": Price(100_000) }
 
-    initial_cash = buyer.cash
+    initial_cash = buyer.cash["PLN"]
     buyer.update_futures_position(
         quantity=2,
         contract=future_short,
@@ -28,7 +28,7 @@ def test_opening_future_reserves_collateral(
 
     assert collateral == pytest.approx(expected_collateral)
     assert buyer.cash["PLN"] == pytest.approx(
-        initial_cash["PLN"] - expected_collateral
+        initial_cash - expected_collateral
     )
     assert buyer.futures_position[contract_id] == 2
 

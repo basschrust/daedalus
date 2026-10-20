@@ -243,7 +243,7 @@ def test_settlement_is_independent_between_contracts(
     short_price = Price(future_short.last_traded_price)
     long_price = Price(future_long.last_traded_price)
 
-    cash_before = buyer.cash
+    cash_before = buyer.cash["PLN"]
 
     future_short.last_traded_price = Price(short_price + 5)
     future_long.last_traded_price = Price(long_price - 3)
@@ -256,7 +256,7 @@ def test_settlement_is_independent_between_contracts(
     )
 
     assert buyer.cash["PLN"] == (
-        cash_before["PLN"] + Price(expected_cash_change)
+        cash_before + Price(expected_cash_change)
     )
 
     assert buyer.futures_position[short_id] == 2

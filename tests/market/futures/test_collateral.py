@@ -11,7 +11,7 @@ def test_collateral_transfer_preserves_equity(
     agent = futures_agents["buyer"]
     agent.cash = { "PLN": Price(100_000) }
 
-    equity_before = agent.cash
+    equity_before = agent.cash["PLN"]
 
     agent.update_futures_position(
         quantity=2,
