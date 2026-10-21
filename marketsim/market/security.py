@@ -392,8 +392,13 @@ class Security:
         plot_cash_transfers(self.trade_stats_df, output_file_tpl=f"{self.output_dir}/{str(self)}/Transfers_cash_{str(self)}_")
 
     def plot_history(self, traded_prices: dict) -> None:
-        traded_prices_float = {t: {v: float(price_item) for v, price_item in item.items()}
-                               for t, item in traded_prices.items()}
+        traded_prices_float = {
+            t: {
+                field: float(value) if value is not None else float("nan")
+                for field, value in prices.items()
+            }
+            for t, prices in traded_prices.items()
+        }
         df_candlestick = pd.DataFrame.from_dict(traded_prices_float,
                                                 orient="index"
                                                 )

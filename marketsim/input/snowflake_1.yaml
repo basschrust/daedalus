@@ -8,8 +8,8 @@ database:
     authenticator: snowflake
 
 
-sim_time: 30  # steps per day
-days: 12 # default 1 day, starting with id=0
+sim_time: 10  # steps per day
+days: 4 # default 1 day, starting with id=0
 lob_plot_interval: 25
 debug_logging: False
 seed: 67

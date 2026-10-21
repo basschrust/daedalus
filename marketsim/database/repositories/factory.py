@@ -19,7 +19,11 @@ def create_repository(
     if driver == "snowflake":
         from marketsim.database.connectors.snowflake_storage import SnowflakeRepository
 
-        return SnowflakeRepository(**config)
+        # return SnowflakeRepository(**config)
+        return SnowflakeRepository(
+            output_dir=output_dir,
+            **config,
+        )
 
     raise ValueError(f"Unsupported database driver: {driver}")
 

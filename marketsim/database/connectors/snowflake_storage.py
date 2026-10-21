@@ -75,9 +75,16 @@ class SnowflakeRepository:
         authenticator: str = "snowflake",
         role: str | None = None,
     ) -> None:
-        del output_dir
         self.database = _identifier(database)
-        self.schema = _identifier(schema)
+
+        # Example:
+        # run_20261021_190000 -> SIMULATION_RUN_20261021_190000
+        run_id = Path(output_dir).name
+
+        self.schema = _identifier(f"{schema}_{run_id}")
+        # del output_dir
+        # self.database = _identifier(database)
+        # self.schema = _identifier(schema)
         self.warehouse = _identifier(warehouse)
         kwargs: dict[str, Any] = dict(
             account=account or os.environ["SNOWFLAKE_ACCOUNT"],
@@ -95,8 +102,24 @@ class SnowflakeRepository:
             kwargs["password"] = secret
         if role:
             kwargs["role"] = role
+        # self.connection = snowflake.connector.connect(**kwargs)
+        # self.prepare_tables()
+        # Connect to the database without assuming the run schema exists.
+        kwargs.pop("schema", None)
+
         self.connection = snowflake.connector.connect(**kwargs)
-        self.prepare_tables()
+
+        try:
+            self._execute(
+                f'CREATE SCHEMA "{self.database}"."{self.schema}"'
+            )
+            self._execute(
+                f'USE SCHEMA "{self.database}"."{self.schema}"'
+            )
+            self.prepare_tables()
+        except Exception:
+            self.connection.close()
+            raise
 
     def close(self) -> None:
         self.connection.close()
@@ -266,7 +289,7 @@ class SnowflakeRepository:
         return self._read('SELECT DAY, OPEN, HIGH, LOW, CLOSE, VOLUME, THEORETICAL, LOP FROM EOD_FUTURE_RATES WHERE CONTRACT_ID = %s', (contract_id,), ["day", "open", "high", "low", "close", "volume", "theoretical", "lop"])
 
     def get_eod_cash(self, agent_id: int) -> pd.DataFrame:
-        return self._read('SELECT DAY, CURRENCY, CASH FROM AGENT_EOD_CASH WHERE AGENT_ID = %s', (agent_id,), ["day", "cash"])
+        return self._read('SELECT DAY, CURRENCY, CASH FROM AGENT_EOD_CASH WHERE AGENT_ID = %s', (agent_id,), ["day", "currency", "cash"])
 
     def get_eod_portfolio_values(self, agent_id: int) -> pd.DataFrame:
         return self._read('SELECT DAY, PORTFOLIO_VALUE FROM AGENT_EOD_PORTFOLIO_VALUE WHERE AGENT_ID = %s', (agent_id,), ["day", "portfolio_value"])
