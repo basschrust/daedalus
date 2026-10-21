@@ -7,7 +7,7 @@ from marketsim.fourheap import Order
 from marketsim.agent import MMZOHAgent
 from marketsim.market import Security
 from marketsim.agent import NoiseAgent, Agent
-from tests.conftest import stock_tnt
+# from tests.conftest import stock_tnt
 
 
 

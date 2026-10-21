@@ -7,8 +7,9 @@ name = "pymarketsim"
 version = "0.1.0"
 description = "A Python framework for agent-based financial market simulation."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 license = "MIT"
+
 
 authors = [
     { name = "Andrzej Kuropatwinski" }
@@ -45,4 +46,4 @@ include = ["marketsim", "marketsim.*"]
 
 [tool.black]
 line-length = 100
-target-version = ["py310"]
+target-version = ["py312"]
