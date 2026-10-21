@@ -10,6 +10,7 @@ import os
 import re
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
+import json
 
 import pandas as pd
 import snowflake.connector
@@ -129,7 +130,8 @@ class SnowflakeRepository:
         if df.empty:
             return
         expected = list(TABLES[table])
-        normalized = df.copy()
+        # normalized = df.copy()
+        normalized = df.reset_index(drop=True).copy()
         normalized.columns = [str(c).lower() for c in normalized.columns]
         if normalized.columns.duplicated().any():
             raise ValueError(f"Duplicate DataFrame columns for {table}")
@@ -138,7 +140,27 @@ class SnowflakeRepository:
             raise ValueError(f"Unexpected columns for {table}: {extra}")
         # Missing optional columns are loaded as NULL, matching DuckDB's explicit NULLs.
         normalized = normalized.reindex(columns=expected)
+
+        # Convert DataFrame columns to Snowflake-compatible types.
+        for column, sql_type in TABLES[table].items():
+            if sql_type == "FLOAT":
+                normalized[column] = pd.to_numeric(
+                    normalized[column],
+                    errors="raise",
+                ).astype("float64")
+
+            elif sql_type.startswith("NUMBER"):
+                normalized[column] = pd.to_numeric(
+                    normalized[column],
+                    errors="raise",
+                ).astype("Int64")
+
+            elif sql_type == "VARCHAR":
+                normalized[column] = normalized[column].astype("string")
+
         normalized.columns = [c.upper() for c in expected]
+        # normalized = normalized.reindex(columns=expected)
+        # normalized.columns = [c.upper() for c in expected]
         success, _chunks, _rows, _output = write_pandas(
             self.connection,
             normalized,
@@ -170,8 +192,18 @@ class SnowflakeRepository:
     def save_future(self, future: Future) -> None:
         self._insert_one("futures", dict(contract_id=future.asset_id, underlying_type="index", underlying_id=future.underlying.asset_id, expiration_day=future.expiration, multiplier=float(future.multiplier), name=future.name, short_name=future.short_name))
 
+    # def save_agent(self, agent: Agent) -> None:
+        #self._insert_one("agents", dict(agent_id=agent.agent_id, name=agent.name, group_name=agent.group, configuration=agent.configuration))
     def save_agent(self, agent: Agent) -> None:
-        self._insert_one("agents", dict(agent_id=agent.agent_id, name=agent.name, group_name=agent.group, configuration=agent.configuration))
+        self._insert_one(
+            table="agents",
+            values=dict(
+                agent_id=agent.agent_id,
+                name=agent.name,
+                group_name=agent.group,
+                configuration=json.dumps(agent.configuration, default=str),
+            ),
+        )
 
     def save_position_history(self, position_history_df: pd.DataFrame) -> None:
         self._insert_frame("agent_position_history", position_history_df)
@@ -234,7 +266,7 @@ class SnowflakeRepository:
         return self._read('SELECT DAY, OPEN, HIGH, LOW, CLOSE, VOLUME, THEORETICAL, LOP FROM EOD_FUTURE_RATES WHERE CONTRACT_ID = %s', (contract_id,), ["day", "open", "high", "low", "close", "volume", "theoretical", "lop"])
 
     def get_eod_cash(self, agent_id: int) -> pd.DataFrame:
-        return self._read('SELECT DAY, CASH FROM AGENT_EOD_CASH WHERE AGENT_ID = %s', (agent_id,), ["day", "cash"])
+        return self._read('SELECT DAY, CURRENCY, CASH FROM AGENT_EOD_CASH WHERE AGENT_ID = %s', (agent_id,), ["day", "cash"])
 
     def get_eod_portfolio_values(self, agent_id: int) -> pd.DataFrame:
         return self._read('SELECT DAY, PORTFOLIO_VALUE FROM AGENT_EOD_PORTFOLIO_VALUE WHERE AGENT_ID = %s', (agent_id,), ["day", "portfolio_value"])

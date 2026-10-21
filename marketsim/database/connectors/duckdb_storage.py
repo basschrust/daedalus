@@ -663,7 +663,7 @@ class Repository:
 
     def get_eod_cash(self, agent_id: int) -> pd.DataFrame:
         return self.connection.execute(query="""
-                SELECT day, cash
+                SELECT day, currency, cash
                 FROM agent_eod_cash
                 WHERE agent_id = ?
             """, parameters=[agent_id]).fetchdf()

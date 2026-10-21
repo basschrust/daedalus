@@ -5,7 +5,7 @@ database:
     database: DAEDALUS
     schema: SIMULATION
     warehouse: DAEDALUS_WH
-    authenticator: externalbrowser
+    authenticator: snowflake
 
 
 sim_time: 30  # steps per day
