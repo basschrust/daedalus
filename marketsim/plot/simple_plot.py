@@ -125,18 +125,29 @@ def plot_agent_history_many_markets(
         ax.set_ylabel(labels_map.get(asset_id))
         ax.grid(True)
 
-    # Cash subplot
+    # Cash subplot — one line per currency
     ax_cash = axes[n_assets]
 
-    ax_cash.plot(
-        # list(cash_history.keys()),
-        # list(cash_history.values()),
-        cash_history["time_step"],
-        cash_history["cash"],
-        color="#2E8B57",
-    )
+    if "currency" not in cash_history.columns:
+        raise ValueError("Cash history must contain a 'currency' column")
+
+    for currency, currency_df in cash_history.groupby("currency", sort=True):
+        currency_df = currency_df.sort_values("time_step")
+
+        ax_cash.plot(
+            currency_df["time_step"],
+            currency_df["cash"],
+            label=currency,
+            linewidth=1.8,
+            marker=".",
+        )
 
     ax_cash.set_ylabel("Cash")
+    # case if no currencies provided:
+    handles, labels = ax_cash.get_legend_handles_labels()
+    if handles:
+        ax_cash.legend(title="Currency")
+
     ax_cash.grid(True)
 
     # Total portfolio value subplot
