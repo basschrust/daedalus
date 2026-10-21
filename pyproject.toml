@@ -31,7 +31,9 @@ dependencies = [
 plot = [
     "mplfinance==0.12.10b0",
 ]
-
+snowflake = [
+    "snowflake-connector-python[pandas]>=4",
+]
 dev = [
     "black",
     "pytest",
