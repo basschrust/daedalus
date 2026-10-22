@@ -300,17 +300,14 @@ class Agent(ABC):
         # self.portfolio_value = self.get_cash_balance()
         # for asset_id, market in self.markets.items():
         #     self.portfolio_value += int(self.position[asset_id]) * market.last_traded_price
+
         self.portfolio_value = self.calculate_portfolio_value()
 
-        # TODO: add futures - collateral + unsettled_pnl
-        for contract_id, ft_val in self.futures_value.items():
-            self.portfolio_value += ft_val["collateral"]
-            self.portfolio_value += ft_val["unsettled_pnl"]
-
-        # save valuation:
         self.portfolio_value_history[current_time] = self.portfolio_value
         self.position_history[current_time] = copy.deepcopy(self.position)
-        self.futures_position_history[current_time] = copy.deepcopy(self.futures_position)
+        self.futures_position_history[current_time] = copy.deepcopy(
+            self.futures_position
+        )
         self.cash_history[current_time] = copy.deepcopy(self.cash)
 
     def record_trade(self, matched_order: MatchedOrder) -> None:
@@ -395,6 +392,9 @@ class Agent(ABC):
 
         # Cash balances
         for currency, balance in self.cash.items():
+            if balance == 0:
+                continue
+            # Convert nonzero balance
             total += self.fx_rate_provider.convert(
                 Decimal(str(balance)),
                 day=day,

@@ -3,7 +3,7 @@ from pathlib import Path
 
 from marketsim.database.connectors.duckdb_storage import Repository
 from marketsim.fourheap.order import Order
-from marketsim.market import Price, Security, Option, Index
+from marketsim.market import Price, Security, Option, Index, FXRateProvider
 from marketsim.agent import Agent, MMZOHAgent, NoiseAgent, HBLAgent
 
 
@@ -18,6 +18,16 @@ def repository(tmp_path: Path):
     yield repo
     repo.connection.close()
 
+
+@pytest.fixture
+def fx_rate_provider():
+    fx = FXRateProvider()
+
+    # Synthetic rates for deterministic tests
+    fx.set_rate(day=0, base="USD", quote="PLN", rate="3.80")
+    fx.set_rate(day=0, base="EUR", quote="PLN", rate="4.25")
+
+    return fx
 
 @pytest.fixture
 def order_factory():
@@ -328,8 +338,15 @@ def option_put_at_expiration_otm(stock_tnt: Security,
 ### agents:
 
 @pytest.fixture
-def agent_noise(stock_tnt: Security, stock_mit: Security, repository: Repository):
-    return NoiseAgent(markets=[stock_tnt, stock_mit], repository=repository)
+def agent_noise(stock_tnt: Security,
+                stock_mit: Security,
+                repository: Repository,
+                fx_rate_provider: FXRateProvider):
+    return NoiseAgent(
+        markets=[stock_tnt, stock_mit],
+        repository=repository,
+        fx_rate_provider=fx_rate_provider,
+    )
 
 @pytest.fixture
 def agent_hbl(security: Security, repository: Repository):

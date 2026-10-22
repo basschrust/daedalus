@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from pathlib import Path
 
 from marketsim.agent.agent import Agent
-from marketsim.market import Security, Price
+from marketsim.market import Security, Price, FXRateProvider
 from marketsim.fourheap.order import Order
 from marketsim.fourheap.constants import BUY, SELL
 from marketsim.market.valuation_libs.BlackScholes import BSCall, BSPut
@@ -21,7 +21,8 @@ class OptionMMZOHAgent(Agent):
     # symmetrically on both sides of this last traded price in each rebalance period
     ###
     def __init__(self, *, markets: list[Security], repository: Repository, configuration: dict|None=None,
-                 group: str = "OptionsMMZOH", output_dir: Path|str = "tmp") -> None:
+                 group: str = "OptionsMMZOH", output_dir: Path|str = "tmp",
+                 fx_rate_provider: FXRateProvider|None=None) -> None:
         default_configuration = {"xi": 0.1,
                                  "K": 3,
                                  "omega": 0.1,
@@ -32,7 +33,7 @@ class OptionMMZOHAgent(Agent):
                                  "rebalance_volume": 70}
         final_configuration = default_configuration | (configuration if configuration is not None else {})
         super().__init__(markets=markets, repository=repository, configuration=final_configuration,
-                         group=group, output_dir=output_dir)
+                         group=group, output_dir=output_dir, fx_rate_provider=fx_rate_provider)
 
         self.option_markets = { market.asset_id: market for market in markets if
                                market.instrument_class == "option" }

@@ -10,7 +10,7 @@ from marketsim.loggers.basic import terminal
 from marketsim.agent.agent import Agent
 from marketsim.fourheap.order import Order
 from marketsim.fourheap.constants import BUY, SELL
-from marketsim.market import Price
+from marketsim.market import Price, FXRateProvider
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
@@ -19,7 +19,8 @@ if TYPE_CHECKING:
 
 class WashTradingAgent(Agent):
     def __init__(self, *, markets: list[Security], repository: Repository, configuration: dict| None=None,
-                 group: str = "WashTraders", output_dir: Path|str="tmp"):
+                 group: str = "WashTraders", output_dir: Path|str="tmp",
+                 fx_rate_provider: FXRateProvider|None=None):
         default_configuration = { "q_max": 1000,
                                   "lam": 0.5,
                                   "pool_id": 0,
@@ -31,9 +32,12 @@ class WashTradingAgent(Agent):
                                   "spread": Price(0.8),
                                 }
         final_configuration = default_configuration | (configuration if configuration is not None else {})
-        super().__init__(markets=markets, repository=repository,
+        super().__init__(markets=markets,
+                         repository=repository,
                          configuration=final_configuration,
-                         group=group, output_dir=output_dir)
+                         group=group,
+                         output_dir=output_dir,
+                         fx_rate_provider=fx_rate_provider)
 
         self.q_max = final_configuration["q_max"]
         self.lam = final_configuration["lam"] # yet not used - probably used in the non-manipulation period

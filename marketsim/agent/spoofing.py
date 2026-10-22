@@ -7,7 +7,7 @@ from pathlib import Path
 from marketsim.agent.agent import Agent
 from marketsim.fourheap.order import Order
 from marketsim.private_values.private_values import PrivateValues
-from marketsim.market import Price
+from marketsim.market import Price, FXRateProvider
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
@@ -15,7 +15,8 @@ if TYPE_CHECKING:
 
 class SpoofingAgent(Agent):
     def __init__(self, *, markets: list[Security], repository: Repository,
-                 configuration: dict | None = None, group: str = "Spoofers", output_dir: Path|str = "tmp"):
+                 configuration: dict | None = None, group: str = "Spoofers", output_dir: Path|str = "tmp",
+                 fx_rate_provider: FXRateProvider|None=None):
         default_configuration = { "q_max": 1000,
                                   "pv_var": 0.2,
                                   "order_size": 10,
@@ -27,7 +28,7 @@ class SpoofingAgent(Agent):
                                   }
         final_configuration = default_configuration | (configuration if configuration is not None else {})
         super().__init__(markets=markets, repository=repository, configuration=final_configuration,
-                         group=group, output_dir=output_dir)
+                         group=group, output_dir=output_dir, fx_rate_provider=fx_rate_provider)
 
         if final_configuration["pv_var"] is not None:
             self.pv = final_configuration["pv_var"]

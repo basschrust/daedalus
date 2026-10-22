@@ -7,7 +7,7 @@ from pathlib import Path
 from marketsim.agent.agent import Agent
 from marketsim.fourheap.order import Order
 from marketsim.fourheap.constants import BUY, SELL
-from marketsim.market import Price
+from marketsim.market import Price, FXRateProvider
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
@@ -19,14 +19,15 @@ class MomentumAgent(Agent):
     # Momentum Agent trades using moving average to catch the market trend
     ###
     def __init__(self, *, markets: list[Security], repository: Repository,
-                 configuration: dict| None=None, group: str= "MOMENTUM", output_dir: Path|str = "tmp") -> None:
+                 configuration: dict| None=None, group: str= "MOMENTUM", output_dir: Path|str = "tmp",
+                 fx_rate_provider: FXRateProvider|None=None) -> None:
         default_configuration = { "period": 7,
                                   "lam": 0.5,
                                   "q_max": 100,
                                   "threshold": 0.01 }
         final_configuration = default_configuration | (configuration if configuration is not None else {})
         super().__init__(markets=markets, repository=repository, configuration=final_configuration
-                         , group=group, output_dir=output_dir)
+                         , group=group, output_dir=output_dir, fx_rate_provider=fx_rate_provider)
 
         self.period = final_configuration["period"] # the period for trend analyzing
         self.lam = final_configuration["lam"] # lambda, the activity parameter
