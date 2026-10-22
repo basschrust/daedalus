@@ -2,11 +2,12 @@ import pytest
 from typing import TYPE_CHECKING
 from decimal import Decimal
 
+from marketsim.database.connectors.duckdb_storage import Repository
+
 from marketsim.agent import (Agent, NoiseAgent, HBLAgent, MMZOHAgent, MomentumAgent, OptionMMZOHAgent, SpoofingAgent,
         WashTradingAgent, ZIAgentNotInformed)
 
-if TYPE_CHECKING:
-    from marketsim.market import Price
+from marketsim.market import Price, Security
 
 #######   testing functions   #######
 
@@ -41,7 +42,7 @@ def test_create_agent_momentum(stock, repository):
 
     assert agent is not None
 
-def test_create_agent_option_mm(stock, repository):
+def test_create_agent_option_mm(stock: Security, repository: Repository):
     agent = OptionMMZOHAgent(markets=[stock], repository=repository)
 
     assert agent is not None
@@ -89,7 +90,27 @@ def test_eod_noise_agent(agent_noise: Agent):
 # valuations
 
 
+def test_zero_value_future_without_market_is_ignored(agent_noise: Agent):
+    agent = agent_noise
 
+    agent.futures_position[999] = 0
+    agent.futures_value[999] = {
+        "avg_initial_price": Price(0),
+        "settlement_price": Price(0),
+        "collateral": Price(0),
+        "unsettled_pnl": Price(0),
+    }
 
+    expected = agent.calculate_portfolio_value()
 
+    assert agent.calculate_portfolio_value() == expected
+
+def test_zero_position_without_market_is_ignored(agent_noise: Agent):
+    agent = agent_noise
+
+    expected = agent.calculate_portfolio_value()
+
+    agent.position[999] = 0
+
+    assert agent.calculate_portfolio_value() == expected
 

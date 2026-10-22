@@ -8,7 +8,7 @@ from pathlib import Path
 from marketsim.database.repositories.factory import create_repository
 from marketsim.loggers.basic import terminal
 from marketsim.fundamental.mean_reverting import GaussianMeanReverting
-from marketsim.market import Security, Option, Index, Future
+from marketsim.market import Security, Option, Index, Future, FXRateProvider
 from marketsim.agent import Agent, WashTradingAgent, MomentumAgent, SpoofingAgent, NoiseAgent
 from marketsim.agent import ZIAgentNotInformed, MMZOHAgent, HBLAgent, OptionMMZOHAgent
 from marketsim.agent.washtrading import WashTradingPool
@@ -66,7 +66,8 @@ class Simulator:
         self.last_progress = -1
         self.bar_length = 40
         self.day = 0 # day counter for SoD and EoD procedures
-        # to save and load data:
+
+        self.fx_rate_provider = FXRateProvider()
 
 
         for m_key, m_conf in markets.items():
@@ -267,6 +268,7 @@ class Simulator:
         for agent in agents:
             self.logger.info(f"Adding agent {str(agent)} to the simulation")
             self.agents[agent.get_id()] = agent
+            agent.fx_rate_provider = self.fx_rate_provider
 
             for asset_id, market in agent.markets.items(): # TODO: this will serve the multimarket agents soon
                 market.add_agents([agent]) # TODO: check performance

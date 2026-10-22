@@ -404,9 +404,14 @@ class Agent(ABC):
 
         # Security positions
         for asset_id, quantity in self.position.items():
+
+            # Zero positions do not contribute to portfolio value.
+            if quantity == 0:
+                continue
+
             market = self.markets[asset_id]
 
-            # Futures require separate margin/P&L treatment
+            # Futures are valued separately through collateral and unsettled P&L.
             if market.instrument_class == "future":
                 continue
 
@@ -424,12 +429,17 @@ class Agent(ABC):
 
         # Futures: collateral + unsettled P&L
         for asset_id, values in self.futures_value.items():
-            market = self.markets[asset_id]
-
             native_value = (
                     Decimal(str(values["collateral"]))
                     + Decimal(str(values["unsettled_pnl"]))
             )
+
+            # Zero-value contracts contribute nothing to portfolio value.
+            # No market lookup or FX conversion is necessary.
+            if native_value == 0:
+                continue
+
+            market = self.markets[asset_id]
 
             total += self.fx_rate_provider.convert(
                 native_value,
