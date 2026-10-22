@@ -5,19 +5,6 @@ import pytest
 from marketsim.market import FXRateProvider, Price
 
 
-@pytest.fixture
-def fx_provider():
-    fx = FXRateProvider()
-
-    for day, usd, eur in [
-        (0, "3.80", "4.25"),
-        (1, "3.90", "4.20"),
-    ]:
-        fx.set_rate(day=day, base="USD", quote="PLN", rate=usd)
-        fx.set_rate(day=day, base="EUR", quote="PLN", rate=eur)
-
-    return fx
-
 
 @pytest.mark.parametrize(
     "base_currency, day, expected",
