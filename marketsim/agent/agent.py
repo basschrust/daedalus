@@ -8,6 +8,7 @@ from collections import defaultdict
 from loguru import logger
 import pandas as pd
 from pathlib import Path
+from decimal import Decimal
 
 from marketsim.loggers.basic import setup_logger, setup_agent_logger
 from marketsim.input import config
@@ -296,9 +297,10 @@ class Agent(ABC):
         # valuation by last trade:
         # self.portfolio_value = self.cash
         # TODO: add multiccy valuation
-        self.portfolio_value = self.get_cash_balance()
-        for asset_id, market in self.markets.items():
-            self.portfolio_value += int(self.position[asset_id]) * market.last_traded_price
+        # self.portfolio_value = self.get_cash_balance()
+        # for asset_id, market in self.markets.items():
+        #     self.portfolio_value += int(self.position[asset_id]) * market.last_traded_price
+        self.portfolio_value = self.calculate_portfolio_value()
 
         # TODO: add futures - collateral + unsettled_pnl
         for contract_id, ft_val in self.futures_value.items():
@@ -316,7 +318,14 @@ class Agent(ABC):
         quantity = matched_order.order.order_type * matched_order.order.quantity
         cash = - Price(matched_order.price * matched_order.order.quantity * matched_order.order.order_type)
 
-        self.update_position(quantity=quantity, cash=cash, asset_id=matched_order.order.asset_id)
+        # self.update_position(quantity=quantity, cash=cash, asset_id=matched_order.order.asset_id)
+        asset_id = matched_order.order.asset_id
+        self.update_position(
+            quantity=quantity,
+            cash=cash,
+            asset_id=asset_id,
+            currency=self.markets[asset_id].currency,
+        )
         self.position_history[matched_order.time][matched_order.order.asset_id] = (
                 self.position_history.get(matched_order.time, {}).get(matched_order.order.asset_id, 0) + quantity)
 
@@ -369,6 +378,68 @@ class Agent(ABC):
             self.trade_history[matched_order.time] = { matched_order.order.asset_id:
                                                 {"trades": 1, "volume": abs(matched_order.order.quantity),
                                                  } }
+
+
+
+    ######### accounting and eod/sod valuations
+
+    def calculate_portfolio_value(self, *, day: int|None=None) -> Price:
+        # returns valuation of current portfolio as of given day.
+        # but currently works reliably for the current day
+        if day is None:
+            day = self.current_day
+        if self.fx_rate_provider is None:
+            raise ValueError("FXRateProvider is required for portfolio valuation")
+
+        total = Decimal("0")
+
+        # Cash balances
+        for currency, balance in self.cash.items():
+            total += self.fx_rate_provider.convert(
+                Decimal(str(balance)),
+                day=day,
+                base=currency,
+                quote=self.base_currency,
+            )
+
+        # Security positions
+        for asset_id, quantity in self.position.items():
+            market = self.markets[asset_id]
+
+            # Futures require separate margin/P&L treatment
+            if market.instrument_class == "future":
+                continue
+
+            native_value = (
+                    Decimal(quantity)
+                    * Decimal(str(market.last_traded_price))
+            )
+
+            total += self.fx_rate_provider.convert(
+                native_value,
+                day=day,
+                base=market.currency,
+                quote=self.base_currency,
+            )
+
+        # Futures: collateral + unsettled P&L
+        for asset_id, values in self.futures_value.items():
+            market = self.markets[asset_id]
+
+            native_value = (
+                    Decimal(str(values["collateral"]))
+                    + Decimal(str(values["unsettled_pnl"]))
+            )
+
+            total += self.fx_rate_provider.convert(
+                native_value,
+                day=day,
+                base=market.currency,
+                quote=self.base_currency,
+            )
+
+        return Price(total)
+
 
     def settle(self, contract):
         # final day settlement
@@ -588,9 +659,10 @@ class Agent(ABC):
             self.repository.save_eod_cash(eod_cash_df=eod_cash_df)
 
             # calculate and save portfolio value
-            self.portfolio_value = self.get_cash_balance() # cash  # cash already includes today's option premiums
-            for asset_id, market in self.markets.items():
-                self.portfolio_value += self.position[asset_id] * market.last_traded_price
+            # self.portfolio_value = self.get_cash_balance() # cash  # cash already includes today's option premiums
+            # for asset_id, market in self.markets.items():
+            #     self.portfolio_value += self.position[asset_id] * market.last_traded_price
+            self.portfolio_value = self.calculate_portfolio_value(day=self.current_day-1)
 
             eod_portfolio_value_df = pd.DataFrame([{ "day": self.current_day-1,
                                                           "agent_id": self.agent_id,
