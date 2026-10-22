@@ -4,7 +4,8 @@ from fontTools.varLib.instancer import instantiateTupleVariationStore
 from loguru import logger
 from pathlib import Path
 
-from marketsim.database.connectors.duckdb_storage import Repository
+# from marketsim.database.connectors.duckdb_storage import Repository
+from marketsim.database.repositories.factory import create_repository
 from marketsim.loggers.basic import terminal
 from marketsim.fundamental.mean_reverting import GaussianMeanReverting
 from marketsim.market import Security, Option, Index, Future
@@ -29,11 +30,24 @@ class Simulator:
                  lob_plot_interval: int = 10,
                  agents: dict|None=None,
                  output_dir: Path|str = "tmp",
+                 database: dict | None = None,
                  ):
         self.logger = logger.bind()
         self.logger.info("Initializing simulation with parameters in market_structure.yaml ...")
         self.output_dir = output_dir
-        self.repository = Repository(output_dir=self.output_dir)
+        # self.repository = Repository(output_dir=self.output_dir)
+        database = database or {"driver": "duckdb"}
+        driver = database.get("driver", "duckdb")
+
+        db_config = database.get(driver, {})
+
+        self.repository = create_repository(
+            driver=driver,
+            output_dir=self.output_dir,
+            **db_config,
+        )
+
+        self.logger.info(f"Database backend: {driver}")
 
         self.sim_time = sim_time # steps per day
         self.days = days

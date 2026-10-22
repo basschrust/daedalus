@@ -29,9 +29,11 @@ wheels/
 *.egg
 
 # Virtual Environment
+.venv312/
 venv/
 env/
 ENV/
+Daedalus312/
 
 # IDE
 .idea/

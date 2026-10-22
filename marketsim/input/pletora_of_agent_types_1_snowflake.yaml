@@ -1,0 +1,310 @@
+# market structure configuration file
+database:
+  driver: snowflake
+
+  snowflake:
+    database: DAEDALUS
+    schema: SIMULATION
+    warehouse: DAEDALUS_WH
+    authenticator: snowflake
+
+
+
+# generic simulation parameters
+sim_time: 500
+lob_plot_interval: 135
+debug_logging: False
+
+# definitions of the securities
+markets:
+  # WT + MM + Noise
+  security_1: !include templates/markets/wt_pull_up_1000_2000_vol.yaml
+
+  ########################## second security ###################################################
+
+  # WT + MM + Noise + HBL
+  security_2:
+    name: "WTs pulling up 1002-2000 + HBL"
+    ticker: "AAB"
+    market_type: continuous
+    lam: 0.8 # does this have any effect? It's defined in each agent though
+    agent_groups:
+      noise: !include templates/agents/noise_25_agents_rather_lazy.yaml
+      noise_2: !include templates/agents/noise_25_agents_withdrawing.yaml
+      mmzoh_1: !include templates/agents/MM_rebalance_by_vol.yaml
+      # manipulators:
+      poolA:
+        agent_class: WashTradingAgent
+        number: 1
+        config:
+          q_max: 11000
+          manipulation_boundaries:
+          manipulation_type: PULL_UP #PUSH_DOWN #PULL_UP
+          manipulation_side: BUY
+          manipulation_period_start: 1002
+          manipulation_period_end: 2000
+          lam: 0.995
+          spread: 0.00 # check this - it highly affects rebalancing, 0.5 was probably too high
+      poolB:
+        agent_class: WashTradingAgent
+        number: 1
+        config:
+          q_max: 11000
+          manipulation_boundaries:
+          manipulation_type: PULL_UP #PUSH_DOWN #PULL_UP
+          manipulation_side: SELL
+          manipulation_period_start: 1002
+          manipulation_period_end: 2000
+          lam: 0.995
+          spread: 0.00 # 0.1 seems like too small one, 0.4 seems to work fine but beware the other side!
+      hbl:
+        agent_class: HBLAgent
+        number: 1
+      hbl2:
+        agent_class: HBLAgent
+        number: 1
+        config:
+          q_max: 100
+          L: 25 # memory length
+
+    agent_dependencies:
+      - type: wash_trading_pool
+        buy_pool: poolA
+        sell_pool: poolB
+
+
+###################### third security #######################################
+
+  # WT + MM + Noise + HBL + Momentum
+  security_3:
+    name: "WTs pulling up 1002-2000 + HBL + 2xMomentum"
+    ticker: "AAC"
+    market_type: continuous
+    lam: 0.8 # does this have any effect? It's defined in each agent though
+    agent_groups:
+      noise: !include templates/agents/noise_25_agents_rather_lazy.yaml
+      noise_2: !include templates/agents/noise_25_agents_withdrawing.yaml
+      mmzoh_1: !include templates/agents/MM_rebalance_by_vol.yaml
+      # manipulators:
+      poolA:
+        agent_class: WashTradingAgent
+        number: 1
+        config:
+          q_max: 11000
+          manipulation_boundaries:
+          manipulation_type: PULL_UP #PUSH_DOWN #PULL_UP
+          manipulation_side: BUY
+          manipulation_period_start: 1002
+          manipulation_period_end: 2000
+          lam: 0.995
+          spread: 0.00 # check this - it highly affects rebalancing, 0.5 was probably too high
+      poolB:
+        agent_class: WashTradingAgent
+        number: 1
+        config:
+          q_max: 11000
+          manipulation_boundaries:
+          manipulation_type: PULL_UP #PUSH_DOWN #PULL_UP
+          manipulation_side: SELL
+          manipulation_period_start: 1002
+          manipulation_period_end: 2000
+          lam: 0.995
+          spread: 0.00 # 0.1 seems like too small one, 0.4 seems to work fine but beware the other side!
+      hbl:
+        agent_class: HBLAgent
+        number: 1
+      hbl2:
+        agent_class: HBLAgent
+        number: 1
+        config:
+          q_max: 100
+          L: 25 # memory length
+      # momentum traders:
+      momentum_1:
+        agent_class: MomentumAgent
+        number: 1
+      momentum_2:
+        agent_class: MomentumAgent
+        number: 1
+        config:
+          period: 100
+    # dep:
+    agent_dependencies:
+      - type: wash_trading_pool
+        buy_pool: poolA
+        sell_pool: poolB
+
+###################### fourth security #######################################
+
+      # more momentum traders
+  security_4:
+    name: "WTs pulling up 1002-2000 + HBL + 3xMomentum"
+    ticker: "AAD"
+    market_type: continuous
+    lam: 0.8 # does this have any effect? It's defined in each agent though
+    agent_groups:
+      noise: !include templates/agents/noise_25_agents_rather_lazy.yaml
+      noise_2: !include templates/agents/noise_25_agents_withdrawing.yaml
+      mmzoh_1: !include templates/agents/MM_rebalance_by_vol.yaml
+      # manipulators:
+      poolA:
+        agent_class: WashTradingAgent
+        number: 1
+        config:
+          q_max: 11000
+          manipulation_boundaries:
+          manipulation_type: PULL_UP #PUSH_DOWN #PULL_UP
+          manipulation_side: BUY
+          manipulation_period_start: 1002
+          manipulation_period_end: 2000
+          lam: 0.995
+          spread: 0.00 # check this - it highly affects rebalancing, 0.5 was probably too high
+      poolB:
+        agent_class: WashTradingAgent
+        number: 1
+        config:
+          q_max: 11000
+          manipulation_boundaries:
+          manipulation_type: PULL_UP #PUSH_DOWN #PULL_UP
+          manipulation_side: SELL
+          manipulation_period_start: 1002
+          manipulation_period_end: 2000
+          lam: 0.995
+          spread: 0.00 # 0.1 seems like too small one, 0.4 seems to work fine but beware the other side!
+      hbl:
+        agent_class: HBLAgent
+        number: 1
+      hbl2:
+        agent_class: HBLAgent
+        number: 1
+        config:
+          q_max: 100
+          L: 25 # memory length
+      # momentum traders:
+      momentum_1:
+        agent_class: MomentumAgent
+        number: 1
+      momentum_2:
+        agent_class: MomentumAgent
+        number: 1
+        config:
+          period: 100
+          threshold: 0.005
+      momentum_3:
+        agent_class: MomentumAgent
+        number: 1
+        config:
+          period: 15
+      spoofers:
+        agent_class: SpoofingAgent
+        number: 1
+    # dep:
+    agent_dependencies:
+      - type: wash_trading_pool
+        buy_pool: poolA
+        sell_pool: poolB
+
+###################### fifth security #######################################
+
+  security_5:
+    name: "WTs pulling up 1002-2000 + HBL + 3xMomentum + Spoofers"
+    ticker: "AAE"
+    market_type: continuous
+    lam: 0.8 # does this have any effect? It's defined in each agent though
+    agent_groups:
+      noise: !include templates/agents/noise_25_agents_rather_lazy.yaml
+      noise_2: !include templates/agents/noise_25_agents_withdrawing.yaml
+      mmzoh_1: !include templates/agents/MM_rebalance_by_vol.yaml
+      # manipulators:
+      poolA:
+        agent_class: WashTradingAgent
+        number: 1
+        config:
+          q_max: 11000
+          manipulation_boundaries:
+          manipulation_type: PULL_UP #PUSH_DOWN #PULL_UP
+          manipulation_side: BUY
+          manipulation_period_start: 1002
+          manipulation_period_end: 2000
+          lam: 0.995
+          spread: 0.00 # check this - it highly affects rebalancing, 0.5 was probably too high
+      poolB:
+        agent_class: WashTradingAgent
+        number: 1
+        config:
+          q_max: 11000
+          manipulation_boundaries:
+          manipulation_type: PULL_UP #PUSH_DOWN #PULL_UP
+          manipulation_side: SELL
+          manipulation_period_start: 1002
+          manipulation_period_end: 2000
+          lam: 0.995
+          spread: 0.00 # 0.1 seems like too small one, 0.4 seems to work fine but beware the other side!
+      hbl:
+        agent_class: HBLAgent
+        number: 1
+        config:
+          q_max: 200
+          L: 13 # memory length
+          shade:
+            - 0.01
+            - 0.03
+          arrival_rate: 2
+          pv_var: 0
+      hbl2:
+        agent_class: HBLAgent
+        number: 1
+        config:
+          q_max: 100
+          L: 25 # memory length
+          shade:
+            - 0.05
+            - 0.1
+          arrival_rate: 4
+          pv_var: 0
+      # momentum traders:
+      momentum_1:
+        agent_class: MomentumAgent
+        number: 1
+      momentum_2:
+        agent_class: MomentumAgent
+        number: 1
+        config:
+          lam: 0.6
+          period: 100
+      momentum_3:
+        agent_class: MomentumAgent
+        number: 1
+        config:
+          lam: 0.6
+          q_max: 20
+          period: 15
+      spoofers:
+        agent_class: SpoofingAgent
+        number: 1
+        config:
+          q_max: 100
+          pv_var: 0
+          order_size: 10
+          spoofing_size: 1000
+          spoofing_times:
+            - 12
+            - 34
+            - 44
+            - 67
+            - 1410
+            - 2354
+            - 3058
+            - 4232
+          normalizers:
+            fundamental: 100
+            reward: 1000
+            min_order_val: 100
+            invt: 10
+            cash: 100000
+    # dep:
+    agent_dependencies:
+      - type: wash_trading_pool
+        buy_pool: poolA
+        sell_pool: poolB
+

@@ -48,10 +48,16 @@ def main():
         )
 
     config["output_dir"] = output_dir
+
     # run simulation...
     sim = Simulator(**kwargs_for(Simulator, config))
 
-    sim.run()
+    try:
+        sim.run()
+    finally:
+        close = getattr(sim.repository, "close", None)
+        if callable(close):
+            close()
 
 
 if __name__ == "__main__":

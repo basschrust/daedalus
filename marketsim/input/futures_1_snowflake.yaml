@@ -1,0 +1,100 @@
+# market structure configuration file
+database:
+  driver: snowflake
+
+  snowflake:
+    database: DAEDALUS
+    schema: SIMULATION
+    warehouse: DAEDALUS_WH
+    authenticator: snowflake
+
+
+# generic simulation parameters
+sim_time: 30  # steps per day
+days: 12 # default 1 day, starting with id=0
+lob_plot_interval: 25
+debug_logging: False
+seed: 67
+
+# definitions of the securities
+markets:
+  tnt_stock:
+    name: "TNT stock"
+    instrument_class: stock # stock is default :)
+    short_name: "TNT"
+    market_type: continuous
+    reference_price: 167.00
+
+  mit_stock:
+    name: "MIT stock"
+    instrument_class: stock # stock is default :)
+    short_name: "MIT"
+    market_type: continuous
+    reference_price: 115.15
+
+  genius_index:
+    name: "GeNiUS index"
+    instrument_class: index
+    short_name: "GeNiUS"
+    components:
+      - weight: 0.4
+        security: tnt_stock
+      - weight: 0.6
+        security: mit_stock
+
+  future_on_index:
+    name: "Future Contract on GeNiUS index, maturity 30 days"
+    instrument_class: future
+    short_name: "FGeN30"
+#    derivatives_config:
+    underlying: genius_index
+    expiration: 10
+    multiplier: 20  # as in WIG20  - 20 PLN/index point
+    margin_rate: 0.1  # for collateral calculation
+
+  call_on_tnt:
+    name: "First derivative - European CALL option on stock TNT with strike 100"
+    instrument_class: option
+    short_name: "CALL TNT 25"
+    derivatives_config:
+      option_type: European
+      underlying: tnt_stock  # reference to one of above defined securities
+      expiration: 25   # at first set 1Y as default, but should be a date/ hour, end of particular session, etc
+      strike: 90 # maybe list of strikes?
+      option_side: CALL # CALL/ PUT, TODO: well, we could make it prepare the whole surface here?
+      quotation_type: price # price/ implied_volatility/ etc.
+      settlement_type: cash # cash/ physical/ etc
+    market_type: continuous
+
+  put_on_tnt:
+    name: "First derivative - European CALL option on stock TNT with strike 100"
+    instrument_class: option
+    short_name: "PUT TNT 25"
+    derivatives_config:
+      option_type: European
+      underlying: tnt_stock  # reference to one of above defined securities
+      expiration: 25   # at first set 1Y as default, but should be a date/ hour, end of particular session, etc
+#      strike: 90 # maybe list of strikes?
+      strikes:
+        - 100
+        - 110
+      option_side: PUT # CALL/ PUT, TODO: well, we could make it prepare the whole surface here?
+      quotation_type: price # price/ implied_volatility/ etc.
+      settlement_type: cash # cash/ physical/ etc
+    market_type: continuous
+
+
+agents:
+  noise:
+    agent_class: NoiseAgent
+    number: 15
+    withdraw_old: True
+    mean_spread: Price(1.2)
+  mmzoh_1:
+    markets:
+      - tnt_stock
+    agent_class: MMZOHAgent
+    number: 1
+  option_mmzoh_1:
+    agent_class: OptionMMZOHAgent
+    number: 1
