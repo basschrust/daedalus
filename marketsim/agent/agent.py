@@ -15,6 +15,7 @@ from marketsim.utils.id_generator import id_generator
 from marketsim.loggers.basic import terminal
 from marketsim.plot.simple_plot import plot_agent_history_many_markets
 from marketsim.market.price import Price
+from marketsim.market import FXRateProvider
 
 if TYPE_CHECKING:
     from marketsim.fourheap import MatchedOrder
@@ -40,7 +41,10 @@ class Agent(ABC):
     # An agent is an investor operating on single market (investing in single security against their cash)
 
     def __init__(self, *, markets: list[Security], repository: Repository, group: str | None = None,
-                 name: str | None = None, configuration: dict|None, output_dir: Path|str="tmp"):
+                 name: str | None = None, configuration: dict|None, output_dir: Path|str="tmp",
+                 base_currency: str = "PLN",
+                 fx_rate_provider: FXRateProvider | None = None,
+                 ):
         self.agent_id = id_generator.next()
 
         self.group = group # previously group_name
@@ -80,9 +84,7 @@ class Agent(ABC):
                                  in self.markets.items() if m.instrument_class == "future"}
         self.futures_value_history = defaultdict(dict)
 
-        # cash
-        # self.cash = Price(0)
-        # self.cash_history = defaultdict(Price)
+        # cash - multicurrency
         self.cash = {
             "USD": Price(0),
             "EUR": Price(0),
@@ -98,7 +100,9 @@ class Agent(ABC):
         self.current_time = 0
 
         self.output_dir = output_dir
-        # setup_logger(subject="agent", subject_id=self.agent_id)
+        self.base_currency = base_currency.upper()
+        self.fx_rate_provider = fx_rate_provider
+
         self.logger = setup_agent_logger(agent_id=self.agent_id, output_dir=self.output_dir) #logger.bind(agent_id=self.agent_id)
 
         self.repository.save_agent(self)
@@ -132,8 +136,10 @@ class Agent(ABC):
     ##              cash manipulation methods
     ##################################################################################
 
-    def get_cash_balance(self, *, currency: str="PLN") -> Price:
-        """Return cash balance in the specified currency."""
+    def get_cash_balance(
+            self, *, currency: str | None = None,
+    ) -> Price:
+        currency = currency or self.base_currency
         return self.cash.get(currency, Price(0))
 
     def get_cash_balance_all_currencies(self):
