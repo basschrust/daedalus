@@ -1,21 +1,16 @@
 from __future__ import annotations
 
-from fontTools.varLib.instancer import instantiateTupleVariationStore
 from loguru import logger
 from pathlib import Path
 
-# from marketsim.database.connectors.duckdb_storage import Repository
 from marketsim.database.repositories.factory import create_repository
 from marketsim.loggers.basic import terminal
 from marketsim.fundamental.mean_reverting import GaussianMeanReverting
-from marketsim.market import Security, Option, Index, Future, FXRateProvider
+from marketsim.market import Security, Option, Index, Future, FXRateProvider, Price
 from marketsim.agent import Agent, WashTradingAgent, MomentumAgent, SpoofingAgent, NoiseAgent
 from marketsim.agent import ZIAgentNotInformed, MMZOHAgent, HBLAgent, OptionMMZOHAgent
 from marketsim.agent.washtrading import WashTradingPool
-from marketsim.input.config import load_config
 
-# config = load_config()
-# output_dir = config["output_dir"]
 
 class Simulator:
     def __init__(self,
@@ -31,6 +26,7 @@ class Simulator:
                  agents: dict|None=None,
                  output_dir: Path|str = "tmp",
                  database: dict | None = None,
+                 fx_rates: dict | None = None,
                  ):
         self.logger = logger.bind()
         self.logger.info("Initializing simulation with parameters in market_structure.yaml ...")
@@ -68,7 +64,16 @@ class Simulator:
         self.day = 0 # day counter for SoD and EoD procedures
 
         self.fx_rate_provider = FXRateProvider()
+        for day, rates in (fx_rates or {}).items():
+            for pair, rate in rates.items():
+                base, quote = pair.split("/")
 
+                self.fx_rate_provider.set_rate(
+                    day=int(day),
+                    base=base,
+                    quote=quote,
+                    rate=rate,
+                )
 
         for m_key, m_conf in markets.items():
             # TODO: do we need this fundamental at all?
@@ -139,9 +144,15 @@ class Simulator:
                 self.asset_names_map[market.asset_id] = {"name": market.name,
                                                          }
             elif instrument_class == "stock":
-                market = Security(market_type=m_conf.get("market_type"), name=m_conf.get("name")
-                                  , repository=self.repository, short_name=m_conf.get("short_name"),
-                                  output_dir=self.output_dir, reference_price=m_conf.get("reference_price"))
+                market = Security(
+                    market_type=m_conf.get("market_type"),
+                    name=m_conf.get("name"),
+                    repository=self.repository,
+                    short_name=m_conf.get("short_name"),
+                    output_dir=self.output_dir,
+                    reference_price=m_conf.get("reference_price"),
+                    currency=m_conf.get("currency", "PLN"),
+                )
                 self.market_map[m_key] = market.asset_id
                 self.markets[market.asset_id] = market
                 self.asset_names_map[market.asset_id] = {"name": market.name,
@@ -267,8 +278,23 @@ class Simulator:
     def add_agents(self, agents: list[Agent]) -> None:
         for agent in agents:
             self.logger.info(f"Adding agent {str(agent)} to the simulation")
-            self.agents[agent.get_id()] = agent
             agent.fx_rate_provider = self.fx_rate_provider
+
+            config = agent.configuration or {}
+            agent.base_currency = config.get(
+                "base_currency", "PLN"
+            ).upper()
+
+            for currency, amount in config.get(
+                    "initial_cash", {}
+            ).items():
+                agent.credit_cash(
+                    currency=currency,
+                    amount=Price(amount),
+                )
+
+            # Existing registration logic follows
+            self.agents[agent.get_id()] = agent
 
             for asset_id, market in agent.markets.items(): # TODO: this will serve the multimarket agents soon
                 market.add_agents([agent]) # TODO: check performance
