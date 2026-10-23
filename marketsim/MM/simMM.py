@@ -11,33 +11,34 @@ from marketsim.market.security import Security
 
 
 class SimulatorSampledArrival_MM:
-    def __init__(self,
-                 num_background_agents: int,
-                 sim_time: int = 12000,
-                 num_assets: int = 1,
-                 lam: float = 1e-3,
-                 lamMM: float = 5,
-                 mean: float = 1e5,
-                 r: float = 0.05,
-                 shock_var: float = 5e6,
-                 q_max: int = 10,
-                 pv_var: float = 5e6,
-                 shade=None,
-                 xi: float = 100,  # rung size
-                 omega: float = 64,  # spread,
-                 n_levels: int = 101,
-                 total_volume: int = 100,
-                 K: int = 100, # n_level - 1
-                 beta_params: dict = None,
-                 policy=None,
-                 beta_MM=False,
-                 inv_driven=False, # enable inventory driven policy
-                 w0=5,
-                 p=2,
-                 k_min=5,
-                 k_max=20,
-                 max_position=100
-                 ):
+    def __init__(
+        self,
+        num_background_agents: int,
+        sim_time: int = 12000,
+        num_assets: int = 1,
+        lam: float = 1e-3,
+        lamMM: float = 5,
+        mean: float = 1e5,
+        r: float = 0.05,
+        shock_var: float = 5e6,
+        q_max: int = 10,
+        pv_var: float = 5e6,
+        shade=None,
+        xi: float = 100,  # rung size
+        omega: float = 64,  # spread,
+        n_levels: int = 101,
+        total_volume: int = 100,
+        K: int = 100,  # n_level - 1
+        beta_params: dict = None,
+        policy=None,
+        beta_MM=False,
+        inv_driven=False,  # enable inventory driven policy
+        w0=5,
+        p=2,
+        k_min=5,
+        k_max=20,
+        max_position=100,
+    ):
 
         if shade is None:
             shade = [250, 500]
@@ -68,10 +69,11 @@ class SimulatorSampledArrival_MM:
         if num_assets > 1:
             raise NotImplementedError("Only support single market currently")
 
-
         self.markets = []
         for _ in range(num_assets):
-            fundamental = LazyGaussianMeanReverting(mean=mean, final_time=sim_time+1, r=r, shock_var=shock_var)
+            fundamental = LazyGaussianMeanReverting(
+                mean=mean, final_time=sim_time + 1, r=r, shock_var=shock_var
+            )
             self.markets.append(Security(fundamental=fundamental, time_steps=sim_time))
 
         self.agents = {}
@@ -79,19 +81,16 @@ class SimulatorSampledArrival_MM:
             self.arrivals[self.arrival_times[self.arrival_index].item()].append(agent_id)
             self.arrival_index += 1
 
-            self.agents[agent_id] = (
-                ZIAgent(
-                    agent_id=agent_id,
-                    market=self.markets[0],
-                    q_max=q_max,
-                    shade=shade,
-                    pv_var=pv_var
-                ))
+            self.agents[agent_id] = ZIAgent(
+                agent_id=agent_id, market=self.markets[0], q_max=q_max, shade=shade, pv_var=pv_var
+            )
 
-        self.arrivals_MM[self.arrival_times_MM[self.arrival_index_MM].item()].append(self.num_background_agents)
+        self.arrivals_MM[self.arrival_times_MM[self.arrival_index_MM].item()].append(
+            self.num_background_agents
+        )
         self.arrival_index_MM += 1
 
-        if beta_MM: # beta policy
+        if beta_MM:  # beta policy
             self.MM = MMbetaAgent(
                 agent_id=self.num_background_agents,
                 market=self.markets[0],
@@ -106,15 +105,11 @@ class SimulatorSampledArrival_MM:
                 p=p,
                 k_min=k_min,
                 k_max=k_max,
-                max_position=max_position
+                max_position=max_position,
             )
-        else: # ladder policy
+        else:  # ladder policy
             self.MM = MMAgent(
-                agent_id=self.num_background_agents,
-                market=self.markets[0],
-                K=K,
-                xi=xi,
-                omega=omega
+                agent_id=self.num_background_agents, market=self.markets[0], K=K, xi=xi, omega=omega
             )
         self.agents[self.num_background_agents] = self.MM
 
@@ -137,24 +132,30 @@ class SimulatorSampledArrival_MM:
                 for agent_id in agents:
                     agent = self.agents[agent_id]
                     market.withdraw_all(agent_id)
-                    if agent_id == self.num_background_agents: # MM
+                    if agent_id == self.num_background_agents:  # MM
                         orders = agent.take_action()
                         # print("MM Orders:", orders)
                         market.add_orders(orders)
                         if self.arrival_index_MM == self.arrivals_sampled:
-                            self.arrival_times_MM = sample_arrivals(self.lamMM, self.arrivals_sampled)
+                            self.arrival_times_MM = sample_arrivals(
+                                self.lamMM, self.arrivals_sampled
+                            )
                             self.arrival_index_MM = 0
-                        self.arrivals_MM[self.arrival_times_MM[self.arrival_index_MM].item() + 1 + self.time].append(agent_id)
+                        self.arrivals_MM[
+                            self.arrival_times_MM[self.arrival_index_MM].item() + 1 + self.time
+                        ].append(agent_id)
                         self.arrival_index_MM += 1
                         # print(self.arrival_times_MM[self.arrival_index_MM].item() + 1 + self.time)
-                    else: # Regular agents.
+                    else:  # Regular agents.
                         orders = agent.take_action()
                         market.add_orders(orders)
 
                         if self.arrival_index == self.arrivals_sampled:
                             self.arrival_times = sample_arrivals(self.lam, self.arrivals_sampled)
                             self.arrival_index = 0
-                        self.arrivals[self.arrival_times[self.arrival_index].item() + 1 + self.time].append(agent_id)
+                        self.arrivals[
+                            self.arrival_times[self.arrival_index].item() + 1 + self.time
+                        ].append(agent_id)
                         self.arrival_index += 1
                     # print("time:", self.time, "orders:", orders)
 
@@ -162,8 +163,12 @@ class SimulatorSampledArrival_MM:
                 # print("time:", self.time, "orders:", new_orders)
                 for matched_order in new_orders:
                     agent_id = matched_order.order.agent_id
-                    quantity = matched_order.order.order_type*matched_order.order.quantity
-                    cash = -matched_order.price*matched_order.order.quantity*matched_order.order.order_type
+                    quantity = matched_order.order.order_type * matched_order.order.quantity
+                    cash = (
+                        -matched_order.price
+                        * matched_order.order.quantity
+                        * matched_order.order.order_type
+                    )
                     self.agents[agent_id].update_position(quantity, cash)
                     # Record
                     self.total_quantity += abs(quantity)
@@ -174,7 +179,7 @@ class SimulatorSampledArrival_MM:
                 best_ask = market.order_book.get_best_ask()
                 best_bid = market.order_book.get_best_bid()
                 self.spreads.append(best_ask - best_bid)
-                self.midprices.append((best_ask + best_bid)/2)
+                self.midprices.append((best_ask + best_bid) / 2)
                 self.inventory.append(self.MM.position)
 
         # else:
@@ -190,8 +195,6 @@ class SimulatorSampledArrival_MM:
         #         self.values.append(agent.position * fundamental_val + agent.cash)
         #     else:
         #         self.values.append(agent.get_pos_value() + agent.position * fundamental_val + agent.cash)
-
-
 
     def run(self):
         counter = 0
@@ -218,20 +221,18 @@ class SimulatorSampledArrival_MM:
                 self.inventory.append(self.MM.position)
             self.time += 1
         self.end_sim()
-        #TODO: We can track the value of MM by using the true fundamental.
+        # TODO: We can track the value of MM by using the true fundamental.
         stats = self.get_stats()
         return stats
-
 
     def reset(self, seed=None, options=None):
         self.time = 0
 
         # Reset the markets
         for market in self.markets:
-            fundamental = LazyGaussianMeanReverting(mean=self.mean,
-                                                    final_time=self.sim_time + 1,
-                                                    r=self.r,
-                                                    shock_var=self.shock_var)
+            fundamental = LazyGaussianMeanReverting(
+                mean=self.mean, final_time=self.sim_time + 1, r=self.r, shock_var=self.shock_var
+            )
             market.reset(fundamental=fundamental)
 
         # Reset the agents
@@ -253,8 +254,6 @@ class SimulatorSampledArrival_MM:
         # Run until the MM enters.
         # self.run_agents_only()
 
-
-
     def reset_arrivals(self):
         # Regular Trader
         self.arrivals = defaultdict(list)
@@ -273,7 +272,6 @@ class SimulatorSampledArrival_MM:
         # self.arrival_index_MM += 1
         self.arrivals_MM[0].append(self.num_background_agents)
 
-
     def run_agents_only(self, all_time_steps=False):
         if all_time_steps:
             sim_time = self.sim_time
@@ -287,7 +285,6 @@ class SimulatorSampledArrival_MM:
         if all_time_steps:
             return self.get_stats()
 
-
     def get_stats(self):
         stats = {}
         stats["spreads"] = self.spreads.copy()
@@ -300,9 +297,8 @@ class SimulatorSampledArrival_MM:
         return stats
 
 
-
-
 def sample_arrivals(p, num_samples):
     geometric_dist = dist.Geometric(torch.tensor([p]))
-    return geometric_dist.sample((num_samples,)).squeeze()  # Returns a tensor of 1000 sampled time steps
-
+    return geometric_dist.sample(
+        (num_samples,)
+    ).squeeze()  # Returns a tensor of 1000 sampled time steps

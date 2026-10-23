@@ -9,7 +9,6 @@ if TYPE_CHECKING:
 
 @runtime_checkable
 class RepositoryInterface(Protocol):
-
     def prepare_tables(self) -> None: ...
 
     # Static simulation data

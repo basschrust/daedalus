@@ -76,7 +76,7 @@ def relative_strength_index(market, lookback=20):
         return 100
 
     rs = up / down
-    rsi = 100. - 100. / (1. + rs)
+    rsi = 100.0 - 100.0 / (1.0 + rs)
 
     return rsi
 
@@ -89,6 +89,3 @@ def midprice_move(market, lookback=20):
         return midprices[-1] - np.mean(midprices[:-1])
     else:
         return 0.0
-
-
-

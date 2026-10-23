@@ -15,6 +15,7 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
       It must contains the file created by the ``Monitor`` wrapper.
     :param verbose: Verbosity level: 0 for no output, 1 for info messages, 2 for debug messages
     """
+
     def __init__(self, check_freq: int, log_dir: str, verbose: int = 1):
         super().__init__(verbose)
         self.check_freq = check_freq
@@ -34,11 +35,13 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
             # Retrieve training reward
             x, y = ts2xy(load_results(self.log_dir), "timesteps")
             # NOTE: Mean training reward over the last 10 episodes. Can be tuned based on environment stochasticity
-            mean_reward = np.mean(y[-min(len(y),10):])
+            mean_reward = np.mean(y[-min(len(y), 10) :])
             self.cumulative_window_rewards.append(mean_reward)
             if self.verbose >= 1:
                 print(f"Num timesteps: {self.num_timesteps}")
-                print(f"Best mean reward: {self.best_mean_reward:.2f} - Last mean reward per episode: {mean_reward:.2f}")
+                print(
+                    f"Best mean reward: {self.best_mean_reward:.2f} - Last mean reward per episode: {mean_reward:.2f}"
+                )
 
             # New best model if avg reward exceeds previous max. Only start saving after training for 20k steps or else results are too stochastic
             if mean_reward > self.best_mean_reward and self.n_calls > 20000:

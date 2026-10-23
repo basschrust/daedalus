@@ -18,7 +18,10 @@ class FourHeap:
     def insert(self, order: Order):
         self.agent_id_map[order.agent_id].append(order.order_id)
         if order.order_type == constants.SELL:
-            if order.price <= self.buy_unmatched.peek() and self.sell_matched.peek() <= self.buy_unmatched.peek():
+            if (
+                order.price <= self.buy_unmatched.peek()
+                and self.sell_matched.peek() <= self.buy_unmatched.peek()
+            ):
                 self.sell_matched.add_order(order)
                 b = self.buy_unmatched.push_to()
                 self.buy_matched.add_order(b)
@@ -29,7 +32,10 @@ class FourHeap:
             else:
                 self.sell_unmatched.add_order(order)
         if order.order_type == constants.BUY:
-            if order.price >= self.sell_unmatched.peek() and self.buy_matched.peek() >= self.sell_unmatched.peek():
+            if (
+                order.price >= self.sell_unmatched.peek()
+                and self.buy_matched.peek() >= self.sell_unmatched.peek()
+            ):
                 self.buy_matched.add_order(order)
                 s = self.sell_unmatched.push_to()
                 self.sell_matched.add_order(s)
@@ -59,7 +65,7 @@ class FourHeap:
             self.remove(order_id)
 
     def market_clear(self, plus_one=False):
-        raise # AK so we are sure it is not called anywhere
+        raise  # AK so we are sure it is not called anywhere
         matched_count = self.buy_matched.count()
         b_i = 0
         s_i = 0
@@ -90,13 +96,13 @@ class FourHeap:
         return max(self.sell_unmatched.peek(), self.buy_matched.peek())
 
     def observe(self) -> str:
-        s = '--------------\n'
-        names = ['buy_matched', 'buy_unmatched', 'sell_matched', 'sell_unmatched']
+        s = "--------------\n"
+        names = ["buy_matched", "buy_unmatched", "sell_matched", "sell_unmatched"]
         for i, heap in enumerate(self.heaps):
             s += names[i]
-            s += '\n'
-            s += f'Top order_id: {heap.peek_order().order_id}\n'
-            s += f'Top price: {abs(heap.peek())}\n'
-            s += f'Number of orders: {heap.count()}\n\n\n'
+            s += "\n"
+            s += f"Top order_id: {heap.peek_order().order_id}\n"
+            s += f"Top price: {abs(heap.peek())}\n"
+            s += f"Number of orders: {heap.count()}\n\n\n"
 
         return s

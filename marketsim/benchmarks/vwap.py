@@ -11,4 +11,4 @@ def vwap(matched_orders):
             num += price * quantity
             den += quantity
 
-    return num/den
+    return num / den

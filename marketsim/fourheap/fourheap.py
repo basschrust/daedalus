@@ -21,8 +21,11 @@ class FourHeap:
     This class reimplements the four-heap data structure described in "Flexible double auctions for electronic commerce:
     theory and implementation" (Wurman, 98)
     """
+
     def __init__(self, plus_one=False, market: Security | None = None):
-        self.plus_one = plus_one # AK - wtf is that? if True gets ask price in clearing, bid otherwise
+        self.plus_one = (
+            plus_one  # AK - wtf is that? if True gets ask price in clearing, bid otherwise
+        )
 
         self.market = market
         self.logger = logger.bind(market_id=market.asset_id)
@@ -35,42 +38,30 @@ class FourHeap:
         self.heaps = [self.buy_matched, self.buy_unmatched, self.sell_matched, self.sell_unmatched]
         self.agent_id_map = defaultdict(list)
 
-        self.midprices = defaultdict(Price) #[] # AK: well, it should be tied to the time slots
+        self.midprices = defaultdict(Price)  # [] # AK: well, it should be tied to the time slots
 
     def handle_new_order(self, order: Order) -> None:
         self.logger.debug("handle_new_order order_id={}", order.order_id)
 
         orders_matched = (
-            self.sell_matched
-            if order.order_type == constants.SELL
-            else self.buy_matched
+            self.sell_matched if order.order_type == constants.SELL else self.buy_matched
         )
         counter_matched = (
-            self.sell_matched
-            if order.order_type == constants.BUY
-            else self.buy_matched
+            self.sell_matched if order.order_type == constants.BUY else self.buy_matched
         )
         counter_unmatched = (
-            self.buy_unmatched
-            if order.order_type == constants.SELL
-            else self.sell_unmatched
+            self.buy_unmatched if order.order_type == constants.SELL else self.sell_unmatched
         )
         orders_unmatched = (
-            self.sell_unmatched
-            if order.order_type == constants.SELL
-            else self.buy_unmatched
+            self.sell_unmatched if order.order_type == constants.SELL else self.buy_unmatched
         )
 
         while order.quantity > 0:
             best_price = counter_unmatched.peek()
 
             # Stop if the remaining order no longer crosses the book.
-            if (
-                    order.order_type == constants.SELL
-                    and order.price > best_price
-            ) or (
-                    order.order_type == constants.BUY
-                    and order.price < best_price
+            if (order.order_type == constants.SELL and order.price > best_price) or (
+                order.order_type == constants.BUY and order.price < best_price
             ):
                 orders_unmatched.add_order(order)
                 break
@@ -115,26 +106,28 @@ class FourHeap:
             order = remaining_order
 
     def handle_replace(self, order: Order) -> None:
-        raise # is it ever used in coninuous mode? yes, but no after the fix on L55 above on 29.7.2026
+        raise  # is it ever used in coninuous mode? yes, but no after the fix on L55 above on 29.7.2026
         # now developing this for the opening/closing phase
         self.logger.info(f"handle_replace {order}")
         matched = self.sell_matched if order.order_type == constants.SELL else self.buy_matched
-        unmatched = self.sell_unmatched if order.order_type == constants.SELL else self.buy_unmatched
+        unmatched = (
+            self.sell_unmatched if order.order_type == constants.SELL else self.buy_unmatched
+        )
         q_order = order.quantity
         replaced = matched.pop_best_order()
         if replaced is not None:
             replaced_quantity = replaced.quantity
             if replaced_quantity == q_order:
-                matched.add_order(order, executed_mode='replaced')
+                matched.add_order(order, executed_mode="replaced")
                 unmatched.add_order(replaced)
             elif replaced_quantity > q_order:
-                matched.add_order(order, executed_mode='replaced2')
+                matched.add_order(order, executed_mode="replaced2")
                 matched_s = replaced.copy_and_decrease(q_order)
-                matched.add_order(matched_s, executed_mode='replaced3')
+                matched.add_order(matched_s, executed_mode="replaced3")
                 unmatched.add_order(replaced)
             elif replaced_quantity < q_order:
                 new_order = order.copy_and_decrease(replaced_quantity)
-                matched.add_order(order, executed_mode='replaced4')
+                matched.add_order(order, executed_mode="replaced4")
                 unmatched.add_order(replaced)
                 self.insert(new_order)
 
@@ -195,7 +188,7 @@ class FourHeap:
         elif self.sell_unmatched.contains(order_id):
             self.sell_unmatched.remove(order_id)
         elif self.buy_matched.contains(order_id):
-            raise # this should not happen - order already executed (in continuous, but in closing/fixing it may)
+            raise  # this should not happen - order already executed (in continuous, but in closing/fixing it may)
             order_q = self.buy_matched.order_dict[order_id].quantity
             self.buy_matched.remove(order_id)
             s = self.sell_matched.pop_best_order()
@@ -240,7 +233,9 @@ class FourHeap:
                 self.remove(order_id)
             self.agent_id_map[agent_id] = []
 
-    def market_clear(self, current_time: int, trading_phase: str = "continuous") -> list[MatchedOrder]:
+    def market_clear(
+        self, current_time: int, trading_phase: str = "continuous"
+    ) -> list[MatchedOrder]:
         # AK TODO: rename to "match_orders"?
         if trading_phase == "continuous":
             # in this mode the orders arrive one by one and are cleared. So when handling this queue of matched orders
@@ -248,8 +243,8 @@ class FourHeap:
             # let's check if it is gonna even work properly - will the set of matched orders be exactly the same as in the
             # opening (standard) mode?
             # let's assume that this method is called after each new order placed
-            #price = self.market.last_traded_price
-            #price = self.market.traded_prices[current_time]["Close"]
+            # price = self.market.last_traded_price
+            # price = self.market.traded_prices[current_time]["Close"]
 
             # well, those will create matched orders with not always proper price?
             # buy_matched = self.buy_matched.market_clear(price=price, current_time=current_time)
@@ -262,7 +257,9 @@ class FourHeap:
 
         elif trading_phase == "fixed":
             raise
-            price = self.get_ask_quote() if self.plus_one else self.get_bid_quote() # AK - ohoh why not midprice?
+            price = (
+                self.get_ask_quote() if self.plus_one else self.get_bid_quote()
+            )  # AK - ohoh why not midprice?
 
             buy_matched = self.buy_matched.market_clear(price=price, current_time=current_time)
             sell_matched = self.sell_matched.market_clear(price=price, current_time=current_time)
@@ -301,10 +298,14 @@ class FourHeap:
 
                 cum_volume += order.quantity
             except KeyError:
-                self.logger.warning(f"No order with id {order_id} in sell_unmatched - get_ask_at_volume")
+                self.logger.warning(
+                    f"No order with id {order_id} in sell_unmatched - get_ask_at_volume"
+                )
 
             if cum_volume >= volume:
-                self.logger.info(f"Price: {price}, Cumulated volume for ask: {cum_volume}, required  {volume}")
+                self.logger.info(
+                    f"Price: {price}, Cumulated volume for ask: {cum_volume}, required  {volume}"
+                )
                 return price
 
         raise ValueError(f"Invalid volume for ask: {volume}")
@@ -312,7 +313,7 @@ class FourHeap:
     def get_bid_at_volume(self, volume: int) -> Price | float:
         # but if inf /- inf then not Price, but float
         if self.buy_unmatched.size < volume:
-            return - math.inf
+            return -math.inf
 
         cum_volume = 0
         for price, order_id in sorted(self.buy_unmatched.heap):
@@ -324,11 +325,15 @@ class FourHeap:
 
                 cum_volume += order.quantity
             except KeyError:
-                self.logger.warning(f"No order with id {order_id} in buy_unmatched - get_bid_at_volume")
+                self.logger.warning(
+                    f"No order with id {order_id} in buy_unmatched - get_bid_at_volume"
+                )
 
             if cum_volume >= volume:
-                self.logger.info(f"Price: {price}, Cumulated volume for bid: {cum_volume}, required {volume}")
-                return - price
+                self.logger.info(
+                    f"Price: {price}, Cumulated volume for bid: {cum_volume}, required {volume}"
+                )
+                return -price
 
         raise ValueError(f"Invalid volume for bid: {volume}")
 
@@ -344,17 +349,15 @@ class FourHeap:
         else:
             self.midprices[current_time] = (best_ask + best_bid) / 2
 
-
-
     def observe(self) -> str:
-        s = '--------------\n'
-        names = ['buy_matched', 'buy_unmatched', 'sell_matched', 'sell_unmatched']
+        s = "--------------\n"
+        names = ["buy_matched", "buy_unmatched", "sell_matched", "sell_unmatched"]
         for i, heap in enumerate(self.heaps):
             s += names[i]
-            s += '\n'
+            s += "\n"
             # s += f'Top order_id: {heap.peek_order().order_id}\n'
-            s += f'Top price: {abs(heap.peek())}\n'
-            s += f'Number of orders: {heap.count()}\n\n\n'
+            s += f"Top price: {abs(heap.peek())}\n"
+            s += f"Number of orders: {heap.count()}\n\n\n"
 
         return s
 

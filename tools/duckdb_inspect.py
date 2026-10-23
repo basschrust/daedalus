@@ -19,18 +19,19 @@ def inspect_database(db_path: str) -> None:
 
         for (table_name,) in tables:
             # Get column names and types
-            columns = conn.execute("""
+            columns = conn.execute(
+                """
                 SELECT column_name, data_type
                 FROM information_schema.columns
                 WHERE table_schema = 'main'
                   AND table_name = ?
                 ORDER BY ordinal_position
-            """, [table_name]).fetchall()
+            """,
+                [table_name],
+            ).fetchall()
 
             # Get row count
-            row_count = conn.execute(
-                f'SELECT COUNT(*) FROM "{table_name}"'
-            ).fetchone()[0]
+            row_count = conn.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[0]
 
             print(f"\nTable: {table_name}")
             print(f"Rows:  {row_count}")

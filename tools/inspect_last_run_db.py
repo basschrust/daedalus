@@ -12,11 +12,7 @@ def main() -> None:
     # Match directories named run_YYYYMMDD_HHMMSS
     pattern = re.compile(r"^run_(\d{8}_\d{6})$")
 
-    run_dirs = [
-        path
-        for path in output_dir.iterdir()
-        if path.is_dir() and pattern.match(path.name)
-    ]
+    run_dirs = [path for path in output_dir.iterdir() if path.is_dir() and pattern.match(path.name)]
 
     if not run_dirs:
         print(f"No simulation run directories found in {output_dir}")

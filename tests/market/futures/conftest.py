@@ -60,13 +60,11 @@ def futures_agents(
     future_short: Future,
     future_long: Future,
     repository: Repository,
-    fx_rate_provider: FXRateProvider
+    fx_rate_provider: FXRateProvider,
 ) -> dict[str, Agent]:
     agents = {
         name: NoiseAgent(
-            markets=futures_markets,
-            repository=repository,
-            fx_rate_provider=fx_rate_provider
+            markets=futures_markets, repository=repository, fx_rate_provider=fx_rate_provider
         )
         for name in ("buyer", "seller", "hedger")
     }
@@ -92,20 +90,11 @@ def futures_agents_with_positions(
         agent.sod()
 
     # Short-maturity contract: +2 / -2
-    buyer.update_futures_position(
-        quantity=2, contract=future_short
-    )
-    seller.update_futures_position(
-        quantity=-2, contract=future_short
-    )
+    buyer.update_futures_position(quantity=2, contract=future_short)
+    seller.update_futures_position(quantity=-2, contract=future_short)
 
     # Long-maturity contract: +1 / -1
-    buyer.update_futures_position(
-        quantity=1, contract=future_long
-    )
-    hedger.update_futures_position(
-        quantity=-1, contract=future_long
-    )
+    buyer.update_futures_position(quantity=1, contract=future_long)
+    hedger.update_futures_position(quantity=-1, contract=future_long)
 
     return futures_agents
-

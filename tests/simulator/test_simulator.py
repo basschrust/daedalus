@@ -1,4 +1,3 @@
-
 from decimal import Decimal
 from unittest.mock import Mock, call
 
@@ -46,13 +45,11 @@ def test_fx_rates_initialized(tmp_path):
     )
 
     try:
-        assert sim.fx_rate_provider.get_rate(
-            day=0, base="USD", quote="PLN"
-        ) == Decimal("3.8")
+        assert sim.fx_rate_provider.get_rate(day=0, base="USD", quote="PLN") == Decimal("3.8")
 
-        assert sim.fx_rate_provider.get_rate(
-            day=0, base="EUR", quote="USD"
-        ) == Decimal("4.30") / Decimal("3.80")
+        assert sim.fx_rate_provider.get_rate(day=0, base="EUR", quote="USD") == Decimal(
+            "4.30"
+        ) / Decimal("3.80")
     finally:
         sim.repository.connection.close()
 
@@ -97,12 +94,8 @@ def test_step_executes_agents_before_markets_and_valuation(simulator):
     events = []
 
     agent = Mock()
-    agent.take_action.side_effect = (
-        lambda **kwargs: events.append("agent_action")
-    )
-    agent.record_valuation.side_effect = (
-        lambda **kwargs: events.append("valuation")
-    )
+    agent.take_action.side_effect = lambda **kwargs: events.append("agent_action")
+    agent.record_valuation.side_effect = lambda **kwargs: events.append("valuation")
 
     market = Mock()
     market.status = "active"
@@ -115,9 +108,7 @@ def test_step_executes_agents_before_markets_and_valuation(simulator):
     market.order_book.buy_unmatched.peek.return_value = None
     market.order_book.sell_unmatched.peek.return_value = None
 
-    market.step.side_effect = (
-        lambda **kwargs: events.append("market_step") or []
-    )
+    market.step.side_effect = lambda **kwargs: events.append("market_step") or []
 
     simulator.agents = {1: agent}
     simulator.markets = {2: market}
@@ -193,10 +184,7 @@ def test_add_agents_registers_agent_and_injects_fx(simulator):
     assert agent.base_currency == "USD"
 
     assert agent.credit_cash.call_count == 2
-    assert {
-        c.kwargs["currency"]
-        for c in agent.credit_cash.call_args_list
-    } == {"USD", "PLN"}
+    assert {c.kwargs["currency"] for c in agent.credit_cash.call_args_list} == {"USD", "PLN"}
 
     market.add_agents.assert_called_once_with([agent])
 

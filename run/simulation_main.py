@@ -24,11 +24,7 @@ def kwargs_for(func: Callable, config: dict) -> dict:
 
 
 def main():
-    config_file = (
-        sys.argv[1]
-        if len(sys.argv) > 1
-        else "market_structure.yaml"
-    )
+    config_file = sys.argv[1] if len(sys.argv) > 1 else "market_structure.yaml"
 
     config = load_config(config_file)
     output_dir = create_run_directory()
@@ -57,8 +53,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-

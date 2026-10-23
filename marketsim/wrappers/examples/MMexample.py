@@ -4,19 +4,21 @@ from marketsim.wrappers.MM_wrapper import MMEnv
 def run():
 
     normalizers = {"fundamental": 1.2e5, "invt": 10, "cash": 5e5}
-    beta_params = {'a_buy': 0.5, 'b_buy': 0.5, 'a_sell': 0.5, 'b_sell': 0.5}
+    beta_params = {"a_buy": 0.5, "b_buy": 0.5, "a_sell": 0.5, "b_sell": 0.5}
 
-    env = MMEnv(num_background_agents=25,
-                sim_time=1000,
-                lam=0.1,
-                mean=1e5,
-                r=0.05,
-                shock_var=5e6,
-                q_max=10,
-                pv_var=5e6,
-                shade=[250,500],
-                normalizers=normalizers,
-                beta_params=beta_params)
+    env = MMEnv(
+        num_background_agents=25,
+        sim_time=1000,
+        lam=0.1,
+        mean=1e5,
+        r=0.05,
+        shock_var=5e6,
+        q_max=10,
+        pv_var=5e6,
+        shade=[250, 500],
+        normalizers=normalizers,
+        beta_params=beta_params,
+    )
 
     obs, info = env.reset()
 
@@ -34,12 +36,12 @@ def run():
         # print(env.markets[0].order_book.observe())
         print("---------------------------")
 
-
         if terminated or truncated:
             print("=========================")
             observation, info = env.reset()
 
     env.end_sim_summarize()
+
 
 if __name__ == "__main__":
     run()

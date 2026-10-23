@@ -23,7 +23,6 @@ if TYPE_CHECKING:
     from marketsim.market import Future, Security
 
 
-
 def validate_update(quantity: int, cash: Price) -> None:
     if not math.isfinite(cash):
         raise ValueError(f"cash must be finite (not NaN or ±inf) as here: {cash}")
@@ -40,18 +39,25 @@ def validate_update(quantity: int, cash: Price) -> None:
 class Agent(ABC):
     # An agent is an investor operating on single market (investing in single security against their cash)
 
-    def __init__(self, *, markets: list[Security], repository: Repository, group: str | None = None,
-                 name: str | None = None, configuration: dict|None, output_dir: Path|str="tmp",
-                 base_currency: str = "PLN",
-                 fx_rate_provider: FXRateProvider | None = None,
-                 ):
+    def __init__(
+        self,
+        *,
+        markets: list[Security],
+        repository: Repository,
+        group: str | None = None,
+        name: str | None = None,
+        configuration: dict | None,
+        output_dir: Path | str = "tmp",
+        base_currency: str = "PLN",
+        fx_rate_provider: FXRateProvider | None = None,
+    ):
         self.agent_id = id_generator.next()
 
-        self.group = group # previously group_name
+        self.group = group  # previously group_name
         self.name = name if name is not None else f"{self.agent_id}_{self.group}"
         self.configuration = configuration
 
-        self.markets = { market.asset_id: market for market in markets }  # converting to dict
+        self.markets = {market.asset_id: market for market in markets}  # converting to dict
         self.abandoned_markets = {}
 
         self.trade_history = {}  # dict of lists/dicts {time: [trades over that day, volume bought, volume sold]}
@@ -59,10 +65,11 @@ class Agent(ABC):
         self.portfolio_value = Price(0)
         self.portfolio_value_history = defaultdict(Price)
 
-        self.position = { m_id: 0 for m_id  in self.markets } #TODO: stocks or all instruments?
+        self.position = {m_id: 0 for m_id in self.markets}  # TODO: stocks or all instruments?
         # for the MtM daily contracts:
-        self.futures_position = { m_id: 0 for m_id, m
-                                  in self.markets.items() if m.instrument_class == "future" }
+        self.futures_position = {
+            m_id: 0 for m_id, m in self.markets.items() if m.instrument_class == "future"
+        }
         self.futures_value = {
             m_id: {
                 "avg_initial_price": Price(0),
@@ -75,13 +82,16 @@ class Agent(ABC):
 
         # all assets:
         self.position_history = defaultdict(dict)
-        self.position_history[0] = { m_id:0  for m_id  in self.markets }  # valid one day! {time: {asset_id: number_of_shares}}
-                # at the end of tick
-        self.position_history_df = None # TODO: is needed as attribute - local var suffices?
+        self.position_history[0] = {
+            m_id: 0 for m_id in self.markets
+        }  # valid one day! {time: {asset_id: number_of_shares}}
+        # at the end of tick
+        self.position_history_df = None  # TODO: is needed as attribute - local var suffices?
         # futures (or derivatives):
         self.futures_position_history = defaultdict(dict)
-        self.futures_position_history[0] = {m_id: 0 for m_id, m
-                                 in self.markets.items() if m.instrument_class == "future"}
+        self.futures_position_history[0] = {
+            m_id: 0 for m_id, m in self.markets.items() if m.instrument_class == "future"
+        }
         self.futures_value_history = defaultdict(dict)
 
         # cash - multicurrency
@@ -94,7 +104,7 @@ class Agent(ABC):
 
         self.repository = repository
 
-        self.eod_status = "open" # open/closed  to make eod procedure idempotent
+        self.eod_status = "open"  # open/closed  to make eod procedure idempotent
         # TODO: start with closed - no trading before sod() is finished !
         self.current_day = 0
         self.current_time = 0
@@ -103,7 +113,9 @@ class Agent(ABC):
         self.base_currency = base_currency.upper()
         self.fx_rate_provider = fx_rate_provider
 
-        self.logger = setup_agent_logger(agent_id=self.agent_id, output_dir=self.output_dir) #logger.bind(agent_id=self.agent_id)
+        self.logger = setup_agent_logger(
+            agent_id=self.agent_id, output_dir=self.output_dir
+        )  # logger.bind(agent_id=self.agent_id)
 
         self.repository.save_agent(self)
 
@@ -137,7 +149,9 @@ class Agent(ABC):
     ##################################################################################
 
     def get_cash_balance(
-            self, *, currency: str | None = None,
+        self,
+        *,
+        currency: str | None = None,
     ) -> Price:
         currency = currency or self.base_currency
         return self.cash.get(currency, Price(0))
@@ -145,23 +159,21 @@ class Agent(ABC):
     def get_cash_balance_all_currencies(self):
         return self.cash
 
-    def credit_cash(self, *, amount: Price, currency: str="PLN") -> None:
+    def credit_cash(self, *, amount: Price, currency: str = "PLN") -> None:
         """Credit cash in the specified currency."""
         amount = Price(amount)
 
         if amount < 0:
             raise ValueError("Credit amount cannot be negative")
 
-        self.cash[currency] = (
-                self.get_cash_balance(currency=currency) + amount
-        )
+        self.cash[currency] = self.get_cash_balance(currency=currency) + amount
 
     def debit_cash(
-            self,
-            *,
-            amount: Price,
-            currency: str="PLN",
-            allow_negative: bool = True,
+        self,
+        *,
+        amount: Price,
+        currency: str = "PLN",
+        allow_negative: bool = True,
     ) -> None:
         """Debit cash in the specified currency."""
         amount = Price(amount)
@@ -173,19 +185,18 @@ class Agent(ABC):
 
         if not allow_negative and balance < amount:
             raise ValueError(
-                f"Insufficient {currency} cash: "
-                f"available={balance}, required={amount}"
+                f"Insufficient {currency} cash: available={balance}, required={amount}"
             )
 
         self.cash[currency] = balance - amount
 
     def transfer_cash(
-            self,
-            *,
-            recipient: "Agent",
-            currency: str,
-            amount: Price,
-            allow_negative: bool = True,
+        self,
+        *,
+        recipient: "Agent",
+        currency: str,
+        amount: Price,
+        allow_negative: bool = True,
     ) -> None:
         """Transfer cash between two agents."""
         amount = Price(amount)
@@ -206,33 +217,41 @@ class Agent(ABC):
 
     #### position manipulation
 
-    def update_position(self, *, quantity: int, cash: Price, asset_id: int, currency: str = 'PLN') -> None:
+    def update_position(
+        self, *, quantity: int, cash: Price, asset_id: int, currency: str = "PLN"
+    ) -> None:
         validate_update(quantity=quantity, cash=cash)
         if asset_id not in self.position:
             raise ValueError(f"Position:  {self.position}. {asset_id} not in position")
         self.position[asset_id] += quantity
-        #self.cash += cash
+        # self.cash += cash
         if cash > 0:
             self.credit_cash(currency=currency, amount=cash)
         else:
             self.debit_cash(currency=currency, amount=-cash)
 
-    def update_futures_position(self, *,
-                                quantity: int,
-                                contract: Future,
-                                ) -> None:
-        self.logger.info(f"Updating futures position agent: {self} contract: {contract} quantity: {quantity}")
+    def update_futures_position(
+        self,
+        *,
+        quantity: int,
+        contract: Future,
+    ) -> None:
+        self.logger.info(
+            f"Updating futures position agent: {self} contract: {contract} quantity: {quantity}"
+        )
         # update the derivatives position of the agent
         if contract.asset_id not in self.futures_position:
-            raise ValueError(f"Position:  {self.futures_position}. {contract.asset_id} not in position")
+            raise ValueError(
+                f"Position:  {self.futures_position}. {contract.asset_id} not in position"
+            )
         current_position = self.futures_position[contract.asset_id]
         new_position = current_position + quantity
         self.futures_position[contract.asset_id] = new_position
         required_collateral = (
-                abs(new_position)
-                * contract.last_traded_price
-                * contract.multiplier
-                * contract.margin_rate
+            abs(new_position)
+            * contract.last_traded_price
+            * contract.multiplier
+            * contract.margin_rate
         )
         old_collateral = self.futures_value[contract.asset_id]["collateral"]
         collateral_change = required_collateral - old_collateral
@@ -245,12 +264,12 @@ class Agent(ABC):
             # initiating position on this contract
             # collateral = contract.last_traded_price * contract.margin_rate * contract.multiplier
             self.futures_value[contract.asset_id] = {
-                "avg_initial_price": contract.last_traded_price, # the current price
+                "avg_initial_price": contract.last_traded_price,  # the current price
                 "settlement_price": contract.last_traded_price,
                 "collateral": required_collateral,
                 "unsettled_pnl": Price(0),
             }
-        elif current_position == - quantity:
+        elif current_position == -quantity:
             # squaring /closing the position
             # freed_collateral = self.futures_value[contract.asset_id]["collateral"]
             # self.cash += freed_collateral
@@ -271,7 +290,9 @@ class Agent(ABC):
 
             total_pos = current_position + quantity
             old_price = self.futures_value[contract.asset_id]["avg_initial_price"]
-            avg_initial_price = (old_price * current_position + contract.last_traded_price * quantity) / total_pos
+            avg_initial_price = (
+                old_price * current_position + contract.last_traded_price * quantity
+            ) / total_pos
             # TODO: calculate this
             self.futures_value[contract.asset_id] = {
                 "avg_initial_price": avg_initial_price,  # the current price
@@ -282,11 +303,11 @@ class Agent(ABC):
         self.futures_value_history[self.current_time] = copy.deepcopy(self.futures_value)
 
     def reset(self) -> None:
-        self.position = { m_id: 0 for m_id  in self.markets}
+        self.position = {m_id: 0 for m_id in self.markets}
         # self.cash = Price(0) # TODO: is it ever needed?
 
     def is_market_maker(self) -> bool:
-        raise # this is utterly deprecated
+        raise  # this is utterly deprecated
         return False
 
     def record_valuation(self, current_time: int) -> None:
@@ -304,15 +325,15 @@ class Agent(ABC):
 
         self.portfolio_value_history[current_time] = self.portfolio_value
         self.position_history[current_time] = copy.deepcopy(self.position)
-        self.futures_position_history[current_time] = copy.deepcopy(
-            self.futures_position
-        )
+        self.futures_position_history[current_time] = copy.deepcopy(self.futures_position)
         self.cash_history[current_time] = copy.deepcopy(self.cash)
 
     def record_trade(self, matched_order: MatchedOrder) -> None:
         self.current_time = matched_order.time
         quantity = matched_order.order.order_type * matched_order.order.quantity
-        cash = - Price(matched_order.price * matched_order.order.quantity * matched_order.order.order_type)
+        cash = -Price(
+            matched_order.price * matched_order.order.quantity * matched_order.order.order_type
+        )
 
         # self.update_position(quantity=quantity, cash=cash, asset_id=matched_order.order.asset_id)
         asset_id = matched_order.order.asset_id
@@ -323,31 +344,40 @@ class Agent(ABC):
             currency=self.markets[asset_id].currency,
         )
         self.position_history[matched_order.time][matched_order.order.asset_id] = (
-                self.position_history.get(matched_order.time, {}).get(matched_order.order.asset_id, 0) + quantity)
+            self.position_history.get(matched_order.time, {}).get(matched_order.order.asset_id, 0)
+            + quantity
+        )
 
         if matched_order.time in self.trade_history:
             # just add info
-            old = self.trade_history.get(matched_order.time, {}).get(matched_order.order.asset_id, {})
+            old = self.trade_history.get(matched_order.time, {}).get(
+                matched_order.order.asset_id, {}
+            )
             if old:
-                self.trade_history[matched_order.time][matched_order.order.asset_id] = {"trades": old["trades"]+1,
-                                                               "volume": old["volume"] + abs(matched_order.order.quantity),}
+                self.trade_history[matched_order.time][matched_order.order.asset_id] = {
+                    "trades": old["trades"] + 1,
+                    "volume": old["volume"] + abs(matched_order.order.quantity),
+                }
             else:
                 # first trade on this security on this date:
-                self.trade_history[matched_order.time][matched_order.order.asset_id] =\
-                            {"trades": 1, "volume": abs(matched_order.order.quantity),
-                                                }
+                self.trade_history[matched_order.time][matched_order.order.asset_id] = {
+                    "trades": 1,
+                    "volume": abs(matched_order.order.quantity),
+                }
         else:
             # first trade this day
-            self.trade_history[matched_order.time] = { matched_order.order.asset_id:
-                                                {"trades": 1, "volume": abs(matched_order.order.quantity),
-                                                 } }
-
+            self.trade_history[matched_order.time] = {
+                matched_order.order.asset_id: {
+                    "trades": 1,
+                    "volume": abs(matched_order.order.quantity),
+                }
+            }
 
     def record_futures_trade(self, matched_order: MatchedOrder) -> None:
         self.logger.info(f"Recording futures trade on futures {matched_order}")
         # TODO: fill this properly for trading futures
         quantity = matched_order.order.order_type * matched_order.order.quantity
-        #cash = - Price(matched_order.price * matched_order.order.quantity * matched_order.order.order_type)
+        # cash = - Price(matched_order.price * matched_order.order.quantity * matched_order.order.order_type)
         # cash to collateral, both sides - so no matter if bought or sold
         contract_id = matched_order.order.asset_id
         contract = self.markets[contract_id]
@@ -356,30 +386,40 @@ class Agent(ABC):
         self.update_futures_position(quantity=quantity, contract=contract)
         # TODO: the below history update encapsulate in the above function
         self.futures_position_history[matched_order.time][contract_id] = (
-                self.futures_position_history.get(matched_order.time, {}).get(matched_order.order.asset_id, 0) + quantity)
+            self.futures_position_history.get(matched_order.time, {}).get(
+                matched_order.order.asset_id, 0
+            )
+            + quantity
+        )
 
         if matched_order.time in self.trade_history:
             # just add info
-            old = self.trade_history.get(matched_order.time, {}).get(matched_order.order.asset_id, {})
+            old = self.trade_history.get(matched_order.time, {}).get(
+                matched_order.order.asset_id, {}
+            )
             if old:
-                self.trade_history[matched_order.time][matched_order.order.asset_id] = {"trades": old["trades"]+1,
-                                                               "volume": old["volume"] + abs(matched_order.order.quantity),}
+                self.trade_history[matched_order.time][matched_order.order.asset_id] = {
+                    "trades": old["trades"] + 1,
+                    "volume": old["volume"] + abs(matched_order.order.quantity),
+                }
             else:
                 # first trade on this security on this date:
-                self.trade_history[matched_order.time][matched_order.order.asset_id] =\
-                            {"trades": 1, "volume": abs(matched_order.order.quantity),
-                                                }
+                self.trade_history[matched_order.time][matched_order.order.asset_id] = {
+                    "trades": 1,
+                    "volume": abs(matched_order.order.quantity),
+                }
         else:
             # first trade this day
-            self.trade_history[matched_order.time] = { matched_order.order.asset_id:
-                                                {"trades": 1, "volume": abs(matched_order.order.quantity),
-                                                 } }
-
-
+            self.trade_history[matched_order.time] = {
+                matched_order.order.asset_id: {
+                    "trades": 1,
+                    "volume": abs(matched_order.order.quantity),
+                }
+            }
 
     ######### accounting and eod/sod valuations
 
-    def calculate_portfolio_value(self, *, day: int|None=None) -> Price:
+    def calculate_portfolio_value(self, *, day: int | None = None) -> Price:
         # returns valuation of current portfolio as of given day.
         # but currently works reliably for the current day
         if day is None:
@@ -403,7 +443,6 @@ class Agent(ABC):
 
         # Security positions
         for asset_id, quantity in self.position.items():
-
             # Zero positions do not contribute to portfolio value.
             if quantity == 0:
                 continue
@@ -414,10 +453,7 @@ class Agent(ABC):
             if market.instrument_class == "future":
                 continue
 
-            native_value = (
-                    Decimal(quantity)
-                    * Decimal(str(market.last_traded_price))
-            )
+            native_value = Decimal(quantity) * Decimal(str(market.last_traded_price))
 
             total += self.fx_rate_provider.convert(
                 native_value,
@@ -428,9 +464,8 @@ class Agent(ABC):
 
         # Futures: collateral + unsettled P&L
         for asset_id, values in self.futures_value.items():
-            native_value = (
-                    Decimal(str(values["collateral"]))
-                    + Decimal(str(values["unsettled_pnl"]))
+            native_value = Decimal(str(values["collateral"])) + Decimal(
+                str(values["unsettled_pnl"])
             )
 
             # Zero-value contracts contribute nothing to portfolio value.
@@ -449,7 +484,6 @@ class Agent(ABC):
 
         return Price(total)
 
-
     def settle(self, contract):
         # final day settlement
         # "avg_initial_price": avg_initial_price,  # the current price
@@ -465,7 +499,7 @@ class Agent(ABC):
             self.debit_cash(currency=contract.currency, amount=-freed_cash)
         # what about settlement_price?
         self.futures_position[contract.asset_id] = 0
-        self.futures_value.pop(contract.asset_id) # delete the contract from analysis
+        self.futures_value.pop(contract.asset_id)  # delete the contract from analysis
         self.abandoned_markets[contract.asset_id] = contract
         self.markets.pop(contract.asset_id)
         # TODO: porftolio value
@@ -487,15 +521,11 @@ class Agent(ABC):
             previous_price = values["settlement_price"]
             current_price = contract.last_traded_price
 
-            vm = Price(
-                position
-                * contract.multiplier
-                * (current_price - previous_price)
-            )
+            vm = Price(position * contract.multiplier * (current_price - previous_price))
 
             # Daily cash settlement
             # self.cash += vm
-            if vm > 0 :
+            if vm > 0:
                 self.credit_cash(amount=vm, currency=contract.currency)
             else:
                 self.debit_cash(amount=-vm, currency=contract.currency)
@@ -507,32 +537,40 @@ class Agent(ABC):
             values["unsettled_pnl"] = Price(0)
 
     def sod(self):
-        self.logger.info(f"Starting agent {self.agent_id} Start-of-Day procedure of day: {self.current_day}")
+        self.logger.info(
+            f"Starting agent {self.agent_id} Start-of-Day procedure of day: {self.current_day}"
+        )
         self.current_time = 0
 
         self.portfolio_value_history = defaultdict(Price)
         self.cash_history = defaultdict(dict)
 
         # drop expired securities from portfolio
-        expired_securities = { m_id: market for m_id, market in self.markets.items()
-                               if market.status == "expired" }
+        expired_securities = {
+            m_id: market for m_id, market in self.markets.items() if market.status == "expired"
+        }
         # or not "active" ?
         for m_id, market in expired_securities.items():
             self.markets.pop(m_id)
             self.abandoned_markets[m_id] = market
 
-        self.logger.info("After removing expired securities agent will be active on the following markets:")
+        self.logger.info(
+            "After removing expired securities agent will be active on the following markets:"
+        )
         self.logger.info(self.markets)
 
         self.position_history = defaultdict(dict)
-        self.position_history[0] = { m_id: 0 for m_id in self.markets }
+        self.position_history[0] = {m_id: 0 for m_id in self.markets}
 
-        self.futures_position_history[0] = { m_id: 0 for m_id, market in self.markets.items()
-                                             if market.instrument_class == "future" }
+        self.futures_position_history[0] = {
+            m_id: 0 for m_id, market in self.markets.items() if market.instrument_class == "future"
+        }
         self.futures_value_history[0] = {}
 
         self.eod_status = "open"
-        self.logger.info(f"Start-of-Day agent {self.agent_id} procedure of day: {self.current_day} completed.")
+        self.logger.info(
+            f"Start-of-Day agent {self.agent_id} procedure of day: {self.current_day} completed."
+        )
 
     def eod(self) -> None:
         # End Of Day procedure of the agent
@@ -541,7 +579,9 @@ class Agent(ABC):
         if self.eod_status == "closed":
             return
         elif self.eod_status == "open":
-            self.logger.info(f"Starting agent {self.agent_id} EoD procedure of day: {self.current_day}")
+            self.logger.info(
+                f"Starting agent {self.agent_id} EoD procedure of day: {self.current_day}"
+            )
 
             self.eod_status = "closed"
             self.current_day += 1
@@ -552,15 +592,15 @@ class Agent(ABC):
             # make position history a DF to enable quick filtering
             # self.position_history
             self.position_history_df = (
-                    pd.DataFrame.from_dict(self.position_history, orient="index")
-                        .rename_axis("time_tick")
-                        .reset_index()
-                        .melt(
-                            id_vars="time_tick",
-                            var_name="asset_id",
-                            value_name="position",
-                        )
-                    )
+                pd.DataFrame.from_dict(self.position_history, orient="index")
+                .rename_axis("time_tick")
+                .reset_index()
+                .melt(
+                    id_vars="time_tick",
+                    var_name="asset_id",
+                    value_name="position",
+                )
+            )
 
             self.position_history_df["agent_id"] = self.agent_id
             self.position_history_df["day"] = self.current_day - 1
@@ -583,8 +623,12 @@ class Agent(ABC):
             self.futures_position_history_df["agent_id"] = self.agent_id
             self.futures_position_history_df["day"] = self.current_day - 1
 
-            self.logger.info(f"futures_position_history_df: {self.futures_position_history_df.head()}")
-            self.repository.save_futures_position_history(position_history_df=self.futures_position_history_df)
+            self.logger.info(
+                f"futures_position_history_df: {self.futures_position_history_df.head()}"
+            )
+            self.repository.save_futures_position_history(
+                position_history_df=self.futures_position_history_df
+            )
 
             futures_position_df = pd.DataFrame(
                 self.futures_position.items(),
@@ -599,29 +643,37 @@ class Agent(ABC):
             rows = []
             for time_tick, contracts in self.futures_value_history.items():
                 for asset_id, values in contracts.items():
-                    rows.append({
-                        "day": self.current_day-1,
-                        "time_tick": time_tick,
-                        "agent_id": self.agent_id,
-                        "asset_id": asset_id,
-                        "position": self.futures_position_history.get(time_tick, {}).get(asset_id, 0),
-                        **values,
-                    })
+                    rows.append(
+                        {
+                            "day": self.current_day - 1,
+                            "time_tick": time_tick,
+                            "agent_id": self.agent_id,
+                            "asset_id": asset_id,
+                            "position": self.futures_position_history.get(time_tick, {}).get(
+                                asset_id, 0
+                            ),
+                            **values,
+                        }
+                    )
             if rows:
                 # unbelievable - can this happen for agents not trading futures?
                 futures_value_history_df = pd.DataFrame(rows)
-                self.repository.save_futures_value_history(futures_value_df=futures_value_history_df)
+                self.repository.save_futures_value_history(
+                    futures_value_df=futures_value_history_df
+                )
 
-            eod_futures_value_df = pd.DataFrame([
-                {
-                    "day": self.current_day - 1,
-                    "agent_id": self.agent_id,
-                    "asset_id": asset_id,
-                    "position": self.futures_position.get(asset_id, 0),
-                    **values,
-                }
-                for asset_id, values in self.futures_value.items()
-            ])
+            eod_futures_value_df = pd.DataFrame(
+                [
+                    {
+                        "day": self.current_day - 1,
+                        "agent_id": self.agent_id,
+                        "asset_id": asset_id,
+                        "position": self.futures_position.get(asset_id, 0),
+                        **values,
+                    }
+                    for asset_id, values in self.futures_value.items()
+                ]
+            )
             if not eod_futures_value_df.empty:
                 self.logger.info(f"Save eod_futures_value_df: {eod_futures_value_df}")
                 self.repository.save_eod_futures_value(eod_futures_value_df=eod_futures_value_df)
@@ -637,16 +689,22 @@ class Agent(ABC):
             # portfolio_value_history:
             # by SQL or in Python?
 
-            value_history_df = pd.DataFrame.from_dict(self.portfolio_value_history, orient="index", columns=["portfolio_value"])
+            value_history_df = pd.DataFrame.from_dict(
+                self.portfolio_value_history, orient="index", columns=["portfolio_value"]
+            )
             value_history_df["time_tick"] = value_history_df.index
-            value_history_df["day"] = self.current_day -1
+            value_history_df["day"] = self.current_day - 1
             value_history_df["agent_id"] = self.agent_id
             self.logger.info(f"Portfolio value history: {value_history_df.head()}")
 
-            self.repository.save_portfolio_value_history(portfolio_value_history_df=value_history_df)
+            self.repository.save_portfolio_value_history(
+                portfolio_value_history_df=value_history_df
+            )
 
             # cash history
-            cash_history_df = pd.DataFrame.from_dict(self.cash_history, orient="index", columns=["cash", "currency"])
+            cash_history_df = pd.DataFrame.from_dict(
+                self.cash_history, orient="index", columns=["cash", "currency"]
+            )
             cash_history_df["time_tick"] = cash_history_df.index
             cash_history_df["day"] = self.current_day - 1
             cash_history_df["agent_id"] = self.agent_id
@@ -658,11 +716,14 @@ class Agent(ABC):
             # save eod_cash and eod_portfolio_value
             rows = []
             for ccy, amount in self.get_cash_balance_all_currencies().items():
-                rows.append({"day": self.current_day - 1,
-                          "agent_id": self.agent_id,
-                          "cash": amount,
-                          "currency": ccy
-                          })
+                rows.append(
+                    {
+                        "day": self.current_day - 1,
+                        "agent_id": self.agent_id,
+                        "cash": amount,
+                        "currency": ccy,
+                    }
+                )
             eod_cash_df = pd.DataFrame(rows)
             self.logger.info(f"eod_cash_df: {eod_cash_df.head()}")
             self.repository.save_eod_cash(eod_cash_df=eod_cash_df)
@@ -671,16 +732,23 @@ class Agent(ABC):
             # self.portfolio_value = self.get_cash_balance() # cash  # cash already includes today's option premiums
             # for asset_id, market in self.markets.items():
             #     self.portfolio_value += self.position[asset_id] * market.last_traded_price
-            self.portfolio_value = self.calculate_portfolio_value(day=self.current_day-1)
+            self.portfolio_value = self.calculate_portfolio_value(day=self.current_day - 1)
 
-            eod_portfolio_value_df = pd.DataFrame([{ "day": self.current_day-1,
-                                                          "agent_id": self.agent_id,
-                                                          "portfolio_value": self.portfolio_value,
-                                                                   }])
+            eod_portfolio_value_df = pd.DataFrame(
+                [
+                    {
+                        "day": self.current_day - 1,
+                        "agent_id": self.agent_id,
+                        "portfolio_value": self.portfolio_value,
+                    }
+                ]
+            )
             self.logger.info(f"eod_portfolio_value_df: {eod_portfolio_value_df.head()}")
             self.repository.save_eod_portfolio_value(eod_portfolio_value_df=eod_portfolio_value_df)
 
-            self.logger.info(f"EoD agent {self.agent_id} procedure of day: {self.current_day-1} completed.")
+            self.logger.info(
+                f"EoD agent {self.agent_id} procedure of day: {self.current_day - 1} completed."
+            )
         else:
             raise ValueError(f"Unknown eod status: {self.eod_status}")
 
@@ -710,18 +778,19 @@ class Agent(ABC):
         # TODO: for futures contracts valuate using self.futures_value
         eod_portfolio_values_df.rename(columns={"day": "time_step"}, inplace=True)
 
-        labels_map = { asset_id: security.short_name for asset_id, security
-                       in self.markets.items() }
+        labels_map = {asset_id: security.short_name for asset_id, security in self.markets.items()}
         for m_id, market in self.abandoned_markets.items():
             labels_map[m_id] = market.short_name
 
-        plot_agent_history_many_markets(position_history=positions_df,
-                                        cash_history=eod_cash_df,
-                                        value_history=eod_portfolio_values_df,
-                                        output_file=agent_output_file,
-                                        title=f"Agent {self.agent_id} {str(self)} summary",
-                                        labels_map=labels_map,
-                                        time_label="Simulation day")
+        plot_agent_history_many_markets(
+            position_history=positions_df,
+            cash_history=eod_cash_df,
+            value_history=eod_portfolio_values_df,
+            output_file=agent_output_file,
+            title=f"Agent {self.agent_id} {str(self)} summary",
+            labels_map=labels_map,
+            time_label="Simulation day",
+        )
 
     def __str__(self) -> str:
         return f"{self.agent_id}_{self.group}"

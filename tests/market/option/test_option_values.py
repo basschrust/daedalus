@@ -23,9 +23,7 @@ def test_option_underlying(
         ("PUT", 75, 75, 0),
     ],
 )
-def test_option_intrinsic_value(
-    option_type, strike, index_price, expected
-):
+def test_option_intrinsic_value(option_type, strike, index_price, expected):
     if option_type == "CALL":
         intrinsic = max(index_price - strike, 0)
     else:

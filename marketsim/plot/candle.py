@@ -5,21 +5,23 @@ from matplotlib.patches import Rectangle
 
 
 def plot_candlestick_old(df, output_file: str):
-    fig, axlist =mpf.plot(
+    fig, axlist = mpf.plot(
         df,
-        type='candle',
+        type="candle",
         volume=True,
-        style='yahoo',
+        style="yahoo",
         returnfig=True,
     )
 
     fig.savefig(output_file, dpi=150, bbox_inches="tight")
 
 
-def plot_candlestick(df: pd.DataFrame,
-                     output_file: str | None =None,
-                     title: str ="Candlestick chart",
-                     x_label: str = "Simulation time [days]"):
+def plot_candlestick(
+    df: pd.DataFrame,
+    output_file: str | None = None,
+    title: str = "Candlestick chart",
+    x_label: str = "Simulation time [days]",
+):
     """
     Parameters
     ----------
@@ -70,7 +72,7 @@ def plot_candlestick(df: pd.DataFrame,
         # Volume
         ax_volume.bar(
             t,
-            row.get("volume",0), # for indices it is 0
+            row.get("volume", 0),  # for indices it is 0
             width=candle_width,
             color=color,
             align="center",
@@ -93,8 +95,11 @@ def plot_candlestick(df: pd.DataFrame,
 
     plt.close(fig)
 
+
 # plotting of a derivative - along with the theoretical price:
-def plot_candlestick_derivative(df: pd.DataFrame, output_file: str | None =None, title: str ="Candlestick chart"):
+def plot_candlestick_derivative(
+    df: pd.DataFrame, output_file: str | None = None, title: str = "Candlestick chart"
+):
     """
     Parameters
     ----------

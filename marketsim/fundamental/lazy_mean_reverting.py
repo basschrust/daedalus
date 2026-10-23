@@ -14,7 +14,10 @@ class LazyGaussianMeanReverting(Fundamental):
         shock_var (float): The variance of the Gaussian shocks.
         shock_mean (float, optional): The mean of the Gaussian shocks. Default is 0.
     """
-    def __init__(self, final_time: int, mean: float, r: float, shock_var: float, shock_mean: float = 0):
+
+    def __init__(
+        self, final_time: int, mean: float, r: float, shock_var: float, shock_mean: float = 0
+    ):
         self.final_time = final_time
         self.mean = float(mean)
         self.r = float(r)
@@ -39,9 +42,9 @@ class LazyGaussianMeanReverting(Fundamental):
         weights = np.power(self._one_minus_r, np.arange(dt, dtype=np.float64))
         total_shock = np.sum(weights * shocks)
         value_at_t = (
-                np.power(self._one_minus_r, dt) * self.fundamental_values[self.latest_t] +
-                self.r * self.mean * np.sum(weights) +
-                total_shock
+            np.power(self._one_minus_r, dt) * self.fundamental_values[self.latest_t]
+            + self.r * self.mean * np.sum(weights)
+            + total_shock
         )
 
         self.fundamental_values[t] = float(value_at_t)

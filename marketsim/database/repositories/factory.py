@@ -26,4 +26,3 @@ def create_repository(
         )
 
     raise ValueError(f"Unsupported database driver: {driver}")
-

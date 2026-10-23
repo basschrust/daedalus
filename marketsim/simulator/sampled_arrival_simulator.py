@@ -17,21 +17,22 @@ def sample_arrivals_numpy(p, num_samples):
 
 
 class SimulatorSampledArrival:
-    def __init__(self,
-                 num_background_agents: int,
-                 sim_time: int,
-                 num_assets: int = 1,
-                 lam: float = 0.1,
-                 mean: float = 100,
-                 r: float = .05,
-                 shock_var: float = 10,
-                 q_max: int = 10,
-                 pv_var: float = 5e6,
-                 shade=None,
-                 eta: float = 0.2,
-                 hbl_agent: bool = False,
-                 lam_r: float = None
-                 ):
+    def __init__(
+        self,
+        num_background_agents: int,
+        sim_time: int,
+        num_assets: int = 1,
+        lam: float = 0.1,
+        mean: float = 100,
+        r: float = 0.05,
+        shock_var: float = 10,
+        q_max: int = 10,
+        pv_var: float = 5e6,
+        shade=None,
+        eta: float = 0.2,
+        hbl_agent: bool = False,
+        lam_r: float = None,
+    ):
 
         if shade is None:
             shade = [10, 30]
@@ -59,7 +60,9 @@ class SimulatorSampledArrival:
 
         self.markets = []
         for _ in range(num_assets):
-            fundamental = LazyGaussianMeanReverting(mean=mean, final_time=sim_time, r=r, shock_var=shock_var)
+            fundamental = LazyGaussianMeanReverting(
+                mean=mean, final_time=sim_time, r=r, shock_var=shock_var
+            )
             self.markets.append(Security(fundamental=fundamental, time_steps=sim_time))
 
         self.agents = {}
@@ -68,15 +71,14 @@ class SimulatorSampledArrival:
             for agent_id in range(num_background_agents + 1):
                 self.arrivals[int(self.arrival_times[self.arrival_index])].append(agent_id)
                 self.arrival_index += 1
-                self.agents[agent_id] = (
-                    ZIAgent(
-                        agent_id=agent_id,
-                        market=self.markets[0],
-                        q_max=q_max,
-                        shade=shade,
-                        pv_var=pv_var,
-                        eta=eta
-                    ))
+                self.agents[agent_id] = ZIAgent(
+                    agent_id=agent_id,
+                    market=self.markets[0],
+                    q_max=q_max,
+                    shade=shade,
+                    pv_var=pv_var,
+                    eta=eta,
+                )
         #  expanded_zi
         # else:
         #     for agent_id in range(24):
@@ -124,16 +126,24 @@ class SimulatorSampledArrival:
                     orders = agent.take_action(estimate=cached_estimate)
                     market.add_orders(orders)
                     if self.arrival_index == self.arrivals_sampled:
-                        self.arrival_times = sample_arrivals_numpy(self.lam_r, self.arrivals_sampled)
+                        self.arrival_times = sample_arrivals_numpy(
+                            self.lam_r, self.arrivals_sampled
+                        )
                         self.arrival_index = 0
-                    self.arrivals[int(self.arrival_times[self.arrival_index]) + 1 + self.time].append(agent_id)
+                    self.arrivals[
+                        int(self.arrival_times[self.arrival_index]) + 1 + self.time
+                    ].append(agent_id)
                     self.arrival_index += 1
 
                 new_orders = market.step()
                 for matched_order in new_orders:
                     agent_id = matched_order.order.agent_id
-                    quantity = matched_order.order.order_type*matched_order.order.quantity
-                    cash = -matched_order.price*matched_order.order.quantity*matched_order.order.order_type
+                    quantity = matched_order.order.order_type * matched_order.order.quantity
+                    cash = (
+                        -matched_order.price
+                        * matched_order.order.quantity
+                        * matched_order.order.order_type
+                    )
                     self.agents[agent_id].update_position(quantity, cash)
         else:
             self.end_sim()
@@ -143,7 +153,7 @@ class SimulatorSampledArrival:
         values = {}
         for agent_id in self.agents:
             agent = self.agents[agent_id]
-            values[agent_id] = agent.get_pos_value() + agent.position*fundamental_val + agent.cash
+            values[agent_id] = agent.get_pos_value() + agent.position * fundamental_val + agent.cash
         # print(f'At the end of the simulation we get {values}')
         return values
 

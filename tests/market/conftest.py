@@ -30,14 +30,14 @@ def genius_index(
 
 @pytest.fixture
 def derivatives_config1(stock: Security):
-    config1 = { "underlying": stock,
-                "strike": Price(90),
-                "expiration": 30,
-                "option_side": "CALL",
-                "option_type": "European",
-                }
+    config1 = {
+        "underlying": stock,
+        "strike": Price(90),
+        "expiration": 30,
+        "option_side": "CALL",
+        "option_type": "European",
+    }
     return config1
-
 
 
 @pytest.fixture
@@ -98,4 +98,3 @@ def option_put_long(index_genius, repository):
             "option_type": "European",
         },
     )
-
