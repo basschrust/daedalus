@@ -34,16 +34,43 @@ class FXRateProvider:
         self._rates[(day, base, quote)] = value
 
     def get_rate(self, *, day: int, base: str, quote: str) -> Decimal:
-        base, quote = self._currency(base), self._currency(quote)
+        base = self._currency(base)
+        quote = self._currency(quote)
+
         if base == quote:
             return Decimal(1)
+
+        # 1. Direct rate
         direct = self._rates.get((day, base, quote))
         if direct is not None:
             return direct
+
+        # 2. Inverse rate
         inverse = self._rates.get((day, quote, base))
         if inverse is not None:
             return Decimal(1) / inverse
-        raise KeyError(f"No FX rate for {base}/{quote} on day {day}")
+
+        # 3. Triangulation through PLN
+        pivot = "PLN"
+
+        if base != pivot and quote != pivot:
+            base_to_pivot = self.get_rate(
+                day=day,
+                base=base,
+                quote=pivot,
+            )
+
+            pivot_to_quote = self.get_rate(
+                day=day,
+                base=pivot,
+                quote=quote,
+            )
+
+            return base_to_pivot * pivot_to_quote
+
+        raise KeyError(
+            f"No FX rate for {base}/{quote} on day {day}"
+        )
 
     def convert(self, amount: Decimal | str | int | float, *, day: int, base: str, quote: str) -> Decimal:
         value = Decimal(str(amount))
