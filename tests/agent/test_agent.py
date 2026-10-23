@@ -73,7 +73,7 @@ def test_sod_noise_agent(agent_noise: Agent):
     agent_noise.sod()
 
     assert agent_noise is not None
-    assert type(agent_noise) == NoiseAgent
+    assert type(agent_noise) is NoiseAgent
     assert agent_noise.cash == {'USD': Decimal('0.00'), 'EUR': Decimal('0.00'), 'PLN': Decimal('0.00')}
 
 
@@ -83,7 +83,7 @@ def test_eod_noise_agent(agent_noise: Agent):
     agent_noise.eod()
 
     assert agent_noise is not None
-    assert type(agent_noise) == NoiseAgent
+    assert type(agent_noise) is NoiseAgent
     assert agent_noise.cash == {'USD': Decimal('0.00'), 'EUR': Decimal('0.00'), 'PLN': Decimal('0.00')}
 
 

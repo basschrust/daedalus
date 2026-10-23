@@ -9,12 +9,11 @@ from loguru import logger
 
 from marketsim.fourheap import constants
 from marketsim.fourheap.order_queue import OrderQueue
-from marketsim.market import Price
+from marketsim.market.price import Price
 
 if TYPE_CHECKING:
     from marketsim.fourheap import MatchedOrder, Order
     from marketsim.market import Security
-
 
 
 class FourHeap:

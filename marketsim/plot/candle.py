@@ -38,19 +38,19 @@ def plot_candlestick(df: pd.DataFrame,
     candle_width = 0.7
 
     for t, row in df.iterrows():
-        o = float(row["open"])
-        h = float(row["high"])
-        l = float(row["low"])
-        c = float(row["close"])
+        op = float(row["open"])
+        hi = float(row["high"])
+        lo = float(row["low"])
+        cl = float(row["close"])
 
-        color = "#26a69a" if c >= o else "#ef5350"
+        color = "#26a69a" if cl >= op else "#ef5350"
 
         # Wick
-        ax_price.plot([t, t], [l, h], color=color, linewidth=1)
+        ax_price.plot([t, t], [lo, hi], color=color, linewidth=1)
 
         # Candle body
-        bottom = min(o, c)
-        height = abs(c - o)
+        bottom = min(op, cl)
+        height = abs(cl - op)
 
         # Prevent invisible body when open == close
         if height == 0:
@@ -113,19 +113,19 @@ def plot_candlestick_derivative(df: pd.DataFrame, output_file: str | None =None,
     candle_width = 0.7
 
     for t, row in df.iterrows():
-        o = float(row["open"])
-        h = float(row["high"])
-        l = float(row["low"])
-        c = float(row["close"])
+        op = float(row["open"])
+        hi = float(row["high"])
+        lo = float(row["low"])
+        cl = float(row["close"])
 
-        color = "#26a69a" if c >= o else "#ef5350"
+        color = "#26a69a" if cl >= op else "#ef5350"
 
         # Wick
-        ax_price.plot([t, t], [l, h], color=color, linewidth=1)
+        ax_price.plot([t, t], [lo, hi], color=color, linewidth=1)
 
         # Candle body
-        bottom = min(o, c)
-        height = abs(c - o)
+        bottom = min(op, cl)
+        height = abs(cl - op)
 
         # Prevent invisible body when open == close
         if height == 0:

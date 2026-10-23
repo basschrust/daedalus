@@ -17,7 +17,6 @@ from marketsim.agent import (
 )
 from marketsim.agent.washtrading import WashTradingPool
 from marketsim.database.repositories.factory import create_repository
-from marketsim.fundamental.mean_reverting import GaussianMeanReverting
 from marketsim.loggers.basic import terminal
 from marketsim.market import Future, FXRateProvider, Index, Option, Price, Security
 
@@ -86,11 +85,6 @@ class Simulator:
                 )
 
         for m_key, m_conf in markets.items():
-            # TODO: do we need this fundamental at all?
-            fundamental = GaussianMeanReverting(mean=self.mean, final_time=self.sim_time, r=self.r,
-                                                shock_var=self.shock_var)
-
-            # TODO: how to handle derivatives here?
             instrument_class = m_conf.get("instrument_class", "stock")
             if instrument_class == "option":
                 # let's rock with first option here!

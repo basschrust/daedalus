@@ -1,4 +1,5 @@
 # %%
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 from marketsim.simulator.sampled_arrival_simulator import SimulatorSampledArrival
@@ -44,8 +45,6 @@ for agent_id in sim.agents:
     # print(agent.cash, agent.position, agent.get_pos_value(), value)
     positions.append(agent.position)
     values.append(value)
-
-import matplotlib.pyplot as plt
 
 print(fundamental_val)
 plt.scatter(positions, values)
