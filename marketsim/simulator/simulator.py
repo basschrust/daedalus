@@ -19,16 +19,6 @@ from marketsim.agent.washtrading import WashTradingPool
 from marketsim.database.repositories.factory import create_repository
 from marketsim.loggers.basic import terminal
 from marketsim.market import Future, FXRateProvider, Index, Option, Price, Security
-from loguru import logger
-from pathlib import Path
-
-from marketsim.database.repositories.factory import create_repository
-from marketsim.loggers.basic import terminal
-from marketsim.fundamental.mean_reverting import GaussianMeanReverting
-from marketsim.market import Security, Option, Index, Future, FXRateProvider, Price
-from marketsim.agent import Agent, WashTradingAgent, MomentumAgent, SpoofingAgent, NoiseAgent
-from marketsim.agent import ZIAgentNotInformed, MMZOHAgent, HBLAgent, OptionMMZOHAgent
-from marketsim.agent.washtrading import WashTradingPool
 
 
 class Simulator:

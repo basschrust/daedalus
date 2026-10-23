@@ -11,9 +11,6 @@ from marketsim.fourheap.constants import BUY, SELL
 from marketsim.fourheap.order import Order
 from marketsim.market import FXRateProvider, Price
 from marketsim.market.security import Security
-import numpy as np
-from marketsim.market import Price, FXRateProvider
-from pathlib import Path
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository

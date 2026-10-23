@@ -1,7 +1,5 @@
 import pytest
 
-from marketsim.database.connectors.duckdb_storage import Repository
-from marketsim.market import Index, Future, Security, FXRateProvider
 from marketsim.agent import Agent, NoiseAgent
 from marketsim.database.connectors.duckdb_storage import Repository
 from marketsim.market import Future, FXRateProvider, Index, Security

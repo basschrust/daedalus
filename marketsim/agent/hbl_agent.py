@@ -15,9 +15,6 @@ from marketsim.fourheap.order import Order
 from marketsim.market import FXRateProvider, Price
 from marketsim.private_values.private_values import PrivateValues
 
-from marketsim.fourheap.constants import BUY, SELL
-from typing import List
-from marketsim.market import Price, FXRateProvider
 #from fastcubicspline import FCS
 
 if TYPE_CHECKING:

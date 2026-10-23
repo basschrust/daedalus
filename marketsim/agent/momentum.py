@@ -8,7 +8,6 @@ from marketsim.agent.agent import Agent
 from marketsim.fourheap.constants import BUY, SELL
 from marketsim.fourheap.order import Order
 from marketsim.market import FXRateProvider, Price
-from marketsim.market import Price, FXRateProvider
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository

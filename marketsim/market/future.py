@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import pandas as pd
 from pathlib import Path
+
+import pandas as pd
 from typing_extensions import TYPE_CHECKING
 
 from marketsim.market.index import Index
@@ -11,6 +12,7 @@ from marketsim.plot.candle import plot_candlestick_derivative
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
+
     from marketsim.fourheap import MatchedOrder
 
 class Future(Security):

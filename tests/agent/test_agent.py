@@ -12,11 +12,6 @@ from marketsim.agent import (
     ZIAgentNotInformed,
 )
 from marketsim.database.connectors.duckdb_storage import Repository
-from marketsim.database.connectors.duckdb_storage import Repository
-
-from marketsim.agent import (Agent, NoiseAgent, HBLAgent, MMZOHAgent, MomentumAgent, OptionMMZOHAgent, SpoofingAgent,
-        WashTradingAgent, ZIAgentNotInformed)
-
 from marketsim.market import Price, Security
 
 #######   testing functions   #######

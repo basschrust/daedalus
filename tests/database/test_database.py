@@ -5,7 +5,6 @@ from marketsim.agent import Agent
 from marketsim.database.connectors.duckdb_storage import Repository
 from marketsim.market import Security
 
-
 EXPECTED_TABLES = {
     "securities",
     "indices",
