@@ -74,6 +74,8 @@ class Index(Security):
             super().eod()
             self.repository.calculate_index_values(day=self.current_day-1)
             self.repository.calculate_eod_index_values(day=self.current_day-1)
+            self.value = self.calculate_value()
+            self.last_traded_price = Price(self.value)
 
 
     def show_summary(self):
