@@ -7,20 +7,33 @@ from marketsim.market import Security, Price, Option
 from marketsim.agent import Agent
 
 
-EXPECTED_TABLES = {"securities",
-                   "options",
-                   "agents",
-                    "agent_position_history",
-                    "agent_eod_positions",
-                    "agent_portfolio_value_history",
-                    "agent_eod_portfolio_value",
-                    "agent_cash_history",
-                    "agent_eod_cash",
-                    "traded_prices",
-                    "eod_prices",
-                    "orders",
-                    "trades",
-                    "option_expiration"}
+EXPECTED_TABLES = {
+    "securities",
+    "indices",
+    "index_components",
+    "futures",
+    "options",
+    "agents",
+    "agent_position_history",
+    "agent_futures_position_history",
+    "agent_futures_value_history",
+    "agent_eod_positions",
+    "agent_eod_futures_position",
+    "agent_eod_futures_value",
+    "agent_portfolio_value_history",
+    "agent_eod_portfolio_value",
+    "agent_cash_history",
+    "agent_eod_cash",
+    "traded_prices",
+    "eod_prices",
+    "index_values",
+    "eod_index_values",
+    "future_rates",
+    "eod_future_rates",
+    "orders",
+    "trades",
+    "option_expiration",
+}
 
 
 ###### test functions  #####
@@ -35,7 +48,10 @@ def test_expected_tables_exist(repository):
     rows = repository.connection.execute("SHOW TABLES").fetchall()
     actual_tables = {row[0] for row in rows}
 
-    assert EXPECTED_TABLES <= actual_tables
+    assert actual_tables == EXPECTED_TABLES, (
+        f"Missing: {EXPECTED_TABLES - actual_tables}; "
+        f"Unexpected: {actual_tables - EXPECTED_TABLES}"
+    )
 
 
 def test_tables_are_empty_at_initialization(repository):
