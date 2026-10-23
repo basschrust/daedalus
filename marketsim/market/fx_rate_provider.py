@@ -60,13 +60,13 @@ class FXRateProvider:
                 quote=pivot,
             )
 
-            pivot_to_quote = self.get_rate(
+            quote_to_pivot = self.get_rate(
                 day=day,
-                base=pivot,
-                quote=quote,
+                base=quote,
+                quote=pivot,
             )
 
-            return base_to_pivot * pivot_to_quote
+            return base_to_pivot / quote_to_pivot
 
         raise KeyError(
             f"No FX rate for {base}/{quote} on day {day}"
