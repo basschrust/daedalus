@@ -1,23 +1,22 @@
-from tqdm import tqdm
-import random
-import numpy as np
 import gzip
-import matplotlib.pyplot as plt
-import sys
-import os, shutil
+import os
 import pickle
-from marketsim.fourheap.constants import BUY, SELL
-from marketsim.wrappers.SP_wrapper import SPEnv
-from marketsim.wrappers.MMSP_wrapper import MMSPEnv
-from marketsim.private_values.private_values import PrivateValues
-import torch.distributions as dist
+import random
+import shutil
+
+import numpy as np
 import torch
-from marketsim.fundamental.mean_reverting import GaussianMeanReverting
-from stable_baselines3 import PPO
-from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
-from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.common.env_checker import check_env
+import torch.distributions as dist
 from custom_callback import SaveOnBestTrainingRewardCallback
+from stable_baselines3 import PPO
+from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+from tqdm import tqdm
+
+from marketsim.fundamental.mean_reverting import GaussianMeanReverting
+from marketsim.private_values.private_values import PrivateValues
+from marketsim.wrappers.MMSP_wrapper import MMSPEnv
+from marketsim.wrappers.SP_wrapper import SPEnv
 
 SIM_TIME = 10000
 TOTAL_ITERS = 8000

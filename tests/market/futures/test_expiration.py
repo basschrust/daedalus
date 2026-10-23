@@ -1,7 +1,8 @@
 import pytest
 
 from marketsim.agent import Agent
-from marketsim.market import Price, Future
+from marketsim.market import Future, Price
+
 
 def test_expiration_removes_only_expired_future(
     futures_agents: dict[str, Agent], future_short: Future, future_long: Future

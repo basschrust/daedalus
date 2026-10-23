@@ -1,11 +1,9 @@
 import os
+
 import numpy as np
-from stable_baselines3.common import results_plotter
-from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.results_plotter import load_results, ts2xy, plot_results
-from stable_baselines3.common.noise import NormalActionNoise
 from stable_baselines3.common.callbacks import BaseCallback
-from stable_baselines3.common import results_plotter
+from stable_baselines3.common.results_plotter import load_results, ts2xy
+
 
 class SaveOnBestTrainingRewardCallback(BaseCallback):
     """

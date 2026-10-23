@@ -2,6 +2,7 @@
 
 import numpy as np
 
+
 def volume_imbalance(market):
     # The ratio of the difference between buy and sell volumes to their sum.
     order_book = market.order_book

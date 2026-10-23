@@ -3,6 +3,7 @@ from __future__ import annotations
 import heapq
 import math
 from typing import TYPE_CHECKING
+
 from marketsim.fourheap.order import MatchedOrder
 
 if TYPE_CHECKING:

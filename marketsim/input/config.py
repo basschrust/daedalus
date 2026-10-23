@@ -1,11 +1,10 @@
 # config.py
 import random
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
 import yaml
-from datetime import datetime
-
 
 DEFAULT_CONFIG = "market_structure.yaml"
 

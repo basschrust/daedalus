@@ -1,6 +1,7 @@
 # %%
-from marketsim.simulator.sampled_arrival_simulator import SimulatorSampledArrival
 from tqdm import tqdm
+
+from marketsim.simulator.sampled_arrival_simulator import SimulatorSampledArrival
 
 # %%
 # %%timeit

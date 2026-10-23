@@ -1,14 +1,13 @@
 from sqlalchemy import (
-    Table,
     Column,
+    Float,
     Integer,
     String,
-    Float,
+    Table,
     Text,
 )
 
 from .base import metadata
-
 
 securities = Table(
     "securities",

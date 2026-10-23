@@ -1,6 +1,7 @@
 import pytest
 
-from marketsim.market import Price, Security, Option
+from marketsim.market import Price
+
 
 def test_option_underlying(
     index_genius,

@@ -2,8 +2,7 @@ from decimal import Decimal
 
 import pytest
 
-from marketsim.market import FXRateProvider, Price
-
+from marketsim.market import Price
 
 
 @pytest.mark.parametrize(

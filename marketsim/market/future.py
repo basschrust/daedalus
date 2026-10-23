@@ -1,19 +1,21 @@
 from __future__ import annotations
 
-import pandas as pd
-
-from typing_extensions import TYPE_CHECKING
 from pathlib import Path
 
-from marketsim.input import config
-from marketsim.market.valuation_libs.BlackScholes import BSCall, BSPut
+import pandas as pd
+from typing_extensions import TYPE_CHECKING
+
+from marketsim.market.security import Security
+from marketsim.market.index import Index
+from marketsim.market.price import Price
 from marketsim.plot.candle import plot_candlestick_derivative
-from marketsim.market import Security, Index
-from marketsim.market import Price
+
 # from marketsim.database.connectors.duckdb_storage import Repository
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
+    # from marketsim.market import Index, Price
+
     from marketsim.fourheap import MatchedOrder
 
 class Future(Security):
@@ -123,7 +125,7 @@ class Future(Security):
     def exercise(self):
         self.logger.info(f"Checking Future Expiration: {self.name}")
         if self.expiration == self.current_day:
-            self.logger.info(f"Final settlement day!")
+            self.logger.info("Final settlement day!")
             # TODO: calculate final settlement
             self.status = "expired"
             # for all agents that had open positions make final settlement, give them cash back :)

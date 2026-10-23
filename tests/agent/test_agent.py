@@ -1,12 +1,17 @@
-import pytest
-from typing import TYPE_CHECKING
 from decimal import Decimal
 
+from marketsim.agent import (
+    Agent,
+    HBLAgent,
+    MMZOHAgent,
+    MomentumAgent,
+    NoiseAgent,
+    OptionMMZOHAgent,
+    SpoofingAgent,
+    WashTradingAgent,
+    ZIAgentNotInformed,
+)
 from marketsim.database.connectors.duckdb_storage import Repository
-
-from marketsim.agent import (Agent, NoiseAgent, HBLAgent, MMZOHAgent, MomentumAgent, OptionMMZOHAgent, SpoofingAgent,
-        WashTradingAgent, ZIAgentNotInformed)
-
 from marketsim.market import Price, Security
 
 #######   testing functions   #######

@@ -1,20 +1,27 @@
-import gymnasium as gym
-from gymnasium import spaces
-import numpy as np
 import math
 import random
-from marketsim.fourheap.constants import BUY, SELL
-from marketsim.market.security import Security
-from marketsim.fundamental.mean_reverting import GaussianMeanReverting
-from marketsim.agent.zero_intelligence_agent import ZIAgent
-from marketsim.agent.hbl_agent import HBLAgent
-from marketsim.agent.spoofing import SpoofingAgent
-from marketsim.agent.market_maker import MMAgent
-from marketsim.wrappers.metrics import volume_imbalance, queue_imbalance, realized_volatility, relative_strength_index, midprice_move
-import torch.distributions as dist
-import torch
 from collections import defaultdict
-import matplotlib.pyplot as plt
+
+import gymnasium as gym
+import numpy as np
+import torch
+import torch.distributions as dist
+from gymnasium import spaces
+
+from marketsim.agent.hbl_agent import HBLAgent
+from marketsim.agent.market_maker import MMAgent
+from marketsim.agent.spoofing import SpoofingAgent
+from marketsim.agent.zero_intelligence_agent import ZIAgent
+from marketsim.fourheap.constants import BUY, SELL
+from marketsim.fundamental.mean_reverting import GaussianMeanReverting
+from marketsim.market.security import Security
+from marketsim.wrappers.metrics import (
+    midprice_move,
+    queue_imbalance,
+    realized_volatility,
+    relative_strength_index,
+    volume_imbalance,
+)
 
 #Global variables for training plots
 COUNT = 0

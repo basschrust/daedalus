@@ -1,9 +1,7 @@
-import pytest
 
 
-from marketsim.agent import Agent, NoiseAgent
-from marketsim.market import Index, Future, Security
-
+from marketsim.agent import Agent
+from marketsim.market import Future, Index
 
 ####################################################################
 ####    test functions

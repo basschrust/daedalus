@@ -1,5 +1,4 @@
-from decimal import Decimal, ROUND_HALF_UP
-from decimal import getcontext
+from decimal import ROUND_HALF_UP, Decimal
 
 # TODO: check precision, currently is 28 (default) print(getcontext().prec)
 

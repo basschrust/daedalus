@@ -1,7 +1,6 @@
-import pytest
 
-from marketsim.market import Future, Price
 from marketsim.agent import Agent
+from marketsim.market import Future, Price
 
 
 def test_collateral_transfer_preserves_equity(

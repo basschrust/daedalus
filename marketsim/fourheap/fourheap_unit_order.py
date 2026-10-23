@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 import marketsim.fourheap.constants as constants
-from marketsim.fourheap.order import Order, MatchedOrder
+from marketsim.fourheap.order import MatchedOrder, Order
 from marketsim.fourheap.order_queue import OrderQueue
 
 

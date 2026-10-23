@@ -1,7 +1,5 @@
-import pytest
 
-from marketsim.market import Price, Security
-
+from marketsim.market import Security
 
 ############  test functions  ##################
 

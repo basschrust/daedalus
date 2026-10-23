@@ -1,6 +1,4 @@
-import pytest
 
-from marketsim.agent import Agent, NoiseAgent, MMZOHAgent
 
 
 

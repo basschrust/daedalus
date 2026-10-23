@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import random
-from typing import TYPE_CHECKING
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from marketsim.agent.agent import Agent
-from marketsim.fourheap.order import Order
 from marketsim.fourheap.constants import BUY, SELL
-from marketsim.market import Price, FXRateProvider
+from marketsim.fourheap.order import Order
+from marketsim.market import FXRateProvider, Price
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
+
     from marketsim.market.security import Security
 
 

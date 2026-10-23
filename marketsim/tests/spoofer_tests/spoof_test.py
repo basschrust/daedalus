@@ -1,13 +1,12 @@
-from tqdm import tqdm
-import random
-import numpy as np
+
 import matplotlib.pyplot as plt
-import time
+import numpy as np
+import torch
+import torch.distributions as dist
+from tqdm import tqdm
+
 from marketsim.simulator.sampled_arrival_simulator import SimulatorSampledArrival
 from marketsim.wrappers.SP_wrapper import SPEnv
-from marketsim.private_values.private_values import PrivateValues
-import torch.distributions as dist
-import torch
 
 SIM_TIME = 10000
 

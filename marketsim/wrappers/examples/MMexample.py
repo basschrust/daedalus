@@ -1,5 +1,6 @@
 from marketsim.wrappers.MM_wrapper import MMEnv
 
+
 def run():
 
     normalizers = {"fundamental": 1.2e5, "invt": 10, "cash": 5e5}

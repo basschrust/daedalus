@@ -1,10 +1,8 @@
-import pytest
 
 from decimal import Decimal
 
 from marketsim.agent import Agent
 from marketsim.market import Option, Price
-
 
 ######## test functions  ######
 

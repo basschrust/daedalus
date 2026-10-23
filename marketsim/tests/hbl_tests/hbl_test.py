@@ -1,7 +1,8 @@
-from tqdm import tqdm
-import numpy as np
+
 import matplotlib.pyplot as plt
-import time
+import numpy as np
+from tqdm import tqdm
+
 #from marketsim.simulator.simulator import Simulator
 from marketsim.simulator.sampled_arrival_simulator import SimulatorSampledArrival
 

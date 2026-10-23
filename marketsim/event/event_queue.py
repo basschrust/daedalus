@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import random
 from collections import defaultdict
-from typing import List
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from marketsim.fourheap.order import Order

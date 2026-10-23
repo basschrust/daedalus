@@ -1,5 +1,5 @@
-from marketsim.database.repositories.interface import RepositoryInterface
 from marketsim.database.connectors.duckdb_storage import Repository
+from marketsim.database.repositories.interface import RepositoryInterface
 
 
 def test_duckdb_implements_repository_interface(tmp_path):

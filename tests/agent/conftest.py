@@ -1,10 +1,18 @@
-import pytest
 from decimal import Decimal
 
+import pytest
+
+from marketsim.agent import (
+    Agent,
+    MomentumAgent,
+    NoiseAgent,
+    OptionMMZOHAgent,
+    SpoofingAgent,
+    WashTradingAgent,
+    ZIAgentNotInformed,
+)
 from marketsim.database.connectors.duckdb_storage import Repository
-from marketsim.market import Security, Option, Price, FXRateProvider
-from marketsim.agent import (Agent, NoiseAgent, HBLAgent, MMZOHAgent, MomentumAgent, OptionMMZOHAgent, SpoofingAgent,
-        WashTradingAgent, ZIAgentNotInformed)
+from marketsim.market import FXRateProvider, Option, Price, Security
 
 BUY = 1
 SELL = -1

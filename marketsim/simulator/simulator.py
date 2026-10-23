@@ -1,15 +1,25 @@
 from __future__ import annotations
 
-from loguru import logger
 from pathlib import Path
 
-from marketsim.database.repositories.factory import create_repository
-from marketsim.loggers.basic import terminal
-from marketsim.fundamental.mean_reverting import GaussianMeanReverting
-from marketsim.market import Security, Option, Index, Future, FXRateProvider, Price
-from marketsim.agent import Agent, WashTradingAgent, MomentumAgent, SpoofingAgent, NoiseAgent
-from marketsim.agent import ZIAgentNotInformed, MMZOHAgent, HBLAgent, OptionMMZOHAgent
+from loguru import logger
+
+from marketsim.agent import (
+    Agent,
+    HBLAgent,
+    MMZOHAgent,
+    MomentumAgent,
+    NoiseAgent,
+    OptionMMZOHAgent,
+    SpoofingAgent,
+    WashTradingAgent,
+    ZIAgentNotInformed,
+)
 from marketsim.agent.washtrading import WashTradingPool
+from marketsim.database.repositories.factory import create_repository
+from marketsim.fundamental.mean_reverting import GaussianMeanReverting
+from marketsim.loggers.basic import terminal
+from marketsim.market import Future, FXRateProvider, Index, Option, Price, Security
 
 
 class Simulator:
@@ -324,7 +334,7 @@ class Simulator:
             # TODO: we should be asynchronous, redesign this part! No returns!!! :)
             new_orders_matched = market.step(current_time=self.current_time)
 
-            market.logger.info(f"Starting to clear out orders.")
+            market.logger.info("Starting to clear out orders.")
             # initiate market prices instance for the case of no trades: - moved to market.step
 
             for matched_order in new_orders_matched:
@@ -343,7 +353,7 @@ class Simulator:
     def end_sim(self) -> None:
         """ End the simulation and print summary """
         self.logger.info(f"\n\nSimulation ended. time: {self.current_time}")
-        terminal.write(f"Preparing agents summary...\n")
+        terminal.write("Preparing agents summary...\n")
         self.last_progress = -1
         self.show_progress_bar(step=0, total=len(self.agents), step_name="Agents")
         agent_steps = 0
@@ -353,7 +363,7 @@ class Simulator:
             self.show_progress_bar(step=agent_steps, total=len(self.agents), step_name="Agents")
             agent_steps += 1
 
-        terminal.write(f"\n\nPreparing markets summary...\n")
+        terminal.write("\n\nPreparing markets summary...\n")
         self.last_progress = -1
         self.show_progress_bar(step=0, total=len(self.markets), step_name="Markets")
         market_steps = 0

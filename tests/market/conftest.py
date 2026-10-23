@@ -1,9 +1,9 @@
 import pytest
 
-from marketsim.database.connectors.duckdb_storage import Repository
-from marketsim.market import Security, Option, Price, Index
 # from tests.conftest import repository, option_tnt_call
-from marketsim.agent import Agent, NoiseAgent
+from marketsim.database.connectors.duckdb_storage import Repository
+from marketsim.market import Index, Option, Price, Security
+
 
 @pytest.fixture
 def genius_index(

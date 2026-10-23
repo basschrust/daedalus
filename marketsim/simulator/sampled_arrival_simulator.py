@@ -1,11 +1,10 @@
-import random
-from marketsim.fourheap.constants import BUY, SELL
-from marketsim.market.security import Security
-from marketsim.fundamental.lazy_mean_reverting import LazyGaussianMeanReverting
-from marketsim.agent.zero_intelligence_agent import ZIAgent
-from marketsim.agent.hbl_agent import HBLAgent
-import numpy as np
 from collections import defaultdict
+
+import numpy as np
+
+from marketsim.agent.zero_intelligence_agent import ZIAgent
+from marketsim.fundamental.lazy_mean_reverting import LazyGaussianMeanReverting
+from marketsim.market.security import Security
 
 
 def sample_arrivals_numpy(p, num_samples):

@@ -1,5 +1,6 @@
 from itertools import count
 
+
 class IdGenerator:
     def __init__(self):
         self._counter = count(0)

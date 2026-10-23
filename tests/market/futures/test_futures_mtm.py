@@ -1,8 +1,9 @@
 
 import pytest
 
-from marketsim.market import Price, Future
 from marketsim.agent import Agent
+from marketsim.market import Future, Price
+
 
 @pytest.fixture
 def mtm_agents(futures_agents: dict[str, Agent], future_short: Future):

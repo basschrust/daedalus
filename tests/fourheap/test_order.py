@@ -1,11 +1,10 @@
-import pytest
-
 import math
 
+import pytest
+
+from marketsim.fourheap import FourHeap
 from marketsim.fourheap.order import Order
 from marketsim.market import Price, Security
-from marketsim.fourheap import FourHeap
-
 
 BUY = 1
 SELL = -1

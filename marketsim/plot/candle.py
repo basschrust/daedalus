@@ -1,8 +1,8 @@
-import pandas as pd
-import mplfinance as mpf
-
 import matplotlib.pyplot as plt
+import mplfinance as mpf
+import pandas as pd
 from matplotlib.patches import Rectangle
+
 
 def plot_candlestick_old(df, output_file: str):
     fig, axlist =mpf.plot(
