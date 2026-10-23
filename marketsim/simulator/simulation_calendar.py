@@ -18,6 +18,9 @@ class SimulationCalendar:
         }
 
     def to_date(self, day: int) -> date:
+        if day < 0 or day >= len(self.dates):
+            raise IndexError(f"Invalid simulation day: {day}")
+
         return self.dates[day]
 
     def to_day(self, trading_date: date) -> int:
