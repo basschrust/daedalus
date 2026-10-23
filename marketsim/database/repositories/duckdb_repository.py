@@ -4,7 +4,6 @@ from marketsim.database.models.securities import securities
 
 
 class Repository:
-
     def __init__(self, engine):
         self.engine = engine
 

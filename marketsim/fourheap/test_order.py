@@ -19,9 +19,15 @@ def test_update_quantity_filled():
 
 
 def test_equality():
-    order1 = Order(price=100.0, order_type=1, quantity=10.0, agent_id=1, time=1234567890, order_id=1)
-    order2 = Order(price=200.0, order_type=-1, quantity=5.0, agent_id=2, time=1234567999, order_id=2)
-    order3 = Order(price=150.0, order_type=-1, quantity=8.0, agent_id=3, time=1234568000, order_id=1)
+    order1 = Order(
+        price=100.0, order_type=1, quantity=10.0, agent_id=1, time=1234567890, order_id=1
+    )
+    order2 = Order(
+        price=200.0, order_type=-1, quantity=5.0, agent_id=2, time=1234567999, order_id=2
+    )
+    order3 = Order(
+        price=150.0, order_type=-1, quantity=8.0, agent_id=3, time=1234568000, order_id=1
+    )
     assert not (order1 == order2)
     assert order1 == order3
 

@@ -8,4 +8,5 @@ class IdGenerator:
     def next(self) -> int:
         return next(self._counter)
 
+
 id_generator = IdGenerator()

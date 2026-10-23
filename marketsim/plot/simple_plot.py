@@ -11,6 +11,7 @@ def simple_plot_old(x: list, y: list, output_file: str) -> None:
     plt.plot(x, y)
     plt.savefig(output_file)
 
+
 def simple_plot(
     x: list,
     y: list,
@@ -39,6 +40,7 @@ def simple_plot(
     Path(output_file).parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_file, dpi=150)
     plt.close(fig)
+
 
 def plot_agent_history_single_market(
     position_history: pd.DataFrame,
@@ -79,12 +81,13 @@ def plot_agent_history_single_market(
 
 def plot_agent_history_many_markets(
     position_history: pd.DataFrame,
-    cash_history: pd.DataFrame, # dict,
-    value_history: pd.DataFrame, #dict,
+    cash_history: pd.DataFrame,  # dict,
+    value_history: pd.DataFrame,  # dict,
     output_file: str,
     title: str = "Agent Portfolio history",
-    labels_map: dict|None=None, # map of short names: {asset_id: "stock TNT", 4: "CALL TNT 90", ...}
-    time_label: str|None=None,
+    labels_map: dict
+    | None = None,  # map of short names: {asset_id: "stock TNT", 4: "CALL TNT 90", ...}
+    time_label: str | None = None,
 ) -> None:
 
     time_label = time_label if time_label is None else "Simulation time"
@@ -92,7 +95,7 @@ def plot_agent_history_many_markets(
     asset_ids = sorted(position_history["asset_id"].unique())
     n_assets = len(asset_ids)
     if labels_map is None:
-        labels_map = { asset_id: f"Asset {asset_id}" for asset_id in asset_ids }
+        labels_map = {asset_id: f"Asset {asset_id}" for asset_id in asset_ids}
     print(f"Labels map: {labels_map}")
 
     fig, axes = plt.subplots(
@@ -112,9 +115,9 @@ def plot_agent_history_many_markets(
     for i, asset_id in enumerate(asset_ids):
         ax = axes[i]
 
-        asset_history = position_history[
-            position_history["asset_id"] == asset_id
-        ].sort_values("time_step")
+        asset_history = position_history[position_history["asset_id"] == asset_id].sort_values(
+            "time_step"
+        )
 
         ax.plot(
             asset_history["time_step"],
@@ -156,7 +159,7 @@ def plot_agent_history_many_markets(
         # list(value_history.keys()),
         # list(value_history.values()),
         value_history["time_step"],
-        value_history["portfolio_value"]
+        value_history["portfolio_value"],
     )
 
     ax_value.set_xlabel(time_label)
@@ -190,7 +193,7 @@ def plot_order_book(
         if cumulative:
             total = 0
             depth = []
-            for price, volume in items: # TODO: these are yet price, order_id (!!!) - solved (?)
+            for price, volume in items:  # TODO: these are yet price, order_id (!!!) - solved (?)
                 total += volume
                 depth.append((float(price), total))
             return depth
@@ -278,9 +281,7 @@ def plot_by_type(
     """
 
     if mode not in ("simple", "extended"):
-        raise ValueError(
-            f"Unknown mode '{mode}'. Expected 'simple' or 'extended'."
-        )
+        raise ValueError(f"Unknown mode '{mode}'. Expected 'simple' or 'extended'.")
 
     order_types = list(orders_by_type.keys())
 
@@ -295,24 +296,11 @@ def plot_by_type(
     width = 0.35
 
     if mode == "simple":
+        buy_counts = [orders_by_type[order_type]["count_buy"] for order_type in order_types]
+        sell_counts = [orders_by_type[order_type]["count_sell"] for order_type in order_types]
 
-        buy_counts = [
-            orders_by_type[order_type]["count_buy"]
-            for order_type in order_types
-        ]
-        sell_counts = [
-            orders_by_type[order_type]["count_sell"]
-            for order_type in order_types
-        ]
-
-        buy_volumes = [
-            orders_by_type[order_type]["volume_buy"]
-            for order_type in order_types
-        ]
-        sell_volumes = [
-            orders_by_type[order_type]["volume_sell"]
-            for order_type in order_types
-        ]
+        buy_volumes = [orders_by_type[order_type]["volume_buy"] for order_type in order_types]
+        sell_volumes = [orders_by_type[order_type]["volume_sell"] for order_type in order_types]
 
         # Order count
         ax_count.bar(
@@ -351,39 +339,31 @@ def plot_by_type(
     else:
         # Extract extended data
         buy_count_arrived = [
-            orders_by_type[order_type]["count_buy"]["arrived"]
-            for order_type in order_types
+            orders_by_type[order_type]["count_buy"]["arrived"] for order_type in order_types
         ]
         buy_count_waited = [
-            orders_by_type[order_type]["count_buy"]["waited"]
-            for order_type in order_types
+            orders_by_type[order_type]["count_buy"]["waited"] for order_type in order_types
         ]
 
         sell_count_arrived = [
-            orders_by_type[order_type]["count_sell"]["arrived"]
-            for order_type in order_types
+            orders_by_type[order_type]["count_sell"]["arrived"] for order_type in order_types
         ]
         sell_count_waited = [
-            orders_by_type[order_type]["count_sell"]["waited"]
-            for order_type in order_types
+            orders_by_type[order_type]["count_sell"]["waited"] for order_type in order_types
         ]
 
         buy_volume_arrived = [
-            orders_by_type[order_type]["volume_buy"]["arrived"]
-            for order_type in order_types
+            orders_by_type[order_type]["volume_buy"]["arrived"] for order_type in order_types
         ]
         buy_volume_waited = [
-            orders_by_type[order_type]["volume_buy"]["waited"]
-            for order_type in order_types
+            orders_by_type[order_type]["volume_buy"]["waited"] for order_type in order_types
         ]
 
         sell_volume_arrived = [
-            orders_by_type[order_type]["volume_sell"]["arrived"]
-            for order_type in order_types
+            orders_by_type[order_type]["volume_sell"]["arrived"] for order_type in order_types
         ]
         sell_volume_waited = [
-            orders_by_type[order_type]["volume_sell"]["waited"]
-            for order_type in order_types
+            orders_by_type[order_type]["volume_sell"]["waited"] for order_type in order_types
         ]
 
         # Order count - Buy
@@ -582,9 +562,7 @@ def plot_agent_profitability_vs_volatility(
         # Total profitability over the simulation
         profitability = values[-1] / values[0] - 1
 
-        groups[agent.group].append(
-            (volatility, profitability, agent.agent_id)
-        )
+        groups[agent.group].append((volatility, profitability, agent.agent_id))
 
     for group, points in groups.items():
         x = [p[0] for p in points]
@@ -620,6 +598,7 @@ class Plotter:
     def hist(self, df: pd.DataFrame, output_file: str) -> None:
         pass
 
+
 # the magic subplots for capital movement between groups:
 def plot_volume_transfers(df: pd.DataFrame, output_file_tpl: str):
     """
@@ -635,7 +614,6 @@ def plot_volume_transfers(df: pd.DataFrame, output_file_tpl: str):
     """
 
     for agent_group in df["agent_group"].unique():
-
         agent_df = df[df["agent_group"] == agent_group]
 
         cp_groups = agent_df["cp_group"].unique()
@@ -674,9 +652,7 @@ def plot_volume_transfers(df: pd.DataFrame, output_file_tpl: str):
                 label=f"volume_sell, total: {sell_total:g}",
             )
             # Display absolute values on Y-axis
-            ax.yaxis.set_major_formatter(
-                lambda x, pos: f"{abs(x):g}"
-            )
+            ax.yaxis.set_major_formatter(lambda x, pos: f"{abs(x):g}")
 
             # Put X-axis through y=0
             ax.axhline(0, linewidth=1)
@@ -695,6 +671,7 @@ def plot_volume_transfers(df: pd.DataFrame, output_file_tpl: str):
         fig.savefig(output_file, dpi=150)
         plt.close(fig)
 
+
 def plot_cash_transfers(df: pd.DataFrame, output_file_tpl: str):
     """
     Plot buy/sell cash transfer history for each agent group.
@@ -709,7 +686,6 @@ def plot_cash_transfers(df: pd.DataFrame, output_file_tpl: str):
     """
 
     for agent_group in df["agent_group"].unique():
-
         agent_df = df[df["agent_group"] == agent_group]
         cp_groups = agent_df["cp_group"].unique()
         n_subplots = len(cp_groups)
@@ -747,9 +723,7 @@ def plot_cash_transfers(df: pd.DataFrame, output_file_tpl: str):
                 label=f"cash_sell, total: {sell_total:g}",
             )
             # Display absolute values on Y-axis
-            ax.yaxis.set_major_formatter(
-                lambda x, pos: f"{abs(x):g}"
-            )
+            ax.yaxis.set_major_formatter(lambda x, pos: f"{abs(x):g}")
 
             # Put X-axis through y=0
             ax.axhline(0, linewidth=1)

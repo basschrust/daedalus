@@ -1,4 +1,3 @@
-
 import pytest
 
 from marketsim.agent import Agent
@@ -12,15 +11,11 @@ def mtm_agents(futures_agents: dict[str, Agent], future_short: Future):
     seller = futures_agents["seller"]
 
     for agent in (buyer, seller):
-        agent.cash = { "PLN": Price(100_000) }
+        agent.cash = {"PLN": Price(100_000)}
         agent.sod()
 
-    buyer.update_futures_position(
-        quantity=2, contract=future_short
-    )
-    seller.update_futures_position(
-        quantity=-2, contract=future_short
-    )
+    buyer.update_futures_position(quantity=2, contract=future_short)
+    seller.update_futures_position(quantity=-2, contract=future_short)
 
     return buyer, seller
 
@@ -34,18 +29,14 @@ def mtm_scenario(mtm_agents: tuple[Agent, Agent], future_short: Future):
         "buyer": buyer,
         "seller": seller,
         "contract": future_short,
-        "initial_price": Price(
-            future_short.last_traded_price
-        ),
+        "initial_price": Price(future_short.last_traded_price),
         "quantity": 2,
         "multiplier": future_short.multiplier,
     }
 
 
 def expected_vm(quantity, multiplier, old_price, new_price):
-    return Price(
-        quantity * multiplier * (new_price - old_price)
-    )
+    return Price(quantity * multiplier * (new_price - old_price))
 
 
 def test_daily_mtm_long_profit(mtm_scenario):
@@ -62,8 +53,10 @@ def test_daily_mtm_long_profit(mtm_scenario):
     buyer.eod()
 
     vm = expected_vm(
-        s["quantity"], s["multiplier"],
-        old_price, new_price,
+        s["quantity"],
+        s["multiplier"],
+        old_price,
+        new_price,
     )
 
     assert buyer.cash["PLN"] == cash_before + vm
@@ -83,8 +76,10 @@ def test_daily_mtm_short_loss(mtm_scenario):
     seller.eod()
 
     vm = expected_vm(
-        -s["quantity"], s["multiplier"],
-        old_price, new_price,
+        -s["quantity"],
+        s["multiplier"],
+        old_price,
+        new_price,
     )
 
     assert seller.cash["PLN"] == cash_before + vm
@@ -97,9 +92,7 @@ def test_daily_mtm_zero_sum(mtm_scenario):
 
     cash_before = buyer.cash["PLN"] + seller.cash["PLN"]
 
-    contract.last_traded_price = Price(
-        s["initial_price"] + 7
-    )
+    contract.last_traded_price = Price(s["initial_price"] + 7)
 
     buyer.eod()
     seller.eod()
@@ -112,18 +105,14 @@ def test_mtm_resets_unsettled_pnl(mtm_scenario):
     buyer = s["buyer"]
     contract = s["contract"]
 
-    contract.last_traded_price = Price(
-        s["initial_price"] + 5
-    )
+    contract.last_traded_price = Price(s["initial_price"] + 5)
 
     buyer.eod()
 
     values = buyer.futures_value[contract.asset_id]
 
     assert values["unsettled_pnl"] == Price(0)
-    assert values["settlement_price"] == (
-        contract.last_traded_price
-    )
+    assert values["settlement_price"] == (contract.last_traded_price)
 
 
 def test_eod_is_idempotent(mtm_scenario):
@@ -131,9 +120,7 @@ def test_eod_is_idempotent(mtm_scenario):
     buyer = s["buyer"]
     contract = s["contract"]
 
-    contract.last_traded_price = Price(
-        s["initial_price"] + 5
-    )
+    contract.last_traded_price = Price(s["initial_price"] + 5)
 
     buyer.eod()
     cash_after_first_eod = buyer.cash
@@ -144,8 +131,6 @@ def test_eod_is_idempotent(mtm_scenario):
     assert buyer.current_day == 1
 
 
-
-
 @pytest.mark.parametrize(
     "day,price,expected_long_vm",
     [
@@ -154,9 +139,7 @@ def test_eod_is_idempotent(mtm_scenario):
         (3, 110, 320),
     ],
 )
-def test_mtm_formula(
-    day, price, expected_long_vm
-):
+def test_mtm_formula(day, price, expected_long_vm):
     previous_prices = {
         1: 100,
         2: 105,
@@ -201,25 +184,14 @@ def test_mtm_over_multiple_days(mtm_scenario):
 
         buyer.eod()
 
-        assert buyer.cash["PLN"] == (
-            initial_cash + expected_cumulative_vm
-        )
+        assert buyer.cash["PLN"] == (initial_cash + expected_cumulative_vm)
 
-        assert (
-            buyer.futures_value[contract.asset_id][
-                "settlement_price"
-            ] == current_price
-        )
+        assert buyer.futures_value[contract.asset_id]["settlement_price"] == current_price
 
-        assert (
-            buyer.futures_value[contract.asset_id][
-                "unsettled_pnl"
-            ] == Price(0)
-        )
+        assert buyer.futures_value[contract.asset_id]["unsettled_pnl"] == Price(0)
 
         if day < len(daily_changes) - 1:
             buyer.sod()
-
 
 
 def test_settlement_is_independent_between_contracts(
@@ -228,15 +200,11 @@ def test_settlement_is_independent_between_contracts(
     future_long,
 ):
     buyer = futures_agents["buyer"]
-    buyer.cash = { "PLN": Price(100_000) }
+    buyer.cash = {"PLN": Price(100_000)}
     buyer.sod()
 
-    buyer.update_futures_position(
-        quantity=2, contract=future_short
-    )
-    buyer.update_futures_position(
-        quantity=1, contract=future_long
-    )
+    buyer.update_futures_position(quantity=2, contract=future_short)
+    buyer.update_futures_position(quantity=1, contract=future_long)
 
     short_id = future_short.asset_id
     long_id = future_long.asset_id
@@ -251,23 +219,12 @@ def test_settlement_is_independent_between_contracts(
 
     buyer.eod()
 
-    expected_cash_change = (
-        2 * future_short.multiplier * 5
-        - future_long.multiplier * 3
-    )
+    expected_cash_change = 2 * future_short.multiplier * 5 - future_long.multiplier * 3
 
-    assert buyer.cash["PLN"] == (
-        cash_before + Price(expected_cash_change)
-    )
+    assert buyer.cash["PLN"] == (cash_before + Price(expected_cash_change))
 
     assert buyer.futures_position[short_id] == 2
     assert buyer.futures_position[long_id] == 1
 
-    assert (
-        buyer.futures_value[short_id]["settlement_price"]
-        == future_short.last_traded_price
-    )
-    assert (
-        buyer.futures_value[long_id]["settlement_price"]
-        == future_long.last_traded_price
-    )
+    assert buyer.futures_value[short_id]["settlement_price"] == future_short.last_traded_price
+    assert buyer.futures_value[long_id]["settlement_price"] == future_long.last_traded_price

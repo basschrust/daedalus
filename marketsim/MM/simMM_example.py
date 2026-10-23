@@ -1,6 +1,14 @@
+import datetime
 import functools
 import os
 import sys
+
+import numpy as np
+from absl import app, flags
+from utils import replace_inf_with_nearest_2d
+
+from marketsim.MM.simMM import SimulatorSampledArrival_MM
+from marketsim.MM.utils import write_to_csv
 
 print = functools.partial(print, flush=True)
 
@@ -16,19 +24,9 @@ grandparent_dir = os.path.dirname(parent_dir)
 # Add the grandparent directory to the sys.path
 sys.path.append(grandparent_dir)
 
-
-import datetime
-
-import numpy as np
-from absl import app, flags
-from utils import replace_inf_with_nearest_2d
-
-from marketsim.MM.simMM import SimulatorSampledArrival_MM
-from marketsim.MM.utils import write_to_csv
-
 FLAGS = flags.FLAGS
 flags.DEFINE_string("game_name", "LadderMM", "Game name.")
-flags.DEFINE_string("root_result_folder", './root_result_static', "root directory of saved results")
+flags.DEFINE_string("root_result_folder", "./root_result_static", "root directory of saved results")
 flags.DEFINE_integer("num_iteration", 1, "num_iteration")
 
 flags.DEFINE_integer("num_background_agents", 100, "Number of background agents.")
@@ -62,6 +60,7 @@ flags.DEFINE_float("b_sell", 2, "b_sell.")
 flags.DEFINE_float("a_buy", 1, "a_buy.")
 flags.DEFINE_float("b_buy", 2, "b_buy.")
 
+
 def run(argv):
     # Set up working directory.
     if not os.path.exists(FLAGS.root_result_folder):
@@ -70,15 +69,22 @@ def run(argv):
     seed = np.random.randint(0, 10000)
 
     checkpoint_dir = FLAGS.game_name
-    checkpoint_dir = checkpoint_dir + "_agonly_" + str(FLAGS.agents_only) + "_se_" + str(
-        seed) + '_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    checkpoint_dir = (
+        checkpoint_dir
+        + "_agonly_"
+        + str(FLAGS.agents_only)
+        + "_se_"
+        + str(seed)
+        + "_"
+        + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    )
     checkpoint_dir = os.path.join(os.getcwd(), FLAGS.root_result_folder, checkpoint_dir)
 
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
 
     # Save the original standard output
-    sys.stdout = open(checkpoint_dir + '/stdout.txt', 'w+')
+    sys.stdout = open(checkpoint_dir + "/stdout.txt", "w+")
 
     print("========== Parameters ==========")
     print(f"game_name: {FLAGS.game_name}")
@@ -112,39 +118,39 @@ def run(argv):
     print(f"k_max: {FLAGS.k_max}")
     print(f"max_position: {FLAGS.max_position}")
 
-    all_spreads, all_midprices, all_inventory, all_tq, all_MM_q , MM_values = [], [], [], [], [], []
+    all_spreads, all_midprices, all_inventory, all_tq, all_MM_q, MM_values = [], [], [], [], [], []
     beta_params = {}
     beta_params["a_sell"] = FLAGS.a_sell
     beta_params["b_sell"] = FLAGS.b_sell
     beta_params["a_buy"] = FLAGS.a_buy
     beta_params["b_buy"] = FLAGS.b_buy
 
-
-    sim = SimulatorSampledArrival_MM(num_background_agents = FLAGS.num_background_agents,
-                                    sim_time = FLAGS.sim_time,
-                                    lam = FLAGS.lam,
-                                    lamMM = FLAGS.lamMM,
-                                    mean = FLAGS.mean,
-                                    r = FLAGS.r,
-                                    shock_var = FLAGS.shock_var,
-                                    q_max = FLAGS.q_max,
-                                    pv_var = FLAGS.pv_var,
-                                    shade = FLAGS.shade,
-                                    xi = FLAGS.xi,
-                                    omega = FLAGS.omega,
-                                    K = FLAGS.K,
-                                    n_levels=FLAGS.n_levels,
-                                    total_volume=FLAGS.total_volume,
-                                    beta_params = beta_params,
-                                    policy = FLAGS.policy,
-                                    beta_MM = FLAGS.beta_MM,
-                                    inv_driven = FLAGS.inv_driven,
-                                    w0 = FLAGS.w0,
-                                    p = FLAGS.p,
-                                    k_min = FLAGS.k_min,
-                                    k_max = FLAGS.k_max,
-                                    max_position = FLAGS.max_position
-                                    )
+    sim = SimulatorSampledArrival_MM(
+        num_background_agents=FLAGS.num_background_agents,
+        sim_time=FLAGS.sim_time,
+        lam=FLAGS.lam,
+        lamMM=FLAGS.lamMM,
+        mean=FLAGS.mean,
+        r=FLAGS.r,
+        shock_var=FLAGS.shock_var,
+        q_max=FLAGS.q_max,
+        pv_var=FLAGS.pv_var,
+        shade=FLAGS.shade,
+        xi=FLAGS.xi,
+        omega=FLAGS.omega,
+        K=FLAGS.K,
+        n_levels=FLAGS.n_levels,
+        total_volume=FLAGS.total_volume,
+        beta_params=beta_params,
+        policy=FLAGS.policy,
+        beta_MM=FLAGS.beta_MM,
+        inv_driven=FLAGS.inv_driven,
+        w0=FLAGS.w0,
+        p=FLAGS.p,
+        k_min=FLAGS.k_min,
+        k_max=FLAGS.k_max,
+        max_position=FLAGS.max_position,
+    )
 
     sim.reset()
     print("=============== START of SIM ================")
@@ -162,7 +168,6 @@ def run(argv):
         all_tq.append(stats["total_quantity"])
         all_MM_q.append(stats["MM_quantity"])
         MM_values.append(stats["MM_value"])
-
 
     # Remove inf
     all_spreads = replace_inf_with_nearest_2d(all_spreads)
@@ -186,14 +191,12 @@ def run(argv):
 
     print("=============== END of SIM ================")
 
-
     # Save everything
     write_to_csv(checkpoint_dir + "/average_spreads.csv", average_spreads)
     write_to_csv(checkpoint_dir + "/average_midprices.csv", average_midprices)
     write_to_csv(checkpoint_dir + "/average_inventory.csv", average_inventory)
     # write_to_csv(average_trade_market_share + "/average_spreads.csv", average_spreads)
     # write_to_csv(average_values + "/average_spreads.csv", average_spreads)
-
 
 
 if __name__ == "__main__":

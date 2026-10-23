@@ -10,16 +10,16 @@ if TYPE_CHECKING:
     from marketsim.agent import Agent
     from marketsim.market import Future, Index, Security
 
+
 # TODO: create some base class with abstract methods, use instances depending on the configuration
 class Repository:
-    def __init__(self, output_dir: Path|str = "tmp"):
+    def __init__(self, output_dir: Path | str = "tmp"):
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
         self.localdb = output_dir / "daedalus.duckdb"
         self.connection = duckdb.connect(str(self.localdb))
         self.prepare_tables()
-
 
     def prepare_tables(self) -> None:
         ###### static tables - per simulation  ################
@@ -36,7 +36,7 @@ class Repository:
                     reference_price DOUBLE,
                     currency STRING
                 )
-            """)   # TODO: configuration STRING, for options and other derivatives
+            """)  # TODO: configuration STRING, for options and other derivatives
 
         # indices
         self.connection.execute("""
@@ -308,7 +308,6 @@ class Repository:
                     )
                 """)
 
-
         # trades / matched orders
         self.connection.execute("""
                     CREATE TABLE IF NOT EXISTS trades (
@@ -337,7 +336,8 @@ class Repository:
     ############# methods for making data persistent ###############################
 
     def save_security(self, security: Security) -> None:
-        self.connection.execute("""
+        self.connection.execute(
+            """
             INSERT INTO securities (
                 asset_id,
                 instrument_class,
@@ -348,24 +348,29 @@ class Repository:
                 currency
             )
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, parameters=[
-            security.asset_id,
-            security.instrument_class,
-            security.market_type,
-            security.name,
-            security.eod_status,
-            security.reference_price,
-            security.currency
-        ])
+        """,
+            parameters=[
+                security.asset_id,
+                security.instrument_class,
+                security.market_type,
+                security.name,
+                security.eod_status,
+                security.reference_price,
+                security.currency,
+            ],
+        )
 
     def save_index(self, index: Index) -> None:
-        self.connection.execute("""
+        self.connection.execute(
+            """
             INSERT INTO indices (
                 index_id,
                 name,
                 short_name
             ) VALUES (?, ?, ?)
-        """, parameters=[index.index_id, index.name, index.short_name])
+        """,
+            parameters=[index.index_id, index.name, index.short_name],
+        )
 
     def save_index_components(self, components_df: pd.DataFrame) -> None:
         self.connection.register("components_df", components_df)
@@ -379,24 +384,29 @@ class Repository:
         self.connection.unregister("components_df")
 
     def save_future(self, future: Future) -> None:
-        self.connection.execute(query="""
+        self.connection.execute(
+            query="""
             INSERT INTO futures (contract_id, underlying_type, underlying_id,
                                 expiration_day, multiplier, name, short_name)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-                    """, parameters=[future.asset_id,
-                                     "index",
-                                     future.underlying.asset_id,
-                                     future.expiration,
-                                     future.multiplier,
-                                     future.name,
-                                     future.short_name
-                                     ])
+                    """,
+            parameters=[
+                future.asset_id,
+                "index",
+                future.underlying.asset_id,
+                future.expiration,
+                future.multiplier,
+                future.name,
+                future.short_name,
+            ],
+        )
 
     ###########################################################################################
 
     # the players :)
     def save_agent(self, agent: Agent) -> None:
-        self.connection.execute("""
+        self.connection.execute(
+            """
             INSERT INTO agents (
                 agent_id,
                 name,
@@ -404,7 +414,9 @@ class Repository:
                 configuration
             )
             VALUES (?, ?, ?, ?)
-        """, parameters=[agent.agent_id, agent.name, agent.group, agent.configuration])
+        """,
+            parameters=[agent.agent_id, agent.name, agent.group, agent.configuration],
+        )
 
     def save_position_history(self, position_history_df: pd.DataFrame) -> None:
         self.connection.register("position_history_df", position_history_df)
@@ -480,7 +492,6 @@ class Repository:
         """)
 
         self.connection.unregister("eod_futures_value_df")
-
 
     def save_portfolio_value_history(self, portfolio_value_history_df: pd.DataFrame) -> None:
         self.connection.register("portfolio_value_history_df", portfolio_value_history_df)
@@ -560,7 +571,6 @@ class Repository:
 
         self.connection.unregister("eod_prices_df")
 
-
     def save_orders(self, orders_df: pd.DataFrame) -> None:
         # with duckdb.connect(self.localdb) as conn:
         self.connection.register("orders_df", orders_df)
@@ -582,7 +592,6 @@ class Repository:
             FROM orders_df
         """)
         self.connection.unregister("orders_df")
-
 
     def save_trades(self, trades_df: pd.DataFrame) -> None:
         # matched_orders aka trades
@@ -624,53 +633,74 @@ class Repository:
 
     # for multiday plotting
     def get_eod_positions(self, agent_id: int) -> pd.DataFrame:
-        return self.connection.execute(query="""
+        return self.connection.execute(
+            query="""
                 SELECT day, asset_id, position
                 FROM agent_eod_positions
                 WHERE agent_id = ?
-            """, parameters=[agent_id]).fetchdf()
+            """,
+            parameters=[agent_id],
+        ).fetchdf()
 
     def get_eod_futures_positions(self, agent_id: int) -> pd.DataFrame:
-        return self.connection.execute(query="""
+        return self.connection.execute(
+            query="""
                 SELECT day, asset_id, position
                 FROM agent_eod_futures_position
                 WHERE agent_id = ?
-            """, parameters=[agent_id]).fetchdf()
+            """,
+            parameters=[agent_id],
+        ).fetchdf()
 
     def get_eod_prices(self, asset_id: int) -> pd.DataFrame:
-        return self.connection.execute(query="""
+        return self.connection.execute(
+            query="""
                 SELECT day, open, high, low, close, volume, theoretical
                 FROM eod_prices
                 WHERE asset_id = ?
-            """, parameters=[asset_id]).fetchdf()
+            """,
+            parameters=[asset_id],
+        ).fetchdf()
 
     def get_eod_index_values(self, index_id: int) -> pd.DataFrame:
-        return self.connection.execute(query="""
+        return self.connection.execute(
+            query="""
                 SELECT day, open, high, low, close
                 FROM eod_index_values
                 WHERE index_id = ?
-            """, parameters=[index_id]).fetchdf()
+            """,
+            parameters=[index_id],
+        ).fetchdf()
 
     def get_eod_future_rates(self, contract_id: int) -> pd.DataFrame:
-        return self.connection.execute(query="""
+        return self.connection.execute(
+            query="""
                 SELECT day, open, high, low, close, volume, theoretical, lop
                 FROM eod_future_rates
                 WHERE contract_id = ?
-            """, parameters=[contract_id]).fetchdf()
+            """,
+            parameters=[contract_id],
+        ).fetchdf()
 
     def get_eod_cash(self, agent_id: int) -> pd.DataFrame:
-        return self.connection.execute(query="""
+        return self.connection.execute(
+            query="""
                 SELECT day, currency, cash
                 FROM agent_eod_cash
                 WHERE agent_id = ?
-            """, parameters=[agent_id]).fetchdf()
+            """,
+            parameters=[agent_id],
+        ).fetchdf()
 
     def get_eod_portfolio_values(self, agent_id: int) -> pd.DataFrame:
-        return self.connection.execute(query="""
+        return self.connection.execute(
+            query="""
                 SELECT day, portfolio_value
                 FROM agent_eod_portfolio_value
                 WHERE agent_id = ?
-            """, parameters=[agent_id]).fetchdf()
+            """,
+            parameters=[agent_id],
+        ).fetchdf()
 
     #################################################################################################
     ##          calculations in the DB
@@ -678,7 +708,8 @@ class Repository:
 
     def calculate_index_values(self, day: int) -> None:
         # calculate intraday index values for all indices
-        self.connection.execute(query="""
+        self.connection.execute(
+            query="""
                 INSERT INTO
                     index_values (day, time_tick, index_id, open, high, low, close)
                 SELECT tp.day, tp.time_tick, ic.index_id,
@@ -691,12 +722,14 @@ class Repository:
                     ON ic.asset_id = tp.asset_id
                 WHERE tp.day = ?
                 GROUP BY tp.day, tp.time_tick, ic.index_id
-            """, parameters=[day])
-
+            """,
+            parameters=[day],
+        )
 
     # combine eod_prices into eod_index_values:
     def calculate_eod_index_values(self, day: int) -> pd.DataFrame:
-        return self.connection.execute(query="""
+        return self.connection.execute(
+            query="""
                 INSERT INTO eod_index_values (day, index_id, open, high, low, close)
                 SELECT iv.day, iv.index_id, 
                     FIRST(iv."open" ORDER BY iv.time_tick) AS open,
@@ -705,5 +738,6 @@ class Repository:
                     LAST(iv."close" ORDER BY iv.time_tick) AS close,
                 FROM main.index_values iv 
                 WHERE iv."day" = ?
-                GROUP BY iv.day, iv.index_id""", parameters=[day]).fetchdf()
-
+                GROUP BY iv.day, iv.index_id""",
+            parameters=[day],
+        ).fetchdf()

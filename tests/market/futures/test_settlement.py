@@ -1,12 +1,9 @@
-
-
 from marketsim.agent import Agent
 from marketsim.market import Future, Index
 
 ####################################################################
 ####    test functions
 #############################################################
-
 
 
 def test_futures_share_underlying(

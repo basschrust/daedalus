@@ -7,15 +7,10 @@ class SimulationCalendar:
             raise ValueError("Simulation calendar cannot be empty")
 
         if dates != sorted(set(dates)):
-            raise ValueError(
-                "Trading dates must be unique and chronological"
-            )
+            raise ValueError("Trading dates must be unique and chronological")
 
         self.dates = dates
-        self._days = {
-            trading_date: day
-            for day, trading_date in enumerate(dates)
-        }
+        self._days = {trading_date: day for day, trading_date in enumerate(dates)}
 
     def to_date(self, day: int) -> date:
         if day < 0 or day >= len(self.dates):

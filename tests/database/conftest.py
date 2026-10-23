@@ -5,6 +5,7 @@ from marketsim.database.connectors.duckdb_storage import Repository
 
 # for testing data extraction:
 
+
 @pytest.fixture
 def position_history_1(repository: Repository):
     repository.connection.execute("""
@@ -21,14 +22,8 @@ def position_history_1(repository: Repository):
 # most of those functions are called inside Agent eod()   Therefore we'll create 2 sophisticated agents
 # and check if their data is properly injected
 
+
 @pytest.fixture
-def agent_sophisticated_1(repository: Repository,
-                          agent_3k_mit_2k_tnt: Agent):
+def agent_sophisticated_1(repository: Repository, agent_3k_mit_2k_tnt: Agent):
 
     return agent_3k_mit_2k_tnt
-
-
-
-
-
-

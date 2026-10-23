@@ -13,14 +13,14 @@ class PrivateValues:
     as well as calculate the cumulative value up to a given position.
     """
 
-    def __init__(self, q_max: int, val_var: float=5e6):
+    def __init__(self, q_max: int, val_var: float = 5e6):
         """
         Initialize the PrivateValues object.
 
         :param q_max: The maximum quantity.
         :param val_var: The variance of the values (default: 1).
         """
-        #print(f"type of val_var: {type(val_var)}")
+        # print(f"type of val_var: {type(val_var)}")
         self.values = np.random.randn(2 * q_max) * np.sqrt(val_var)
         self.values = np.sort(self.values)[::-1]  # Sort descending
 
@@ -62,11 +62,10 @@ class PrivateValues:
         position += self.offset
         if position > self.offset:
             index = min(position, len(self.values))
-            value += np.sum(self.values[self.offset:index])
-            value += max(0, position - 2*self.offset)*self.extra_buy
+            value += np.sum(self.values[self.offset : index])
+            value += max(0, position - 2 * self.offset) * self.extra_buy
         else:
             index = max(0, position)
-            value -= np.sum(self.values[index:self.offset])
-            value -= -1*min(0, position)*self.extra_sell
+            value -= np.sum(self.values[index : self.offset])
+            value -= -1 * min(0, position) * self.extra_sell
         return float(value)
-    

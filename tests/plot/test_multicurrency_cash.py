@@ -33,16 +33,20 @@ def _plot(tmp_path, cash_history, monkeypatch):
         patch.setattr(plt.Axes, "plot", spy_plot)
         target = tmp_path / "agent_multicurrency.png"
         plot_agent_history_many_markets(
-            position_history=pd.DataFrame({
-                "time_step": [0, 1, 2, 3],
-                "asset_id": [1, 1, 1, 1],
-                "position": [10, 12, 11, 10],
-            }),
+            position_history=pd.DataFrame(
+                {
+                    "time_step": [0, 1, 2, 3],
+                    "asset_id": [1, 1, 1, 1],
+                    "position": [10, 12, 11, 10],
+                }
+            ),
             cash_history=cash_history,
-            value_history=pd.DataFrame({
-                "time_step": [0, 1, 2, 3],
-                "portfolio_value": [11000, 11200, 11100, 10900],
-            }),
+            value_history=pd.DataFrame(
+                {
+                    "time_step": [0, 1, 2, 3],
+                    "portfolio_value": [11000, 11200, 11100, 10900],
+                }
+            ),
             output_file=str(target),
         )
     assert target.is_file() and target.stat().st_size > 0
@@ -51,17 +55,20 @@ def _plot(tmp_path, cash_history, monkeypatch):
 
 @pytest.fixture
 def balances():
-    return pd.DataFrame([
-        {"time_step": 0, "currency": "PLN", "cash": 10000},
-        {"time_step": 0, "currency": "USD", "cash": 0},
-        {"time_step": 0, "currency": "EUR", "cash": 0},
-        {"time_step": 1, "currency": "PLN", "cash": 10200},
-        {"time_step": 1, "currency": "USD", "cash": 50},
-        {"time_step": 1, "currency": "EUR", "cash": 0},
-        {"time_step": 2, "currency": "PLN", "cash": 10100},
-        {"time_step": 2, "currency": "USD", "cash": 75},
-        {"time_step": 2, "currency": "EUR", "cash": 20},
-    ])
+    return pd.DataFrame(
+        [
+            {"time_step": 0, "currency": "PLN", "cash": 10000},
+            {"time_step": 0, "currency": "USD", "cash": 0},
+            {"time_step": 0, "currency": "EUR", "cash": 0},
+            {"time_step": 1, "currency": "PLN", "cash": 10200},
+            {"time_step": 1, "currency": "USD", "cash": 50},
+            {"time_step": 1, "currency": "EUR", "cash": 0},
+            {"time_step": 2, "currency": "PLN", "cash": 10100},
+            {"time_step": 2, "currency": "USD", "cash": 75},
+            {"time_step": 2, "currency": "EUR", "cash": 20},
+        ]
+    )
+
 
 ################################################################
 ####  test functions

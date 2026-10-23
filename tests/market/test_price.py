@@ -12,6 +12,7 @@ def test_price_create():
 
     assert price == Decimal("98.00")
 
+
 def test_price_update():
     price = Price(98.00)
 

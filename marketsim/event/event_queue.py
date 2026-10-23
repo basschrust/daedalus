@@ -12,9 +12,9 @@ class EventQueue:
     def __init__(self, rand_seed: int = None):
         self.rand = random.Random(rand_seed)
         self.scheduled_activities = defaultdict(list)
-        #self.current_time = 0 # is it even needed here? we just store the time im simulation
-            # we will have to think about optimization later, when the dict is not enough and we'll have to
-            # save mamory usage
+        # self.current_time = 0 # is it even needed here? we just store the time im simulation
+        # we will have to think about optimization later, when the dict is not enough and we'll have to
+        # save mamory usage
 
     def schedule_activity(self, order: Order):
         t = order.time
@@ -24,9 +24,9 @@ class EventQueue:
     def step(self) -> List[Order]:
         raise
         random.shuffle(self.scheduled_activities[self.current_time])
-        self.current_time += 1 # TODO: AK: isn't it redundant? step in market, step in queue.
-                               # that's why matched order has time t+1, while placed order t
-                                # without it nothing happens on the market, we have to align it somehow
+        self.current_time += 1  # TODO: AK: isn't it redundant? step in market, step in queue.
+        # that's why matched order has time t+1, while placed order t
+        # without it nothing happens on the market, we have to align it somehow
 
         return self.scheduled_activities[self.current_time - 1]
 

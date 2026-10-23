@@ -1,4 +1,3 @@
-
 import re
 import sys
 from pathlib import Path
@@ -30,17 +29,18 @@ def inspect_database(db_path: Path) -> None:
 
             columns = {
                 row[0]
-                for row in conn.execute("""
+                for row in conn.execute(
+                    """
                     SELECT column_name
                     FROM information_schema.columns
                     WHERE table_schema = 'main'
                       AND table_name = ?
-                """, [table_name]).fetchall()
+                """,
+                    [table_name],
+                ).fetchall()
             }
 
-            total = conn.execute(
-                f"SELECT COUNT(*) FROM {table}"
-            ).fetchone()[0]
+            total = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
 
             print(f"\n{'=' * 60}")
             print(f"Table: {table_name}")
@@ -48,9 +48,7 @@ def inspect_database(db_path: Path) -> None:
 
             # Prefer grouping by day when both fields are present.
             group_column = (
-                "day" if "day" in columns
-                else "agent_id" if "agent_id" in columns
-                else None
+                "day" if "day" in columns else "agent_id" if "agent_id" in columns else None
             )
 
             if group_column is None:
@@ -85,11 +83,7 @@ def main() -> None:
         print(f"Output directory not found: {output_dir}")
         sys.exit(1)
 
-    run_dirs = [
-        path
-        for path in output_dir.iterdir()
-        if path.is_dir() and pattern.match(path.name)
-    ]
+    run_dirs = [path for path in output_dir.iterdir() if path.is_dir() and pattern.match(path.name)]
 
     if not run_dirs:
         print(f"No simulation run directories found in {output_dir}")

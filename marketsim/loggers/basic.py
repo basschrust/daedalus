@@ -9,10 +9,12 @@ terminal = sys.stdout
 # remove printing to console
 logger.remove()
 
+
 # One file per each run:
-def setup_logger(config, output_dir,
-                 subject: str="market", subject_id: int|None=None) -> None:
-    if subject=="agent":
+def setup_logger(
+    config, output_dir, subject: str = "market", subject_id: int | None = None
+) -> None:
+    if subject == "agent":
         if subject_id is None:
             raise ValueError("subject id is required for agent logger")
 
@@ -20,18 +22,18 @@ def setup_logger(config, output_dir,
             sink=f"{output_dir}/agent_logs/agent_{subject_id}.log",
             format="{elapsed} | {message}",
             level="DEBUG" if config.debug_logging else "INFO",
-            filter=lambda record, agent_id=subject_id:
-            record["extra"].get("agent_id") == agent_id,
+            filter=lambda record, agent_id=subject_id: record["extra"].get("agent_id") == agent_id,
         )
-    elif subject=="market":
+    elif subject == "market":
         if subject_id is None:
             raise ValueError("subject id is required for market logger")
         logger.add(
             sink=output_dir / f"market_{subject_id}.log",
             format="{elapsed} | {message}",
             level="DEBUG" if config.debug_logging else "INFO",
-            filter=lambda record, market_id=subject_id:
-            record["extra"].get("market_id") == market_id,
+            filter=lambda record, market_id=subject_id: (
+                record["extra"].get("market_id") == market_id
+            ),
         )
     else:
         # so to the main
@@ -40,6 +42,7 @@ def setup_logger(config, output_dir,
             format="{elapsed} | {message}",
             level="DEBUG" if config.debug_logging else "INFO",
         )
+
 
 def setup_subject_logger(output_dir: Path = Path("tmp")) -> None:
     logger.add(
@@ -58,7 +61,7 @@ def setup_subject_logger(output_dir: Path = Path("tmp")) -> None:
 
 
 def setup_market_logger(asset_id: int, output_dir: Path | str = "tmp"):
-    if output_dir=="tmp":
+    if output_dir == "tmp":
         return logger.bind(market_id=asset_id)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -72,8 +75,9 @@ def setup_market_logger(asset_id: int, output_dir: Path | str = "tmp"):
 
     return logger.bind(market_id=asset_id)
 
+
 def setup_agent_logger(agent_id: int, output_dir: Path | str = "tmp"):
-    if output_dir=="tmp":
+    if output_dir == "tmp":
         return logger.bind(agent_id=agent_id)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -96,6 +100,7 @@ class StreamToLogger:
 
     def flush(self):
         pass
+
 
 sys.stdout = StreamToLogger()
 # unhash if you want the errors be shown in the log, not console:

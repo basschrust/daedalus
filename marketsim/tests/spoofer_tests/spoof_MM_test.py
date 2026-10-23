@@ -32,6 +32,7 @@ PICKLE_PATH = "None"
 CALLBACK_LOG_DIR = "None"
 LEARNING_GRAPH_PATH = "None"
 
+
 def create_dirs(base_path):
     global BASE_PATH
     global PICKLE_PATH
@@ -53,11 +54,13 @@ def create_dirs(base_path):
 
     print("CALLBACK PATH", CALLBACK_LOG_DIR)
 
+
 mm_params = {"xi": 100, "omega": 256, "K": 8}
-arrival_rates = {"lam":2e-3, "lamSP": 2e-2, "lamMM": 0.035}
-market_params = {"r":0.05, "mean": 1e5, "shock_var": 1e4, "pv_var": 5e6}
-normalizers = {"fundamental": 1e5, "reward":1e2, "min_order_val": 1e5, "invt": 10, "cash": 1e6}
+arrival_rates = {"lam": 2e-3, "lamSP": 2e-2, "lamMM": 0.035}
+market_params = {"r": 0.05, "mean": 1e5, "shock_var": 1e4, "pv_var": 5e6}
+normalizers = {"fundamental": 1e5, "reward": 1e2, "min_order_val": 1e5, "invt": 10, "cash": 1e6}
 # normalizers = {"fundamental": 1, "reward":1, "min_order_val": 1, "invt": 1, "cash": 1}
+
 
 def append_pickle(data, file_path):
     """
@@ -66,17 +69,20 @@ def append_pickle(data, file_path):
     file_path += ".pkl"
     if os.path.exists(file_path):
         # If the file exists, open it in append mode
-        with gzip.open(file_path, 'ab') as f:
+        with gzip.open(file_path, "ab") as f:
             pickle.dump(data, f)
     else:
         # If the file does not exist, create it and write the data
-        with gzip.open(file_path, 'wb') as f:
+        with gzip.open(file_path, "wb") as f:
             pickle.dump(data, f)
 
 
 def sample_arrivals(p, num_samples):
     geometric_dist = dist.Geometric(torch.tensor([p]))
-    return geometric_dist.sample((num_samples,)).squeeze()  # Returns a tensor of 1000 sampled time steps
+    return geometric_dist.sample(
+        (num_samples,)
+    ).squeeze()  # Returns a tensor of 1000 sampled time steps
+
 
 def make_env(spEnv: SPEnv):
     """
@@ -87,6 +93,7 @@ def make_env(spEnv: SPEnv):
     :param seed: the initial seed for RNG
     :param rank: index of the subprocess
     """
+
     def _init() -> SPEnv:
         env = spEnv
         env.reset()
@@ -94,12 +101,13 @@ def make_env(spEnv: SPEnv):
 
     return _init
 
+
 def run(data_path):
     create_dirs(data_path)
     valueAgentsSpoof = []
     env_trades = []
     env_sell_orders = []
-    env_spoof_orders =[]
+    env_spoof_orders = []
     env_est_fund = []
     spoofer_surplus = []
     spoofer_position = []
@@ -107,35 +115,46 @@ def run(data_path):
     env_best_asks = []
     if LEARNING:
         print("GPU =", torch.cuda.is_available())
-        learningEnv = MMSPEnv(num_background_agents=NUM_AGENTS,
-                    sim_time=SIM_TIME,
-                    lam=arrival_rates["lam"],
-                    lamSP=arrival_rates["lamSP"],
-                    lamMM=arrival_rates["lamMM"],
-                    mean=market_params["mean"],
-                    r=market_params["r"],
-                    shock_var=market_params["shock_var"],
-                    q_max=10,
-                    pv_var=market_params["pv_var"],
-                    shade=[250,500],
-                    normalizers=normalizers,
-                    learning = LEARNING,
-                    learnedActions = LEARNING_ACTIONS,
-                    analytics = True,
-                    xi=mm_params["xi"], # rung size
-                    omega=mm_params["omega"], #spread
-                    K=mm_params["K"],
-                    order_size=1, #can be tuned
-                    spoofing_size=200, #can be tuned
-                    learning_graphs_path=LEARNING_GRAPH_PATH
-                    )
-        
+        learningEnv = MMSPEnv(
+            num_background_agents=NUM_AGENTS,
+            sim_time=SIM_TIME,
+            lam=arrival_rates["lam"],
+            lamSP=arrival_rates["lamSP"],
+            lamMM=arrival_rates["lamMM"],
+            mean=market_params["mean"],
+            r=market_params["r"],
+            shock_var=market_params["shock_var"],
+            q_max=10,
+            pv_var=market_params["pv_var"],
+            shade=[250, 500],
+            normalizers=normalizers,
+            learning=LEARNING,
+            learnedActions=LEARNING_ACTIONS,
+            analytics=True,
+            xi=mm_params["xi"],  # rung size
+            omega=mm_params["omega"],  # spread
+            K=mm_params["K"],
+            order_size=1,  # can be tuned
+            spoofing_size=200,  # can be tuned
+            learning_graphs_path=LEARNING_GRAPH_PATH,
+        )
+
         num_cpu = 1  # Number of processes to use
         # Create the vectorized environment
         if num_cpu == 1:
-            spEnv = make_vec_env(make_env(learningEnv), n_envs=1, monitor_dir=CALLBACK_LOG_DIR, vec_env_cls=DummyVecEnv)
+            spEnv = make_vec_env(
+                make_env(learningEnv),
+                n_envs=1,
+                monitor_dir=CALLBACK_LOG_DIR,
+                vec_env_cls=DummyVecEnv,
+            )
         else:
-            spEnv = make_vec_env(make_env(learningEnv), n_envs=num_cpu, monitor_dir=CALLBACK_LOG_DIR, vec_env_cls=SubprocVecEnv)
+            spEnv = make_vec_env(
+                make_env(learningEnv),
+                n_envs=num_cpu,
+                monitor_dir=CALLBACK_LOG_DIR,
+                vec_env_cls=SubprocVecEnv,
+            )
 
         callback = SaveOnBestTrainingRewardCallback(check_freq=1000, log_dir=CALLBACK_LOG_DIR)
         model = PPO("MlpPolicy", spEnv, verbose=1, device="cuda")
@@ -146,39 +165,47 @@ def run(data_path):
         print("LOADED!", model)
 
     for i in tqdm(range(TOTAL_ITERS)):
-        random_seed = [random.randint(0,100000) for _ in range(SIM_TIME)]
-        privateValues = [PrivateValues(10,market_params["pv_var"]) for _ in range(0,NUM_AGENTS - 1)]
-        sampled_arr = sample_arrivals(arrival_rates["lam"],SIM_TIME)
-        spoofer_arrivals = sample_arrivals(arrival_rates["lamSP"],SIM_TIME)
-        MM_arrivals = sample_arrivals(arrival_rates["lamMM"],SIM_TIME)
-        fundamental = GaussianMeanReverting(mean=market_params["mean"], final_time=SIM_TIME + 1, r=market_params["r"], shock_var=market_params["shock_var"])
-        env = MMSPEnv(num_background_agents=NUM_AGENTS,
-                    sim_time=SIM_TIME,
-                    lam=arrival_rates["lam"],
-                    lamSP=arrival_rates["lamSP"],
-                    lamMM=arrival_rates["lamMM"],
-                    mean=market_params["mean"],
-                    r=market_params["r"],
-                    shock_var=market_params["shock_var"],
-                    q_max=10,
-                    pv_var=market_params["pv_var"],
-                    shade=[250,500],
-                    normalizers=normalizers,
-                    pvalues = privateValues,
-                    sampled_arr=sampled_arr,
-                    spoofer_arrivals=spoofer_arrivals,
-                    MM_arrivals=MM_arrivals,
-                    fundamental = fundamental,
-                    learning = False,
-                    learnedActions = LEARNING_ACTIONS,
-                    analytics = True,
-                    random_seed = random_seed,
-                    xi=mm_params["xi"], # rung size
-                    omega=mm_params["omega"], #spread
-                    K=mm_params["K"],
-                    order_size=1, #can be tuned
-                    spoofing_size=200, #can be tuned
-                    )
+        random_seed = [random.randint(0, 100000) for _ in range(SIM_TIME)]
+        privateValues = [
+            PrivateValues(10, market_params["pv_var"]) for _ in range(0, NUM_AGENTS - 1)
+        ]
+        sampled_arr = sample_arrivals(arrival_rates["lam"], SIM_TIME)
+        spoofer_arrivals = sample_arrivals(arrival_rates["lamSP"], SIM_TIME)
+        MM_arrivals = sample_arrivals(arrival_rates["lamMM"], SIM_TIME)
+        fundamental = GaussianMeanReverting(
+            mean=market_params["mean"],
+            final_time=SIM_TIME + 1,
+            r=market_params["r"],
+            shock_var=market_params["shock_var"],
+        )
+        env = MMSPEnv(
+            num_background_agents=NUM_AGENTS,
+            sim_time=SIM_TIME,
+            lam=arrival_rates["lam"],
+            lamSP=arrival_rates["lamSP"],
+            lamMM=arrival_rates["lamMM"],
+            mean=market_params["mean"],
+            r=market_params["r"],
+            shock_var=market_params["shock_var"],
+            q_max=10,
+            pv_var=market_params["pv_var"],
+            shade=[250, 500],
+            normalizers=normalizers,
+            pvalues=privateValues,
+            sampled_arr=sampled_arr,
+            spoofer_arrivals=spoofer_arrivals,
+            MM_arrivals=MM_arrivals,
+            fundamental=fundamental,
+            learning=False,
+            learnedActions=LEARNING_ACTIONS,
+            analytics=True,
+            random_seed=random_seed,
+            xi=mm_params["xi"],  # rung size
+            omega=mm_params["omega"],  # spread
+            K=mm_params["K"],
+            order_size=1,  # can be tuned
+            spoofing_size=200,  # can be tuned
+        )
 
         observation, info = env.reset()
 
@@ -199,14 +226,14 @@ def run(data_path):
         env_spoof_orders.append(list(env.spoof_orders.values()))
         env_sell_orders.append(list(env.sell_orders.values()))
         fundamental_val = env.markets[0].get_final_fundamental()
-        
+
         valuesSpoof = []
-        
+
         for agent_id in env.agents:
             agent = env.agents[agent_id]
             value = agent.get_pos_value() + agent.position * fundamental_val + agent.cash
             valuesSpoof.append(value)
-        
+
         mm = env.MM
         value = mm.position * fundamental_val + mm.cash
         valuesSpoof.append(value)
@@ -236,8 +263,9 @@ def run(data_path):
             env_spoof_orders = []
             env_best_buys = []
             env_best_asks = []
-            
+
+
 if __name__ == "__main__":
-    #TODO: Insert data path
-    data_path = ''
+    # TODO: Insert data path
+    data_path = ""
     run(data_path, data_path)

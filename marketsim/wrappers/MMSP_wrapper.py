@@ -23,44 +23,49 @@ from marketsim.wrappers.metrics import (
     volume_imbalance,
 )
 
-#Global variables for training plots
+# Global variables for training plots
 COUNT = 0
 DATA_SAVE_PATH = ""
 
+
 def sample_arrivals(p, num_samples):
     geometric_dist = dist.Geometric(torch.tensor([p]))
-    return geometric_dist.sample((num_samples,)).squeeze()  # Returns a tensor of 10000 sampled time steps
+    return geometric_dist.sample(
+        (num_samples,)
+    ).squeeze()  # Returns a tensor of 10000 sampled time steps
+
 
 class MMSPEnv(gym.Env):
-    def __init__(self,
-                 num_background_agents: int,
-                 sim_time: int,
-                 num_assets: int = 1,
-                 lam: float = 5e-3,
-                 lamSP: float = 5e-2,
-                 lamMM: float = 8e-2,
-                 mean: float = 1e5,
-                 r: float = 0.05,
-                 shock_var: float = 5e6,
-                 q_max: int = 10,
-                 pv_var: float = 5e6,
-                 shade=None,
-                 xi: float = 100, # rung size
-                 omega: float = 256, #spread
-                 K: int = 8,
-                 normalizers=None,
-                 fundamental = None,
-                 order_size=1,
-                 spoofing_size=200, 
-                 pvalues = None,
-                 sampled_arr = None,
-                 spoofer_arrivals = None,
-                 MM_arrivals = None,
-                 learning = False,
-                 learnedActions = False,
-                 analytics = False,
-                 random_seed = None,
-                 ):
+    def __init__(
+        self,
+        num_background_agents: int,
+        sim_time: int,
+        num_assets: int = 1,
+        lam: float = 5e-3,
+        lamSP: float = 5e-2,
+        lamMM: float = 8e-2,
+        mean: float = 1e5,
+        r: float = 0.05,
+        shock_var: float = 5e6,
+        q_max: int = 10,
+        pv_var: float = 5e6,
+        shade=None,
+        xi: float = 100,  # rung size
+        omega: float = 256,  # spread
+        K: int = 8,
+        normalizers=None,
+        fundamental=None,
+        order_size=1,
+        spoofing_size=200,
+        pvalues=None,
+        sampled_arr=None,
+        spoofer_arrivals=None,
+        MM_arrivals=None,
+        learning=False,
+        learnedActions=False,
+        analytics=False,
+        random_seed=None,
+    ):
 
         # MarketSim Setup
         if shade is None:
@@ -82,11 +87,13 @@ class MMSPEnv(gym.Env):
         self.pvalues = pvalues
 
         if learning:
-            self.sampled_arr = sampled_arr = sample_arrivals(lam,sim_time)
-            self.spoofer_arrivals = sample_arrivals(lamSP,sim_time)
+            self.sampled_arr = sampled_arr = sample_arrivals(lam, sim_time)
+            self.spoofer_arrivals = sample_arrivals(lamSP, sim_time)
             self.MM_arrivals = sample_arrivals(lamMM, sim_time)
-            random_seed = [random.randint(0,100000) for _ in range(sim_time)]
-            fundamental = GaussianMeanReverting(mean=mean, final_time=sim_time + 1, r=r, shock_var=shock_var)
+            random_seed = [random.randint(0, 100000) for _ in range(sim_time)]
+            fundamental = GaussianMeanReverting(
+                mean=mean, final_time=sim_time + 1, r=r, shock_var=shock_var
+            )
             self.pvalues = [-1] * (num_background_agents - 1)
             self.spoof_position = []
             self.spoof_profits = []
@@ -128,7 +135,7 @@ class MMSPEnv(gym.Env):
         # MM
         self.lamMM = lamMM
         self.arrivals_MM = defaultdict(list)
-        self.arrival_times_MM  = sample_arrivals(lamMM, self.arrivals_sampled)
+        self.arrival_times_MM = sample_arrivals(lamMM, self.arrivals_sampled)
         self.arrival_index_MM = 0
 
         self.mean = mean
@@ -144,48 +151,58 @@ class MMSPEnv(gym.Env):
             self.markets.append(Security(fundamental=fundamental, time_steps=sim_time))
 
         self.agents = {}
-        self.backgroundAgentConfig = {"q_max":q_max, "pv_var": pv_var, "shade": shade, "L": 4, "spoof_size": spoofing_size, "reg_size": order_size}
+        self.backgroundAgentConfig = {
+            "q_max": q_max,
+            "pv_var": pv_var,
+            "shade": shade,
+            "L": 4,
+            "spoof_size": spoofing_size,
+            "reg_size": order_size,
+        }
         for agent_id in range(12):
             self.arrivals[self.arrival_times[self.arrival_index].item()].append(agent_id)
             self.arrival_index += 1
-            self.agents[agent_id] = (
-                ZIAgent(
-                    agent_id=agent_id,
-                    market=self.markets[0],
-                    q_max=q_max,
-                    shade=shade,
-                    pv_var=pv_var,
-                    pv=self.pvalues[agent_id]
-                ))
+            self.agents[agent_id] = ZIAgent(
+                agent_id=agent_id,
+                market=self.markets[0],
+                q_max=q_max,
+                shade=shade,
+                pv_var=pv_var,
+                pv=self.pvalues[agent_id],
+            )
 
         for agent_id in range(12, self.num_agents - 1):
-                self.arrivals[self.arrival_times[self.arrival_index].item()].append(agent_id)
-                self.arrival_index += 1
-                self.agents[agent_id] = (HBLAgent(
-                    agent_id = agent_id,
-                    market = self.markets[0],
-                    pv_var = pv_var,
-                    q_max= q_max,
-                    shade = shade,
-                    L = 4,
-                    arrival_rate = self.lam,
-                    pv=self.pvalues[agent_id]
-                ))
+            self.arrivals[self.arrival_times[self.arrival_index].item()].append(agent_id)
+            self.arrival_index += 1
+            self.agents[agent_id] = HBLAgent(
+                agent_id=agent_id,
+                market=self.markets[0],
+                pv_var=pv_var,
+                q_max=q_max,
+                shade=shade,
+                L=4,
+                arrival_rate=self.lam,
+                pv=self.pvalues[agent_id],
+            )
 
         # Set up for market makers.
-        self.arrivals_MM[self.arrival_times_MM[self.arrival_index_MM].item()].append(self.num_agents - 1)
+        self.arrivals_MM[self.arrival_times_MM[self.arrival_index_MM].item()].append(
+            self.num_agents - 1
+        )
         self.arrival_index_MM += 1
         self.MM_id = self.num_agents - 1
         self.MM = MMAgent(
-                agent_id=self.MM_id,
-                market=self.markets[0],
-                xi=xi,
-                K=K,
-                omega=omega,
-            )
+            agent_id=self.MM_id,
+            market=self.markets[0],
+            xi=xi,
+            K=K,
+            omega=omega,
+        )
 
         # Set up for spoofer.
-        self.arrivals_SP[self.arrival_times_SP[self.arrival_index_SP].item() + 1000].append(self.num_agents)
+        self.arrivals_SP[self.arrival_times_SP[self.arrival_index_SP].item() + 1000].append(
+            self.num_agents
+        )
         self.arrival_index_SP += 1
 
         self.spoofer = SpoofingAgent(
@@ -225,11 +242,15 @@ class MMSPEnv(gym.Env):
 
         # self.spoofer_norm_pvs = np.array(self.spoofer.pv.values) / pv_var
 
-        self.observation_space = spaces.Box(low=(obs_space_low),
-                                    high=(obs_space_high),
-                                    shape=(len(obs_space_low),),
-                                    dtype=np.float64) # Need rescale the obs.
-        self.action_space = spaces.Box(low=np.array([0.01, 0.1]), high=np.array([1.0, 1.0]), dtype=np.float32) # price for regular order and price for spoofing
+        self.observation_space = spaces.Box(
+            low=(obs_space_low),
+            high=(obs_space_high),
+            shape=(len(obs_space_low),),
+            dtype=np.float64,
+        )  # Need rescale the obs.
+        self.action_space = spaces.Box(
+            low=np.array([0.01, 0.1]), high=np.array([1.0, 1.0]), dtype=np.float32
+        )  # price for regular order and price for spoofing
 
     def get_obs(self):
         return self.observation
@@ -248,12 +269,12 @@ class MMSPEnv(gym.Env):
         que_imbalance = queue_imbalance(self.markets[0])
         vr = realized_volatility(self.markets[0])
         rsi = relative_strength_index(self.markets[0])
-        
+
         if not math.isinf(best_ask) and not math.isinf(best_bid):
             midprice = (best_bid + best_ask) / 2
         else:
             midprice = 0
-        
+
         self.observation = self.normalization(
             time_left=time_left,
             fundamental_value=fundamental_value,
@@ -266,27 +287,28 @@ class MMSPEnv(gym.Env):
             vr=vr,
             rsi=rsi,
             estimated_fundamental=est_fund,
-            midprice=midprice
-            )
+            midprice=midprice,
+        )
 
-    def normalization(self,
-                      time_left: int,
-                      fundamental_value: float,
-                      best_ask: float,
-                      best_bid: float,
-                      SPinvt: float,
-                      midprice_delta: float,
-                      vol_imbalance: float,
-                      que_imbalance: float,
-                      vr: float,
-                      rsi: float,
-                      estimated_fundamental: float,
-                      midprice: float,
-                      ):
-        '''
-            We need to define min/max bounds for the price or else the range is TOO BIG.
-            Can't have a fundamental of 1e5 and a spoofing order of price = 7 for example. 
-        '''
+    def normalization(
+        self,
+        time_left: int,
+        fundamental_value: float,
+        best_ask: float,
+        best_bid: float,
+        SPinvt: float,
+        midprice_delta: float,
+        vol_imbalance: float,
+        que_imbalance: float,
+        vr: float,
+        rsi: float,
+        estimated_fundamental: float,
+        midprice: float,
+    ):
+        """
+        We need to define min/max bounds for the price or else the range is TOO BIG.
+        Can't have a fundamental of 1e5 and a spoofing order of price = 7 for example.
+        """
         if self.normalizers is None:
             print("No normalizer warning!")
             return np.array([time_left, fundamental_value, best_ask, best_bid, SPinvt])
@@ -295,11 +317,11 @@ class MMSPEnv(gym.Env):
         fundamental_value /= self.normalizers["fundamental"]
         estimated_fundamental /= self.normalizers["fundamental"]
 
-        #TODO: Default values need to be tuned. Shouldn't matter too much though because spoofer's enter at t=1000 and usually there will be a best ask and bid by that point.
+        # TODO: Default values need to be tuned. Shouldn't matter too much though because spoofer's enter at t=1000 and usually there will be a best ask and bid by that point.
         if math.isinf(abs(best_ask)):
             best_ask = 1.01
         else:
-            best_ask /= self.normalizers["fundamental"] 
+            best_ask /= self.normalizers["fundamental"]
 
         if math.isinf(abs(best_bid)):
             best_bid = 0.98
@@ -313,19 +335,22 @@ class MMSPEnv(gym.Env):
 
         midprice /= self.normalizers["fundamental"]
 
-        obs = np.array([time_left,
-                         fundamental_value,
-                         best_ask,
-                         best_bid,
-                         SPinvt,
-                         midprice_delta,
-                         vol_imbalance,
-                         que_imbalance,
-                         vr,
-                         rsi,
-                         estimated_fundamental,
-                         midprice             
-                         ])
+        obs = np.array(
+            [
+                time_left,
+                fundamental_value,
+                best_ask,
+                best_bid,
+                SPinvt,
+                midprice_delta,
+                vol_imbalance,
+                que_imbalance,
+                vr,
+                rsi,
+                estimated_fundamental,
+                midprice,
+            ]
+        )
         return obs
 
     def reset(self, seed=None, options=None):
@@ -333,16 +358,16 @@ class MMSPEnv(gym.Env):
 
         self.observation = None
         if self.learning:
-            #When learning, want to change fundamental and PVs so RL learns from the distribution
+            # When learning, want to change fundamental and PVs so RL learns from the distribution
             # and not a specific instance.
             for market in self.markets:
-                #TODO: Use a better way to generate a new fundamental
+                # TODO: Use a better way to generate a new fundamental
                 market.fundamental._generate()
                 market.reset()
-            
+
             self.final_fundamental = self.markets[0].get_final_fundamental()
-            self.random_seed = [random.randint(0,100000) for _ in range(10000)]
-            
+            self.random_seed = [random.randint(0, 100000) for _ in range(10000)]
+
             for agent_id in range(self.num_agents - 1):
                 agent = self.agents[agent_id]
                 agent.reset()
@@ -386,7 +411,9 @@ class MMSPEnv(gym.Env):
 
         end = self.run_until_next_SP_arrival()
         if end:
-            raise ValueError("An episode without spoofer. Length of an episode should be set large.")
+            raise ValueError(
+                "An episode without spoofer. Length of an episode should be set large."
+            )
 
         return self.get_obs(), {}
 
@@ -415,12 +442,13 @@ class MMSPEnv(gym.Env):
             self.arrivals[self.arrival_times[self.arrival_index].item()].append(agent_id)
             self.arrival_index += 1
 
-        self.arrivals_SP[self.arrival_times_SP[self.arrival_index_SP].item() + 1000].append(self.num_agents)
+        self.arrivals_SP[self.arrival_times_SP[self.arrival_index_SP].item() + 1000].append(
+            self.num_agents
+        )
         self.arrival_index_SP += 1
 
         self.arrivals_MM[self.arrival_times_MM[self.arrival_index_MM].item()].append(self.MM_id)
         self.arrival_index_MM += 1
-
 
     def step(self, action):
         if self.time < self.sim_time:
@@ -435,7 +463,6 @@ class MMSPEnv(gym.Env):
             return self.get_obs(), reward, False, False, {}
         else:
             return self.end_sim()
-
 
     def agents_step(self):
         agents = self.arrivals[self.time]
@@ -452,7 +479,7 @@ class MMSPEnv(gym.Env):
                     if agent_id != self.MM_id:
                         random.seed(self.time + self.random_seed[self.time])
                         side = random.choice([BUY, SELL])
-                        orders = agent.take_action(side, seed = self.random_seed[self.time])
+                        orders = agent.take_action(side, seed=self.random_seed[self.time])
                     else:
                         orders = agent.take_action()
                     market.add_orders(orders)
@@ -460,18 +487,21 @@ class MMSPEnv(gym.Env):
                     if self.arrival_index == self.arrivals_sampled:
                         self.arrival_times = sample_arrivals(self.lam, self.arrivals_sampled)
                         self.arrival_index = 0
-                    
+
                     if self.arrival_index_MM == self.arrivals_sampled:
                         self.arrival_times_MM = sample_arrivals(self.lamMM, self.arrivals_sampled)
                         self.arrival_index_MM = 0
 
                     if agent_id != self.MM_id:
-                        self.arrivals[self.arrival_times[self.arrival_index].item() + 1 + self.time].append(agent_id)
+                        self.arrivals[
+                            self.arrival_times[self.arrival_index].item() + 1 + self.time
+                        ].append(agent_id)
                         self.arrival_index += 1
                     else:
-                        self.arrivals_MM[self.arrival_times_MM[self.arrival_index_MM].item() + 1 + self.time].append(agent_id)
+                        self.arrivals_MM[
+                            self.arrival_times_MM[self.arrival_index_MM].item() + 1 + self.time
+                        ].append(agent_id)
                         self.arrival_index_MM += 1
-                    
 
     def SP_step(self, action):
         for market in self.markets:
@@ -479,21 +509,26 @@ class MMSPEnv(gym.Env):
             market.withdraw_all(self.num_agents)
             orders = self.spoofer.take_action(action, seed=self.random_seed[self.time])
             market.add_orders(orders)
-            #Regular order first then spoofing order
+            # Regular order first then spoofing order
             self.spoofer_orders[0].append((action[0]))
             self.spoofer_orders[1].append(action[1])
             if self.analytics:
                 self.spoof_orders[self.time] = orders[1].price
                 self.sell_orders[self.time] = orders[0].price
                 if self.learning:
-                    self.sell_above_best.append(orders[0].price - market.order_book.sell_unmatched.peek())
-                    self.buy_below_best.append(market.order_book.buy_unmatched.peek() - orders[1].price)
-
+                    self.sell_above_best.append(
+                        orders[0].price - market.order_book.sell_unmatched.peek()
+                    )
+                    self.buy_below_best.append(
+                        market.order_book.buy_unmatched.peek() - orders[1].price
+                    )
 
             if self.arrival_index_SP == self.arrivals_sampled:
                 self.arrival_times_SP = self.spoofer_arrivals
                 self.arrival_index_SP = 0
-            self.arrivals_SP[self.arrival_times_SP[self.arrival_index_SP].item() + 1 + self.time].append(self.num_agents)
+            self.arrivals_SP[
+                self.arrival_times_SP[self.arrival_index_SP].item() + 1 + self.time
+            ].append(self.num_agents)
             self.arrival_index_SP += 1
 
     def MM_step(self):
@@ -506,7 +541,9 @@ class MMSPEnv(gym.Env):
             if self.arrival_index_MM == self.arrivals_sampled:
                 self.arrival_times_MM = sample_arrivals(self.lamMM, self.arrivals_sampled)
                 self.arrival_index_MM = 0
-            self.arrivals_MM[self.arrival_times_MM[self.arrival_index_MM].item() + 1 + self.time].append(self.num_agents)
+            self.arrivals_MM[
+                self.arrival_times_MM[self.arrival_index_MM].item() + 1 + self.time
+            ].append(self.num_agents)
             self.arrival_index_MM += 1
 
     def market_step(self, agent_only=True, verbose=False):
@@ -515,12 +552,18 @@ class MMSPEnv(gym.Env):
             for matched_order in new_orders:
                 agent_id = matched_order.order.agent_id
                 quantity = matched_order.order.order_type * matched_order.order.quantity
-                cash = -matched_order.price * matched_order.order.quantity * matched_order.order.order_type
+                cash = (
+                    -matched_order.price
+                    * matched_order.order.quantity
+                    * matched_order.order.order_type
+                )
                 if agent_id == self.num_agents:
                     self.spoofer.update_position(quantity, cash)
                     self.spoof_position.append(self.spoofer.position)
                     # TODO: a = (self.spoofer.position*self.final_fundamental + self.spoofer.cash)
-                    self.spoof_profits.append((self.spoofer.position*self.final_fundamental + self.spoofer.cash))
+                    self.spoof_profits.append(
+                        (self.spoofer.position * self.final_fundamental + self.spoofer.cash)
+                    )
                 elif agent_id == self.MM_id:
                     self.MM.update_position(quantity, cash)
                 else:
@@ -534,19 +577,21 @@ class MMSPEnv(gym.Env):
                 if not math.isinf(self.markets[0].order_book.sell_unmatched.peek()):
                     self.best_asks[self.time] = self.markets[0].order_book.sell_unmatched.peek()
                 if not math.isinf(self.markets[0].order_book.buy_unmatched.peek()):
-                    self.best_buys[self.time] = self.markets[0].order_book.buy_unmatched.peek() 
-            
+                    self.best_buys[self.time] = self.markets[0].order_book.buy_unmatched.peek()
+
                 # Spoofer analytic data
                 self.spoofer_quantity[self.time] = self.spoofer.position
-                self.spoof_activity[self.time] = (self.spoofer.position*self.final_fundamental + self.spoofer.cash)
+                self.spoof_activity[self.time] = (
+                    self.spoofer.position * self.final_fundamental + self.spoofer.cash
+                )
 
             if not agent_only:
-                current_value = (self.spoofer.position*self.final_fundamental + self.spoofer.cash)
+                current_value = self.spoofer.position * self.final_fundamental + self.spoofer.cash
                 reward = current_value - self.spoofer.last_value
-                self.spoofer.last_value = current_value 
+                self.spoofer.last_value = current_value
 
                 return reward / self.normalizers["reward"]
-                
+
     def end_sim_summarize(self):
         fundamental_val = self.markets[0].get_final_fundamental()
         values = {}
@@ -558,10 +603,10 @@ class MMSPEnv(gym.Env):
         # print(f'At the end of the simulation we get {values}')
 
     def end_sim(self):
-        current_value = (self.spoofer.position*self.final_fundamental + self.spoofer.cash)
+        current_value = self.spoofer.position * self.final_fundamental + self.spoofer.cash
         reward = current_value - self.spoofer.last_value
-        
-        #Graph training data. Can enable if you want training plots
+
+        # Graph training data. Can enable if you want training plots
         # global COUNT
         # print(COUNT)
         # if COUNT % 50 == 0 and self.learning:
@@ -579,7 +624,7 @@ class MMSPEnv(gym.Env):
         #     plt.ylabel('Price Level')
         #     plt.savefig(DATA_SAVE_PATH + "/{}_diff_sim.jpg".format(COUNT))
         #     plt.close()
-            
+
         #     plt.figure()
         #     plt.scatter(np.arange(len(self.sell_above_best)), self.sell_above_best, s=10)
         #     plt.xlabel('Order entry')
@@ -611,7 +656,6 @@ class MMSPEnv(gym.Env):
         #     plt.savefig(DATA_SAVE_PATH + "/{}_spoof_order.jpg".format(COUNT))
         #     plt.close()
 
-
         #     plt.figure()
         #     plt.title('Average Sell Above Ask')
         #     plt.scatter(np.arange(400), np.nanmean(self.aggregate_above_ask, axis=0), s=15)
@@ -633,7 +677,7 @@ class MMSPEnv(gym.Env):
         #     f.close()
         # COUNT += 1
 
-        current_value = (self.spoofer.position*self.final_fundamental + self.spoofer.cash)
+        current_value = self.spoofer.position * self.final_fundamental + self.spoofer.cash
         reward = current_value - self.spoofer.last_value
 
         return self.get_obs(), reward / self.normalizers["reward"], True, False, {}
@@ -656,5 +700,3 @@ class MMSPEnv(gym.Env):
                 self.agents_step()
                 self.market_step(agent_only=True)
             self.time += 1
-
-

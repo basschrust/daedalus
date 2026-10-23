@@ -8,7 +8,6 @@ from marketsim.agent.agent import Agent
 from marketsim.fourheap.constants import BUY, SELL
 from marketsim.fourheap.order import Order
 from marketsim.market import FXRateProvider, Price
-from marketsim.market import Price, FXRateProvider
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
@@ -20,22 +19,35 @@ class MomentumAgent(Agent):
     ### Momentum Agent -
     # Momentum Agent trades using moving average to catch the market trend
     ###
-    def __init__(self, *, markets: list[Security], repository: Repository,
-                 configuration: dict| None=None, group: str= "MOMENTUM", output_dir: Path|str = "tmp",
-                 fx_rate_provider: FXRateProvider|None=None) -> None:
-        default_configuration = { "period": 7,
-                                  "lam": 0.5,
-                                  "q_max": 100,
-                                  "threshold": 0.01 }
-        final_configuration = default_configuration | (configuration if configuration is not None else {})
-        super().__init__(markets=markets, repository=repository, configuration=final_configuration
-                         , group=group, output_dir=output_dir, fx_rate_provider=fx_rate_provider)
+    def __init__(
+        self,
+        *,
+        markets: list[Security],
+        repository: Repository,
+        configuration: dict | None = None,
+        group: str = "MOMENTUM",
+        output_dir: Path | str = "tmp",
+        fx_rate_provider: FXRateProvider | None = None,
+    ) -> None:
+        default_configuration = {"period": 7, "lam": 0.5, "q_max": 100, "threshold": 0.01}
+        final_configuration = default_configuration | (
+            configuration if configuration is not None else {}
+        )
+        super().__init__(
+            markets=markets,
+            repository=repository,
+            configuration=final_configuration,
+            group=group,
+            output_dir=output_dir,
+            fx_rate_provider=fx_rate_provider,
+        )
 
-        self.period = final_configuration["period"] # the period for trend analyzing
-        self.lam = final_configuration["lam"] # lambda, the activity parameter
-        self.q_max = final_configuration["q_max"] # maximum agent position on each side
-        self.threshold = final_configuration["threshold"] # threshold above which we consider the trend to exist
-
+        self.period = final_configuration["period"]  # the period for trend analyzing
+        self.lam = final_configuration["lam"]  # lambda, the activity parameter
+        self.q_max = final_configuration["q_max"]  # maximum agent position on each side
+        self.threshold = final_configuration[
+            "threshold"
+        ]  # threshold above which we consider the trend to exist
 
     def get_id(self) -> int:
         return self.agent_id
@@ -50,10 +62,10 @@ class MomentumAgent(Agent):
             # amounts? and lambda? yet ignore, take into account in next iteration, price limit?
             if current_time >= self.period:
                 market.withdraw_all(agent_id=self.agent_id)
-                previous_price = market.traded_prices[current_time-self.period]["close"]
-                limit = Price(float(market.last_traded_price) * (0.95 + 0.1*random.uniform(0, 1)))
+                previous_price = market.traded_prices[current_time - self.period]["close"]
+                limit = Price(float(market.last_traded_price) * (0.95 + 0.1 * random.uniform(0, 1)))
                 # asymptotic approaching the q_max - but let it also reverse the trend when position is high...
-                if market.last_traded_price > float(previous_price) * (1+self.threshold):
+                if market.last_traded_price > float(previous_price) * (1 + self.threshold):
                     if self.position[asset_id] > 0:
                         # asymptotic approach
                         quantity = int(self.q_max - abs(self.position[asset_id]) / 10)
@@ -71,7 +83,7 @@ class MomentumAgent(Agent):
                                 asset_id=asset_id,
                             )
                         )
-                elif market.last_traded_price < float(previous_price) * (1-self.threshold):
+                elif market.last_traded_price < float(previous_price) * (1 - self.threshold):
                     if self.position[asset_id] < 0:
                         # asymptotic approach
                         quantity = int(self.q_max - abs(self.position[asset_id]) / 10)
@@ -92,11 +104,9 @@ class MomentumAgent(Agent):
 
             market.add_orders(orders)
 
-
     def get_pos_value(self) -> float:
         # TODO: wtf is this function for?
         return 0
 
     def __str__(self):
-        return f'Momentum_{self.agent_id}'
-
+        return f"Momentum_{self.agent_id}"

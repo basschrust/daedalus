@@ -4,16 +4,18 @@ from marketsim.wrappers.SP_wrapper import SPEnv
 def run():
 
     normalizers = {"fundamental": 5e5, "invt": 1e3, "cash": 1e5}
-    env = SPEnv(num_background_agents=25,
-                sim_time=100,
-                lam=0.1,
-                mean=1e5,
-                r=0.05,
-                shock_var=5e6,
-                q_max=10,
-                pv_var=5e6,
-                shade=[250,500],
-                normalizers=normalizers)
+    env = SPEnv(
+        num_background_agents=25,
+        sim_time=100,
+        lam=0.1,
+        mean=1e5,
+        r=0.05,
+        shock_var=5e6,
+        q_max=10,
+        pv_var=5e6,
+        shade=[250, 500],
+        normalizers=normalizers,
+    )
 
     obs, info = env.reset()
 
@@ -27,7 +29,6 @@ def run():
         print("terminated:", terminated)
         print(env.markets[0].order_book.observe())
         print("---------------------------")
-
 
         if terminated or truncated:
             print("=========================")

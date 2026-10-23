@@ -17,4 +17,3 @@ class Fundamental(ABC):
     @abstractmethod
     def get_final_fundamental(self) -> float:
         pass
-

@@ -1,4 +1,3 @@
-
 from datetime import date
 
 import pytest
@@ -9,14 +8,16 @@ from marketsim.simulator.simulation_calendar import SimulationCalendar
 @pytest.fixture
 def calendar():
     """Five consecutive trading days, skipping the weekend."""
-    return SimulationCalendar([
-        date(2026, 10, 19),
-        date(2026, 10, 20),
-        date(2026, 10, 21),
-        date(2026, 10, 22),
-        date(2026, 10, 23),
-        date(2026, 10, 26),
-    ])
+    return SimulationCalendar(
+        [
+            date(2026, 10, 19),
+            date(2026, 10, 20),
+            date(2026, 10, 21),
+            date(2026, 10, 22),
+            date(2026, 10, 23),
+            date(2026, 10, 26),
+        ]
+    )
 
 
 @pytest.mark.parametrize(
@@ -69,18 +70,22 @@ def test_empty_calendar_rejected():
 
 def test_duplicate_dates_rejected():
     with pytest.raises(ValueError, match="unique and chronological"):
-        SimulationCalendar([
-            date(2026, 10, 19),
-            date(2026, 10, 19),
-        ])
+        SimulationCalendar(
+            [
+                date(2026, 10, 19),
+                date(2026, 10, 19),
+            ]
+        )
 
 
 def test_unsorted_dates_rejected():
     with pytest.raises(ValueError, match="unique and chronological"):
-        SimulationCalendar([
-            date(2026, 10, 20),
-            date(2026, 10, 19),
-        ])
+        SimulationCalendar(
+            [
+                date(2026, 10, 20),
+                date(2026, 10, 19),
+            ]
+        )
 
 
 def test_missing_trading_date(calendar):

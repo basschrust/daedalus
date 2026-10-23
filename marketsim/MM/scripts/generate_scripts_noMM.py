@@ -42,9 +42,15 @@ for game_name in game_name_list:
                                                         for p in p_list:
                                                             for k_min in k_min_list:
                                                                 for k_max in k_max_list:
-                                                                    for max_position in max_position_list:
-                                                                        for agents_only in agents_only_list:
-                                                                            for param in beta_params:
+                                                                    for (
+                                                                        max_position
+                                                                    ) in max_position_list:
+                                                                        for (
+                                                                            agents_only
+                                                                        ) in agents_only_list:
+                                                                            for (
+                                                                                param
+                                                                            ) in beta_params:
                                                                                 bash_script_content += (
                                                                                     f"python simMM_example.py --game_name={game_name} "
                                                                                     f"--root_result_folder={root_result_folder} "
@@ -66,13 +72,16 @@ for game_name in game_name_list:
                                                                                     f"--max_position={max_position} "
                                                                                     f"--agents_only={agents_only}"
                                                                                 )
-                                                                                bash_script_content += param + "&& \\\n"
+                                                                                bash_script_content += (
+                                                                                    param
+                                                                                    + "&& \\\n"
+                                                                                )
 
 # Remove the last "&& \\\n"
 bash_script_content = bash_script_content.rstrip(" && \\\n")
 
 # Write the bash script to a file
-with open(file_name, 'w') as file:
+with open(file_name, "w") as file:
     file.write(bash_script_content)
 
 print(f"Bash script generated and saved as '{file_name}'")

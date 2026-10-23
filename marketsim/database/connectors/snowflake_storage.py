@@ -4,6 +4,7 @@ Install: pip install 'snowflake-connector-python[pandas]'
 Credentials: SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, SNOWFLAKE_PASSWORD.
 Never commit passwords or private keys.
 """
+
 from __future__ import annotations
 
 import json
@@ -23,31 +24,196 @@ if TYPE_CHECKING:
 # Column names intentionally mirror the existing DuckDB tables.
 # Snowflake's NUMBER(38,0) corresponds to integer values; FLOAT to DuckDB DOUBLE.
 TABLES: dict[str, dict[str, str]] = {
-    "securities": dict(asset_id="NUMBER(38,0)", instrument_class="VARCHAR", market_type="VARCHAR", name="VARCHAR", short_name="VARCHAR", eod_status="VARCHAR", reference_price="FLOAT", currency="VARCHAR"),
+    "securities": dict(
+        asset_id="NUMBER(38,0)",
+        instrument_class="VARCHAR",
+        market_type="VARCHAR",
+        name="VARCHAR",
+        short_name="VARCHAR",
+        eod_status="VARCHAR",
+        reference_price="FLOAT",
+        currency="VARCHAR",
+    ),
     "indices": dict(index_id="NUMBER(38,0)", name="VARCHAR", short_name="VARCHAR"),
     "index_components": dict(index_id="NUMBER(38,0)", asset_id="NUMBER(38,0)", weight="FLOAT"),
-    "futures": dict(contract_id="NUMBER(38,0)", underlying_type="VARCHAR", underlying_id="NUMBER(38,0)", expiration_day="NUMBER(38,0)", multiplier="FLOAT", margin_rate="FLOAT", name="VARCHAR", short_name="VARCHAR"),
-    "options": dict(asset_id="NUMBER(38,0)", underlying_id="NUMBER(38,0)", configuration="VARCHAR", expiration_day="NUMBER(38,0)", strike="FLOAT"),
-    "agents": dict(agent_id="NUMBER(38,0)", name="VARCHAR", group_name="VARCHAR", configuration="VARCHAR"),
-    "agent_position_history": dict(day="NUMBER(38,0)", time_tick="NUMBER(38,0)", agent_id="NUMBER(38,0)", asset_id="NUMBER(38,0)", position="NUMBER(38,0)"),
-    "agent_futures_position_history": dict(day="NUMBER(38,0)", time_tick="NUMBER(38,0)", agent_id="NUMBER(38,0)", asset_id="NUMBER(38,0)", position="NUMBER(38,0)"),
-    "agent_futures_value_history": dict(day="NUMBER(38,0)", time_tick="NUMBER(38,0)", agent_id="NUMBER(38,0)", asset_id="NUMBER(38,0)", position="NUMBER(38,0)", avg_initial_price="FLOAT", collateral="FLOAT", unsettled_pnl="FLOAT", settlement_price="FLOAT"),
-    "agent_eod_positions": dict(day="NUMBER(38,0)", agent_id="NUMBER(38,0)", asset_id="NUMBER(38,0)", position="NUMBER(38,0)"),
-    "agent_eod_futures_position": dict(day="NUMBER(38,0)", agent_id="NUMBER(38,0)", asset_id="NUMBER(38,0)", position="NUMBER(38,0)"),
-    "agent_eod_futures_value": dict(day="NUMBER(38,0)", agent_id="NUMBER(38,0)", asset_id="NUMBER(38,0)", position="NUMBER(38,0)", avg_initial_price="FLOAT", collateral="FLOAT", unsettled_pnl="FLOAT", settlement_price="FLOAT"),
-    "agent_portfolio_value_history": dict(day="NUMBER(38,0)", time_tick="NUMBER(38,0)", agent_id="NUMBER(38,0)", portfolio_value="FLOAT"),
-    "agent_eod_portfolio_value": dict(day="NUMBER(38,0)", agent_id="NUMBER(38,0)", portfolio_value="FLOAT"),
-    "agent_cash_history": dict(day="NUMBER(38,0)", time_tick="NUMBER(38,0)", agent_id="NUMBER(38,0)", cash="FLOAT", currency="VARCHAR"),
-    "agent_eod_cash": dict(day="NUMBER(38,0)", agent_id="NUMBER(38,0)", cash="FLOAT", currency="VARCHAR"),
-    "traded_prices": dict(day="NUMBER(38,0)", time_tick="NUMBER(38,0)", asset_id="NUMBER(38,0)", open="FLOAT", high="FLOAT", low="FLOAT", close="FLOAT", volume="FLOAT", theoretical="FLOAT"),
-    "eod_prices": dict(day="NUMBER(38,0)", asset_id="NUMBER(38,0)", open="FLOAT", high="FLOAT", low="FLOAT", close="FLOAT", volume="FLOAT", theoretical="FLOAT"),
-    "index_values": dict(day="NUMBER(38,0)", time_tick="NUMBER(38,0)", index_id="NUMBER(38,0)", open="FLOAT", high="FLOAT", low="FLOAT", close="FLOAT"),
-    "eod_index_values": dict(day="NUMBER(38,0)", index_id="NUMBER(38,0)", open="FLOAT", high="FLOAT", low="FLOAT", close="FLOAT"),
-    "future_rates": dict(contract_id="NUMBER(38,0)", day="NUMBER(38,0)", time_tick="NUMBER(38,0)", open="FLOAT", high="FLOAT", low="FLOAT", close="FLOAT", volume="FLOAT", lop="NUMBER(38,0)", theoretical="FLOAT"),
-    "eod_future_rates": dict(contract_id="NUMBER(38,0)", day="NUMBER(38,0)", open="FLOAT", high="FLOAT", low="FLOAT", close="FLOAT", volume="FLOAT", lop="NUMBER(38,0)", theoretical="FLOAT"),
-    "orders": dict(day="NUMBER(38,0)", price="FLOAT", order_type="NUMBER(38,0)", quantity="NUMBER(38,0)", agent_id="NUMBER(38,0)", time="NUMBER(38,0)", order_id="NUMBER(38,0)", asset_id="NUMBER(38,0)", executed_price="FLOAT", executed_mode="VARCHAR", parent_id="NUMBER(38,0)", matched_with="NUMBER(38,0)", valid_until="NUMBER(38,0)"),
-    "trades": dict(day="NUMBER(38,0)", asset_id="NUMBER(38,0)", matched_with="NUMBER(38,0)", executed_mode="VARCHAR", executed_time="NUMBER(38,0)", executed_price="FLOAT", order_id="NUMBER(38,0)", order_side="NUMBER(38,0)", executed_volume="NUMBER(38,0)", cash="FLOAT", phase="VARCHAR"),
-    "option_expiration": dict(day="NUMBER(38,0)", asset_id="NUMBER(38,0)", exercise_price="FLOAT", premium="FLOAT"),
+    "futures": dict(
+        contract_id="NUMBER(38,0)",
+        underlying_type="VARCHAR",
+        underlying_id="NUMBER(38,0)",
+        expiration_day="NUMBER(38,0)",
+        multiplier="FLOAT",
+        margin_rate="FLOAT",
+        name="VARCHAR",
+        short_name="VARCHAR",
+    ),
+    "options": dict(
+        asset_id="NUMBER(38,0)",
+        underlying_id="NUMBER(38,0)",
+        configuration="VARCHAR",
+        expiration_day="NUMBER(38,0)",
+        strike="FLOAT",
+    ),
+    "agents": dict(
+        agent_id="NUMBER(38,0)", name="VARCHAR", group_name="VARCHAR", configuration="VARCHAR"
+    ),
+    "agent_position_history": dict(
+        day="NUMBER(38,0)",
+        time_tick="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
+        position="NUMBER(38,0)",
+    ),
+    "agent_futures_position_history": dict(
+        day="NUMBER(38,0)",
+        time_tick="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
+        position="NUMBER(38,0)",
+    ),
+    "agent_futures_value_history": dict(
+        day="NUMBER(38,0)",
+        time_tick="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
+        position="NUMBER(38,0)",
+        avg_initial_price="FLOAT",
+        collateral="FLOAT",
+        unsettled_pnl="FLOAT",
+        settlement_price="FLOAT",
+    ),
+    "agent_eod_positions": dict(
+        day="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
+        position="NUMBER(38,0)",
+    ),
+    "agent_eod_futures_position": dict(
+        day="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
+        position="NUMBER(38,0)",
+    ),
+    "agent_eod_futures_value": dict(
+        day="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
+        position="NUMBER(38,0)",
+        avg_initial_price="FLOAT",
+        collateral="FLOAT",
+        unsettled_pnl="FLOAT",
+        settlement_price="FLOAT",
+    ),
+    "agent_portfolio_value_history": dict(
+        day="NUMBER(38,0)",
+        time_tick="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
+        portfolio_value="FLOAT",
+    ),
+    "agent_eod_portfolio_value": dict(
+        day="NUMBER(38,0)", agent_id="NUMBER(38,0)", portfolio_value="FLOAT"
+    ),
+    "agent_cash_history": dict(
+        day="NUMBER(38,0)",
+        time_tick="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
+        cash="FLOAT",
+        currency="VARCHAR",
+    ),
+    "agent_eod_cash": dict(
+        day="NUMBER(38,0)", agent_id="NUMBER(38,0)", cash="FLOAT", currency="VARCHAR"
+    ),
+    "traded_prices": dict(
+        day="NUMBER(38,0)",
+        time_tick="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
+        open="FLOAT",
+        high="FLOAT",
+        low="FLOAT",
+        close="FLOAT",
+        volume="FLOAT",
+        theoretical="FLOAT",
+    ),
+    "eod_prices": dict(
+        day="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
+        open="FLOAT",
+        high="FLOAT",
+        low="FLOAT",
+        close="FLOAT",
+        volume="FLOAT",
+        theoretical="FLOAT",
+    ),
+    "index_values": dict(
+        day="NUMBER(38,0)",
+        time_tick="NUMBER(38,0)",
+        index_id="NUMBER(38,0)",
+        open="FLOAT",
+        high="FLOAT",
+        low="FLOAT",
+        close="FLOAT",
+    ),
+    "eod_index_values": dict(
+        day="NUMBER(38,0)",
+        index_id="NUMBER(38,0)",
+        open="FLOAT",
+        high="FLOAT",
+        low="FLOAT",
+        close="FLOAT",
+    ),
+    "future_rates": dict(
+        contract_id="NUMBER(38,0)",
+        day="NUMBER(38,0)",
+        time_tick="NUMBER(38,0)",
+        open="FLOAT",
+        high="FLOAT",
+        low="FLOAT",
+        close="FLOAT",
+        volume="FLOAT",
+        lop="NUMBER(38,0)",
+        theoretical="FLOAT",
+    ),
+    "eod_future_rates": dict(
+        contract_id="NUMBER(38,0)",
+        day="NUMBER(38,0)",
+        open="FLOAT",
+        high="FLOAT",
+        low="FLOAT",
+        close="FLOAT",
+        volume="FLOAT",
+        lop="NUMBER(38,0)",
+        theoretical="FLOAT",
+    ),
+    "orders": dict(
+        day="NUMBER(38,0)",
+        price="FLOAT",
+        order_type="NUMBER(38,0)",
+        quantity="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
+        time="NUMBER(38,0)",
+        order_id="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
+        executed_price="FLOAT",
+        executed_mode="VARCHAR",
+        parent_id="NUMBER(38,0)",
+        matched_with="NUMBER(38,0)",
+        valid_until="NUMBER(38,0)",
+    ),
+    "trades": dict(
+        day="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
+        matched_with="NUMBER(38,0)",
+        executed_mode="VARCHAR",
+        executed_time="NUMBER(38,0)",
+        executed_price="FLOAT",
+        order_id="NUMBER(38,0)",
+        order_side="NUMBER(38,0)",
+        executed_volume="NUMBER(38,0)",
+        cash="FLOAT",
+        phase="VARCHAR",
+    ),
+    "option_expiration": dict(
+        day="NUMBER(38,0)", asset_id="NUMBER(38,0)", exercise_price="FLOAT", premium="FLOAT"
+    ),
 }
 
 _IDENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -110,12 +276,8 @@ class SnowflakeRepository:
         self.connection = snowflake.connector.connect(**kwargs)
 
         try:
-            self._execute(
-                f'CREATE SCHEMA "{self.database}"."{self.schema}"'
-            )
-            self._execute(
-                f'USE SCHEMA "{self.database}"."{self.schema}"'
-            )
+            self._execute(f'CREATE SCHEMA "{self.database}"."{self.schema}"')
+            self._execute(f'USE SCHEMA "{self.database}"."{self.schema}"')
             self.prepare_tables()
         except Exception:
             self.connection.close()
@@ -147,7 +309,10 @@ class SnowflakeRepository:
         columns = list(values)
         cols = ", ".join(f'"{_identifier(c)}"' for c in columns)
         placeholders = ", ".join(["%s"] * len(columns))
-        self._execute(f'INSERT INTO "{_identifier(table)}" ({cols}) VALUES ({placeholders})', tuple(values.values()))
+        self._execute(
+            f'INSERT INTO "{_identifier(table)}" ({cols}) VALUES ({placeholders})',
+            tuple(values.values()),
+        )
 
     def _insert_frame(self, table: str, df: pd.DataFrame) -> None:
         if df.empty:
@@ -204,19 +369,43 @@ class SnowflakeRepository:
         return pd.DataFrame.from_records(rows, columns=columns)
 
     def save_security(self, security: Security) -> None:
-        self._insert_one("securities", dict(asset_id=security.asset_id, instrument_class=security.instrument_class, market_type=security.market_type, name=security.name, eod_status=security.eod_status, reference_price=float(security.reference_price), currency=security.currency))
+        self._insert_one(
+            "securities",
+            dict(
+                asset_id=security.asset_id,
+                instrument_class=security.instrument_class,
+                market_type=security.market_type,
+                name=security.name,
+                eod_status=security.eod_status,
+                reference_price=float(security.reference_price),
+                currency=security.currency,
+            ),
+        )
 
     def save_index(self, index: Index) -> None:
-        self._insert_one("indices", dict(index_id=index.index_id, name=index.name, short_name=index.short_name))
+        self._insert_one(
+            "indices", dict(index_id=index.index_id, name=index.name, short_name=index.short_name)
+        )
 
     def save_index_components(self, components_df: pd.DataFrame) -> None:
         self._insert_frame("index_components", components_df)
 
     def save_future(self, future: Future) -> None:
-        self._insert_one("futures", dict(contract_id=future.asset_id, underlying_type="index", underlying_id=future.underlying.asset_id, expiration_day=future.expiration, multiplier=float(future.multiplier), name=future.name, short_name=future.short_name))
+        self._insert_one(
+            "futures",
+            dict(
+                contract_id=future.asset_id,
+                underlying_type="index",
+                underlying_id=future.underlying.asset_id,
+                expiration_day=future.expiration,
+                multiplier=float(future.multiplier),
+                name=future.name,
+                short_name=future.short_name,
+            ),
+        )
 
     # def save_agent(self, agent: Agent) -> None:
-        #self._insert_one("agents", dict(agent_id=agent.agent_id, name=agent.name, group_name=agent.group, configuration=agent.configuration))
+    # self._insert_one("agents", dict(agent_id=agent.agent_id, name=agent.name, group_name=agent.group, configuration=agent.configuration))
     def save_agent(self, agent: Agent) -> None:
         self._insert_one(
             table="agents",
@@ -274,28 +463,57 @@ class SnowflakeRepository:
         self._insert_frame("option_expiration", option_expiration_df)
 
     def get_eod_positions(self, agent_id: int) -> pd.DataFrame:
-        return self._read('SELECT DAY, ASSET_ID, POSITION FROM AGENT_EOD_POSITIONS WHERE AGENT_ID = %s', (agent_id,), ["day", "asset_id", "position"])
+        return self._read(
+            "SELECT DAY, ASSET_ID, POSITION FROM AGENT_EOD_POSITIONS WHERE AGENT_ID = %s",
+            (agent_id,),
+            ["day", "asset_id", "position"],
+        )
 
     def get_eod_futures_positions(self, agent_id: int) -> pd.DataFrame:
-        return self._read('SELECT DAY, ASSET_ID, POSITION FROM AGENT_EOD_FUTURES_POSITION WHERE AGENT_ID = %s', (agent_id,), ["day", "asset_id", "position"])
+        return self._read(
+            "SELECT DAY, ASSET_ID, POSITION FROM AGENT_EOD_FUTURES_POSITION WHERE AGENT_ID = %s",
+            (agent_id,),
+            ["day", "asset_id", "position"],
+        )
 
     def get_eod_prices(self, asset_id: int) -> pd.DataFrame:
-        return self._read('SELECT DAY, OPEN, HIGH, LOW, CLOSE, VOLUME, THEORETICAL FROM EOD_PRICES WHERE ASSET_ID = %s', (asset_id,), ["day", "open", "high", "low", "close", "volume", "theoretical"])
+        return self._read(
+            "SELECT DAY, OPEN, HIGH, LOW, CLOSE, VOLUME, THEORETICAL FROM EOD_PRICES WHERE ASSET_ID = %s",
+            (asset_id,),
+            ["day", "open", "high", "low", "close", "volume", "theoretical"],
+        )
 
     def get_eod_index_values(self, index_id: int) -> pd.DataFrame:
-        return self._read('SELECT DAY, OPEN, HIGH, LOW, CLOSE FROM EOD_INDEX_VALUES WHERE INDEX_ID = %s', (index_id,), ["day", "open", "high", "low", "close"])
+        return self._read(
+            "SELECT DAY, OPEN, HIGH, LOW, CLOSE FROM EOD_INDEX_VALUES WHERE INDEX_ID = %s",
+            (index_id,),
+            ["day", "open", "high", "low", "close"],
+        )
 
     def get_eod_future_rates(self, contract_id: int) -> pd.DataFrame:
-        return self._read('SELECT DAY, OPEN, HIGH, LOW, CLOSE, VOLUME, THEORETICAL, LOP FROM EOD_FUTURE_RATES WHERE CONTRACT_ID = %s', (contract_id,), ["day", "open", "high", "low", "close", "volume", "theoretical", "lop"])
+        return self._read(
+            "SELECT DAY, OPEN, HIGH, LOW, CLOSE, VOLUME, THEORETICAL, LOP FROM EOD_FUTURE_RATES WHERE CONTRACT_ID = %s",
+            (contract_id,),
+            ["day", "open", "high", "low", "close", "volume", "theoretical", "lop"],
+        )
 
     def get_eod_cash(self, agent_id: int) -> pd.DataFrame:
-        return self._read('SELECT DAY, CURRENCY, CASH FROM AGENT_EOD_CASH WHERE AGENT_ID = %s', (agent_id,), ["day", "currency", "cash"])
+        return self._read(
+            "SELECT DAY, CURRENCY, CASH FROM AGENT_EOD_CASH WHERE AGENT_ID = %s",
+            (agent_id,),
+            ["day", "currency", "cash"],
+        )
 
     def get_eod_portfolio_values(self, agent_id: int) -> pd.DataFrame:
-        return self._read('SELECT DAY, PORTFOLIO_VALUE FROM AGENT_EOD_PORTFOLIO_VALUE WHERE AGENT_ID = %s', (agent_id,), ["day", "portfolio_value"])
+        return self._read(
+            "SELECT DAY, PORTFOLIO_VALUE FROM AGENT_EOD_PORTFOLIO_VALUE WHERE AGENT_ID = %s",
+            (agent_id,),
+            ["day", "portfolio_value"],
+        )
 
     def calculate_index_values(self, day: int) -> None:
-        self._execute('''
+        self._execute(
+            """
             INSERT INTO INDEX_VALUES (DAY, TIME_TICK, INDEX_ID, OPEN, HIGH, LOW, CLOSE)
             SELECT TP.DAY, TP.TIME_TICK, IC.INDEX_ID,
                    SUM(IC.WEIGHT * TP.OPEN),
@@ -306,10 +524,13 @@ class SnowflakeRepository:
             JOIN TRADED_PRICES TP ON IC.ASSET_ID = TP.ASSET_ID
             WHERE TP.DAY = %s
             GROUP BY TP.DAY, TP.TIME_TICK, IC.INDEX_ID
-        ''', (day,))
+        """,
+            (day,),
+        )
 
     def calculate_eod_index_values(self, day: int) -> None:
-        self._execute('''
+        self._execute(
+            """
             INSERT INTO EOD_INDEX_VALUES (DAY, INDEX_ID, OPEN, HIGH, LOW, CLOSE)
             SELECT DAY, INDEX_ID,
                    MIN_BY(OPEN, TIME_TICK),
@@ -318,4 +539,6 @@ class SnowflakeRepository:
             FROM INDEX_VALUES
             WHERE DAY = %s
             GROUP BY DAY, INDEX_ID
-        ''', (day,))
+        """,
+            (day,),
+        )

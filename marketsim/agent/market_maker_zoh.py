@@ -8,39 +8,58 @@ from marketsim.agent.agent import Agent
 from marketsim.fourheap.constants import BUY, SELL
 from marketsim.fourheap.order import Order
 from marketsim.market import FXRateProvider, Price
-from marketsim.market import Price, FXRateProvider
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
 
     from marketsim.market.security import Security
 
+
 class MMZOHAgent(Agent):
     ### Market Maker Zero Order Hold Agent -
     # A MM which just takes into account last traded price and sets new order ladder
     # symmetrically on both sides of this last traded price in each rebalance period
     ###
-    def __init__(self, *, markets: list[Security], repository: Repository, configuration: dict | None = None,
-                 group: str = "MMZOH", output_dir: Path|str="tmp",
-                 fx_rate_provider: FXRateProvider|None=None) -> None:
-        default_configuration = {"xi": 0.1,
-                                "K":  3,
-                                 "omega": 0.1,
-                                 "rebalance_period": 7,
-                                 "volume": 5,
-                                 "q_max": 1000,
-                                "rebalance_by": "time",
-                                 "rebalance_volume": 70 }
-        final_configuration = default_configuration | (configuration if configuration is not None else {})
-        super().__init__(markets=markets, repository=repository, configuration=final_configuration,
-                         group=group, output_dir=output_dir, fx_rate_provider=fx_rate_provider)
+    def __init__(
+        self,
+        *,
+        markets: list[Security],
+        repository: Repository,
+        configuration: dict | None = None,
+        group: str = "MMZOH",
+        output_dir: Path | str = "tmp",
+        fx_rate_provider: FXRateProvider | None = None,
+    ) -> None:
+        default_configuration = {
+            "xi": 0.1,
+            "K": 3,
+            "omega": 0.1,
+            "rebalance_period": 7,
+            "volume": 5,
+            "q_max": 1000,
+            "rebalance_by": "time",
+            "rebalance_volume": 70,
+        }
+        final_configuration = default_configuration | (
+            configuration if configuration is not None else {}
+        )
+        super().__init__(
+            markets=markets,
+            repository=repository,
+            configuration=final_configuration,
+            group=group,
+            output_dir=output_dir,
+            fx_rate_provider=fx_rate_provider,
+        )
 
         ## TODO: MM parameters - should be defined per market
-        self.xi = Decimal(final_configuration["xi"]) # step of the order ladder
-        self.K = final_configuration["K"] # number of orders in the ladder
-        self.omega = Decimal(final_configuration["omega"]) # bid ask spread between two closest MM quotations
+        self.xi = Decimal(final_configuration["xi"])  # step of the order ladder
+        self.K = final_configuration["K"]  # number of orders in the ladder
+        self.omega = Decimal(
+            final_configuration["omega"]
+        )  # bid ask spread between two closest MM quotations
         self.rebalance_period = final_configuration["rebalance_period"]
-        self.rebalance_by = final_configuration["rebalance_by"] # time or volume
+        self.rebalance_by = final_configuration["rebalance_by"]  # time or volume
         self.rebalance_volume = final_configuration["rebalance_volume"]
         self.last_rebalance_time = 0
         self.cum_volume = 0
@@ -48,14 +67,13 @@ class MMZOHAgent(Agent):
         self.volume = final_configuration["volume"]
         self.q_max = final_configuration["q_max"]
 
-
     def get_id(self) -> int:
         return self.agent_id
 
     def is_market_maker(self) -> bool:
         return True
 
-    def should_rebalance(self, current_time:int) -> bool:
+    def should_rebalance(self, current_time: int) -> bool:
         # TODO: add market dimension?
         if current_time == 0:
             return True
@@ -72,7 +90,7 @@ class MMZOHAgent(Agent):
             # TODO: make the calculation, but what about methods - own, global, side, cash?
             # TODO: per market!
             for asset_id, market in self.markets.items():
-                self.cum_volume += market.traded_prices.get(current_time-1, {}).get("Volume", 0)
+                self.cum_volume += market.traded_prices.get(current_time - 1, {}).get("Volume", 0)
             if self.cum_volume >= self.rebalance_volume:
                 self.last_rebalance_time = current_time
                 self.cum_volume = 0
@@ -88,7 +106,9 @@ class MMZOHAgent(Agent):
             # add orders only in rebalance periods:
             if self.should_rebalance(current_time):
                 # AK - clear previous orders (should we?)
-                self.logger.info("Withdrawing previous orders ()") # how to check number of orders of this agent?
+                self.logger.info(
+                    "Withdrawing previous orders ()"
+                )  # how to check number of orders of this agent?
                 market.withdraw_all(agent_id=self.agent_id)
                 # AK - don't withdraw, but also don't blindly add new orders - just ensure they are balanced
                 # that's basically the same to just withdraw all and create new, the problem might be with timing
@@ -106,17 +126,17 @@ class MMZOHAgent(Agent):
                 st = max(estimate + HALF * self.omega, best_bid)
                 bt = min(estimate - HALF * self.omega, best_ask)
                 self.logger.info(f"Setting basic spread to: {bt}, {st}")
-                buy_volume = self.volume #TODO: per market!
+                buy_volume = self.volume  # TODO: per market!
                 sell_volume = self.volume
                 # TODO: adjust the spread for position rebalancing
-                if abs(self.position[asset_id]) > self.q_max/2:
+                if abs(self.position[asset_id]) > self.q_max / 2:
                     if self.position[asset_id] > 0:
                         # the MM position is very long - needs to sell, so move the prices up
                         st = st + HALF * self.omega
                         bt = bt + HALF * self.omega
-                        if self.position[asset_id] > 3/4 * self.q_max:
+                        if self.position[asset_id] > 3 / 4 * self.q_max:
                             # if getting close to max we also limit the volume of buy orders:
-                            buy_volume = int(buy_volume /2)
+                            buy_volume = int(buy_volume / 2)
                             if self.position[asset_id] > self.q_max:
                                 # if we exceeded the q_max then volume should be only symbolic
                                 buy_volume = 1
@@ -124,9 +144,9 @@ class MMZOHAgent(Agent):
                         # the MM position is very short - has to buy more, lower the prices
                         st = st - HALF * self.omega
                         bt = bt - HALF * self.omega
-                        if self.position[asset_id] < -3/4 * self.q_max:
-                            sell_volume = int(sell_volume /2)
-                            if self.position[asset_id] < - self.q_max:
+                        if self.position[asset_id] < -3 / 4 * self.q_max:
+                            sell_volume = int(sell_volume / 2)
+                            if self.position[asset_id] < -self.q_max:
                                 sell_volume = 1
 
                 self.logger.info(f"Basic spread adjusted to: {bt}, {st}")
@@ -137,7 +157,7 @@ class MMZOHAgent(Agent):
                         orders.append(
                             Order(
                                 price=price_bid,
-                                quantity=buy_volume, #7,#1, # we ćould raise the quantity in each ladder step...
+                                quantity=buy_volume,  # 7,#1, # we ćould raise the quantity in each ladder step...
                                 agent_id=self.agent_id,
                                 time=current_time,
                                 order_type=BUY,
@@ -146,8 +166,8 @@ class MMZOHAgent(Agent):
                         )
                         orders.append(
                             Order(
-                                price= Price(st + (k + 1)*self.xi),
-                                quantity=sell_volume, # 7,#1,
+                                price=Price(st + (k + 1) * self.xi),
+                                quantity=sell_volume,  # 7,#1,
                                 agent_id=self.agent_id,
                                 time=current_time,
                                 order_type=SELL,
@@ -158,10 +178,8 @@ class MMZOHAgent(Agent):
             # return orders
             market.add_orders(orders)
 
-
     def get_pos_value(self) -> float:
         return 0
 
     def __str__(self):
-        return f'MM_ZOH{self.agent_id}'
-
+        return f"MM_ZOH{self.agent_id}"

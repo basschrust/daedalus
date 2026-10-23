@@ -11,7 +11,9 @@ class FXRateProvider:
     Rates must be positive and finite. No implicit carry-forward or triangulation.
     """
 
-    def __init__(self, rates: Mapping[tuple[int, str, str], Decimal | str | int | float] | None = None):
+    def __init__(
+        self, rates: Mapping[tuple[int, str, str], Decimal | str | int | float] | None = None
+    ):
         self._rates: dict[tuple[int, str, str], Decimal] = {}
         for (day, base, quote), rate in (rates or {}).items():
             self.set_rate(day=day, base=base, quote=quote, rate=rate)
@@ -22,7 +24,9 @@ class FXRateProvider:
             raise ValueError(f"Invalid currency code: {value!r}")
         return value.strip().upper()
 
-    def set_rate(self, *, day: int, base: str, quote: str, rate: Decimal | str | int | float) -> None:
+    def set_rate(
+        self, *, day: int, base: str, quote: str, rate: Decimal | str | int | float
+    ) -> None:
         if not isinstance(day, int) or isinstance(day, bool) or day < 0:
             raise ValueError("day must be a nonnegative integer")
         base, quote = self._currency(base), self._currency(quote)
@@ -68,11 +72,11 @@ class FXRateProvider:
 
             return base_to_pivot / quote_to_pivot
 
-        raise KeyError(
-            f"No FX rate for {base}/{quote} on day {day}"
-        )
+        raise KeyError(f"No FX rate for {base}/{quote} on day {day}")
 
-    def convert(self, amount: Decimal | str | int | float, *, day: int, base: str, quote: str) -> Decimal:
+    def convert(
+        self, amount: Decimal | str | int | float, *, day: int, base: str, quote: str
+    ) -> Decimal:
         value = Decimal(str(amount))
         if not value.is_finite():
             raise ValueError("Amount must be finite")

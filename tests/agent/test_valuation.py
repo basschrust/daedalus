@@ -1,4 +1,3 @@
-
 from decimal import Decimal
 
 from marketsim.agent import Agent, MMZOHAgent, NoiseAgent
@@ -8,19 +7,17 @@ from marketsim.market import Price, Security
 # from tests.conftest import stock_tnt
 
 
-
-
-
-def test_valuation_after_two_trades(stock_tnt: Security,
-              agent_noise: NoiseAgent,
-              buy_order_101_tnt: Order,
-              agent_mm: MMZOHAgent,
-              sell_order_99_tnt: Order,
-              stock_mit: Security,
-              buy_order_102_mit_5: Order,
-              sell_order_101_mit: Order,
-              buy_order_101_mit: Order,
-              ):
+def test_valuation_after_two_trades(
+    stock_tnt: Security,
+    agent_noise: NoiseAgent,
+    buy_order_101_tnt: Order,
+    agent_mm: MMZOHAgent,
+    sell_order_99_tnt: Order,
+    stock_mit: Security,
+    buy_order_102_mit_5: Order,
+    sell_order_101_mit: Order,
+    buy_order_101_mit: Order,
+):
 
     stock_tnt.add_agents([agent_mm, agent_noise])
     stock_mit.add_agents([agent_mm, agent_noise])
@@ -48,8 +45,16 @@ def test_valuation_after_two_trades(stock_tnt: Security,
     for agent in [agent_mm, agent_noise]:
         agent.record_valuation(current_time=2)
 
-    assert agent_noise.cash == {'USD': Decimal('0.00'), 'EUR': Decimal('0.00'), 'PLN': Decimal('-2025.00')}
-    assert agent_mm.cash == {'USD': Decimal('0.00'), 'EUR': Decimal('0.00'), 'PLN': Decimal('2025.00')}
+    assert agent_noise.cash == {
+        "USD": Decimal("0.00"),
+        "EUR": Decimal("0.00"),
+        "PLN": Decimal("-2025.00"),
+    }
+    assert agent_mm.cash == {
+        "USD": Decimal("0.00"),
+        "EUR": Decimal("0.00"),
+        "PLN": Decimal("2025.00"),
+    }
     assert agent_mm.position.get(stock_tnt.asset_id) == -10
     assert agent_mm.position.get(stock_mit.asset_id) == -10
     assert agent_noise.position.get(stock_mit.asset_id) == 10
@@ -58,9 +63,9 @@ def test_valuation_after_two_trades(stock_tnt: Security,
     assert agent_mm.portfolio_value == 5
 
 
-def test_valuation_price_change(agent_3k_mit_2k_tnt: Agent,
-                                stock_mit: Security,
-                                stock_tnt: Security):
+def test_valuation_price_change(
+    agent_3k_mit_2k_tnt: Agent, stock_mit: Security, stock_tnt: Security
+):
     stock_tnt.last_traded_price = Price(165.00)
     stock_mit.last_traded_price = Price(18.67)
     agent_3k_mit_2k_tnt.record_valuation(current_time=1)

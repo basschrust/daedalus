@@ -1,4 +1,3 @@
-
 from marketsim.agent import Agent
 from marketsim.market import Future, Price
 
@@ -8,7 +7,7 @@ def test_collateral_transfer_preserves_equity(
     future_short: Future,
 ):
     agent = futures_agents["buyer"]
-    agent.cash = { "PLN": Price(100_000) }
+    agent.cash = {"PLN": Price(100_000)}
 
     equity_before = agent.cash["PLN"]
 
@@ -20,9 +19,7 @@ def test_collateral_transfer_preserves_equity(
     values = agent.futures_value[future_short.asset_id]
 
     equity_after = (
-        agent.get_cash_balance(currency="PLN")
-        + values["collateral"]
-        + values["unsettled_pnl"]
+        agent.get_cash_balance(currency="PLN") + values["collateral"] + values["unsettled_pnl"]
     )
 
     assert equity_after == equity_before

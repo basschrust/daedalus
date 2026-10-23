@@ -4,7 +4,9 @@ from .fundamental_abc import Fundamental
 
 
 class GaussianMeanReverting(Fundamental):
-    def __init__(self, final_time: int, mean: float, r: float, shock_var: float, shock_mean: float = 0):
+    def __init__(
+        self, final_time: int, mean: float, r: float, shock_var: float, shock_mean: float = 0
+    ):
         self.final_time = final_time
         self.mean = torch.tensor(mean, dtype=torch.float32)
         self.r = torch.tensor(r, dtype=torch.float32)
@@ -15,10 +17,10 @@ class GaussianMeanReverting(Fundamental):
         self._generate()
 
     def _generate(self):
-        shocks = torch.randn(self.final_time)*self.shock_std + self.shock_mean
+        shocks = torch.randn(self.final_time) * self.shock_std + self.shock_mean
         for t in range(1, self.final_time):
-            self.fundamental_values[t] = (
-                max(0, self.r*self.mean + (1 - self.r)*self.fundamental_values[t - 1] + shocks[t])
+            self.fundamental_values[t] = max(
+                0, self.r * self.mean + (1 - self.r) * self.fundamental_values[t - 1] + shocks[t]
             )
 
     def get_value_at(self, time: int) -> float:

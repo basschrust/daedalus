@@ -17,7 +17,7 @@ from tianshou.utils.net.continuous import ActorProb, Critic
 from tianshou.utils.space_info import SpaceInfo
 from torch.utils.tensorboard import SummaryWriter
 
-#MM
+# MM
 from marketsim.wrappers.MM_wrapper import MMEnv
 
 
@@ -54,27 +54,30 @@ def get_args() -> argparse.Namespace:
 
 
 def make_env():
-    normalizers = {"fundamental": 1e5, "reward":1e4, "min_order_val": 1e5, "invt": 10, "cash": 1e7}
-    beta_params = {'a_buy': 0.5, 'b_buy': 0.5, 'a_sell': 0.5, 'b_sell': 0.5}
+    normalizers = {"fundamental": 1e5, "reward": 1e4, "min_order_val": 1e5, "invt": 10, "cash": 1e7}
+    beta_params = {"a_buy": 0.5, "b_buy": 0.5, "a_sell": 0.5, "b_sell": 0.5}
 
-    env = MMEnv(num_background_agents=25,
-                sim_time=1200,
-                lam=75e-3,
-                lamMM= 5e-3,
-                mean=1e5,
-                r=0.05,
-                shock_var=5e6,
-                q_max=10,
-                pv_var=5e6,
-                shade=[250,500],
-                n_levels= 101,
-                total_volume= 100,
-                xi= 100,  # rung size
-                omega= 64,  # spread
-                normalizers=normalizers,
-                beta_params=beta_params)
+    env = MMEnv(
+        num_background_agents=25,
+        sim_time=1200,
+        lam=75e-3,
+        lamMM=5e-3,
+        mean=1e5,
+        r=0.05,
+        shock_var=5e6,
+        q_max=10,
+        pv_var=5e6,
+        shade=[250, 500],
+        n_levels=101,
+        total_volume=100,
+        xi=100,  # rung size
+        omega=64,  # spread
+        normalizers=normalizers,
+        beta_params=beta_params,
+    )
 
     return env
+
 
 def run_MM(args: argparse.Namespace = get_args()) -> None:
     env = make_env()
@@ -87,9 +90,7 @@ def run_MM(args: argparse.Namespace = get_args()) -> None:
     )
     # test_envs = gym.make(args.task)
     test_envs = SubprocVectorEnv(
-        [
-            lambda: make_env() for _ in range(args.test_num)
-        ],
+        [lambda: make_env() for _ in range(args.test_num)],
     )
 
     # seed
@@ -171,13 +172,13 @@ def run_MM(args: argparse.Namespace = get_args()) -> None:
 
     checkpoint_dir = ""
     checkpoint_dir += args.task + "_"
-    checkpoint_dir += datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    checkpoint_dir += datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     checkpoint_dir = os.path.join(os.getcwd(), args.logdir, checkpoint_dir)
 
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
 
-    sys.stdout = open(checkpoint_dir + '/stdout.txt', 'w+')
+    sys.stdout = open(checkpoint_dir + "/stdout.txt", "w+")
     writer = SummaryWriter(checkpoint_dir)
     logger = TensorboardLogger(writer)
 
