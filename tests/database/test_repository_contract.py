@@ -5,6 +5,7 @@ Snowflake tests create and drop their own schema; use a dedicated test role/data
 """
 import os
 from decimal import Decimal
+from pathlib import Path
 from uuid import uuid4
 
 import pandas as pd

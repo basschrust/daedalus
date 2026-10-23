@@ -1,5 +1,6 @@
 
 from decimal import Decimal
+from types import SimpleNamespace
 from unittest.mock import Mock, call
 
 import pytest

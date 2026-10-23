@@ -2,6 +2,7 @@ from decimal import Decimal
 
 import pytest
 
+import pytest
 from marketsim.market.fx_rate_provider import FXRateProvider
 
 

@@ -6,6 +6,9 @@ from marketsim.agent import Agent, HBLAgent, MMZOHAgent, NoiseAgent
 from marketsim.database.connectors.duckdb_storage import Repository
 from marketsim.fourheap.order import Order
 from marketsim.market import FXRateProvider, Index, Option, Price, Security
+from marketsim.market import Price, Security, Option, Index, FXRateProvider
+from marketsim.agent import Agent, MMZOHAgent, NoiseAgent, HBLAgent
+
 
 BUY = 1
 SELL = -1

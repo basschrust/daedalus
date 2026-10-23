@@ -7,6 +7,7 @@ from collections import defaultdict
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
+from decimal import Decimal
 
 import pandas as pd
 
@@ -15,6 +16,7 @@ from marketsim.market import FXRateProvider
 from marketsim.market.price import Price
 from marketsim.plot.simple_plot import plot_agent_history_many_markets
 from marketsim.utils.id_generator import id_generator
+from marketsim.market import FXRateProvider
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
