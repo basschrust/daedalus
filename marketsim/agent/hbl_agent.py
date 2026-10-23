@@ -13,7 +13,7 @@ from marketsim.fourheap.order import Order
 from marketsim.private_values.private_values import PrivateValues
 from marketsim.fourheap.constants import BUY, SELL
 from typing import List
-from marketsim.market import Price
+from marketsim.market import Price, FXRateProvider
 #from fastcubicspline import FCS
 
 if TYPE_CHECKING:
@@ -38,7 +38,8 @@ class Custom_cs:
 
 class HBLAgent(Agent):
     def __init__(self, *, markets: list[Security], repository: Repository,
-                 configuration: dict| None = None, group: str = "HBL", output_dir: Path|str="tmp") -> None:
+                 configuration: dict| None = None, group: str = "HBL", output_dir: Path|str="tmp",
+                 fx_rate_provider: FXRateProvider|None=None) -> None:
         default_configuration = { "q_max": 1000,
                                   "shade": [0.1,0.2],
                                   "L": 25,
@@ -47,7 +48,7 @@ class HBLAgent(Agent):
                                   "pv": None }
         final_configuration = default_configuration | (configuration if configuration is not None else {})
         super().__init__(markets=markets, repository=repository, configuration=final_configuration,
-                         group=group, output_dir=output_dir)
+                         group=group, output_dir=output_dir, fx_rate_provider=fx_rate_provider)
 
         if final_configuration["pv"] is not None:
             self.pv = final_configuration["pv"]

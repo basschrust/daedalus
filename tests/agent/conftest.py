@@ -1,12 +1,35 @@
 import pytest
+from decimal import Decimal
 
 from marketsim.database.connectors.duckdb_storage import Repository
-from marketsim.market import Security, Option
+from marketsim.market import Security, Option, Price, FXRateProvider
 from marketsim.agent import (Agent, NoiseAgent, HBLAgent, MMZOHAgent, MomentumAgent, OptionMMZOHAgent, SpoofingAgent,
         WashTradingAgent, ZIAgentNotInformed)
 
 BUY = 1
 SELL = -1
+
+
+@pytest.fixture
+def fx_provider():
+    fx = FXRateProvider()
+
+    for day, usd, eur in [
+        (0, "3.80", "4.25"),
+        (1, "3.90", "4.20"),
+    ]:
+        fx.set_rate(day=day, base="USD", quote="PLN", rate=usd)
+        fx.set_rate(day=day, base="EUR", quote="PLN", rate=eur)
+
+        # triangled rate:
+        fx.set_rate(
+            day=day,
+            base="EUR",
+            quote="USD",
+            rate=Decimal(eur) / Decimal(usd),
+        )
+
+    return fx
 
 
 @pytest.fixture
@@ -28,6 +51,44 @@ def agent_zi(security: Security, repository: Repository):
 @pytest.fixture
 def agent_option_mm(security: Security, option: Option, repository: Repository):
     return OptionMMZOHAgent(markets=[security], repository=repository)
+
+
+@pytest.fixture
+def multicurrency_agent(repository, fx_provider):
+    markets = [
+        Security(
+            name="WIGCO",
+            currency="PLN",
+            repository=repository,
+        ),
+        Security(
+            name="USCO",
+            currency="USD",
+            repository=repository,
+        ),
+        Security(
+            name="EUROCO",
+            currency="EUR",
+            repository=repository,
+        ),
+    ]
+
+    agent = NoiseAgent(
+        markets=markets,
+        repository=repository,
+        fx_rate_provider=fx_provider,
+    )
+
+    agent.cash = {
+        "PLN": Price(1000),
+        "USD": Price(100),
+        "EUR": Price(200),
+    }
+
+    for market, quantity in zip(markets, [10, 5, 3]):
+        agent.position[market.asset_id] = quantity
+
+    return agent
 
 ######### for cash flow check between agents:
 

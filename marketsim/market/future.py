@@ -110,7 +110,7 @@ class Future(Security):
                 "volume": self.traded_prices_df["volume"].sum(),
                 "asset_id": self.asset_id,
                 "day": self.current_day - 1,
-                "theoretical": self.underlying.last_traded_price,
+                "theoretical": self.underlying.calculate_value(),
             }])
 
             self.repository.save_eod_prices(eod_prices_df=eod_prices_df)

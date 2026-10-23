@@ -7,20 +7,33 @@ from marketsim.market import Security, Price, Option
 from marketsim.agent import Agent
 
 
-EXPECTED_TABLES = {"securities",
-                   "options",
-                   "agents",
-                    "agent_position_history",
-                    "agent_eod_positions",
-                    "agent_portfolio_value_history",
-                    "agent_eod_portfolio_value",
-                    "agent_cash_history",
-                    "agent_eod_cash",
-                    "traded_prices",
-                    "eod_prices",
-                    "orders",
-                    "trades",
-                    "option_expiration"}
+EXPECTED_TABLES = {
+    "securities",
+    "indices",
+    "index_components",
+    "futures",
+    "options",
+    "agents",
+    "agent_position_history",
+    "agent_futures_position_history",
+    "agent_futures_value_history",
+    "agent_eod_positions",
+    "agent_eod_futures_position",
+    "agent_eod_futures_value",
+    "agent_portfolio_value_history",
+    "agent_eod_portfolio_value",
+    "agent_cash_history",
+    "agent_eod_cash",
+    "traded_prices",
+    "eod_prices",
+    "index_values",
+    "eod_index_values",
+    "future_rates",
+    "eod_future_rates",
+    "orders",
+    "trades",
+    "option_expiration",
+}
 
 
 ###### test functions  #####
@@ -35,7 +48,10 @@ def test_expected_tables_exist(repository):
     rows = repository.connection.execute("SHOW TABLES").fetchall()
     actual_tables = {row[0] for row in rows}
 
-    assert EXPECTED_TABLES <= actual_tables
+    assert actual_tables == EXPECTED_TABLES, (
+        f"Missing: {EXPECTED_TABLES - actual_tables}; "
+        f"Unexpected: {actual_tables - EXPECTED_TABLES}"
+    )
 
 
 def test_tables_are_empty_at_initialization(repository):
@@ -50,60 +66,137 @@ def test_tables_are_empty_at_initialization(repository):
 
 ####  getting data
 
-@pytest.mark.skip(reason="TODO")
-@pytest.mark.usefixtures("position_history_1")
+
 def test_get_eod_positions_filters_by_agent(repository: Repository):
+    repository.connection.execute("""
+        INSERT INTO agent_eod_positions
+            (day, agent_id, asset_id, position)
+        VALUES
+            (0, 1, 10, 100),
+            (0, 1, 11, 50),
+            (0, 2, 10, 999),
+            (1, 1, 10, 120)
+    """)
+
     actual = repository.get_eod_positions(agent_id=1)
+    actual = actual.sort_values(["day", "asset_id"]).reset_index(drop=True)
 
     expected = pd.DataFrame({
-        "day": [0, 0],
-        "asset_id": [0, 1],
-        "position": [100, 50],
-    })
-
-    actual = actual.sort_values("asset_id").reset_index(drop=True)
+        "day": [0, 0, 1],
+        "asset_id": [10, 11, 10],
+        "position": [100, 50, 120],
+    }).astype("int32")
 
     pd.testing.assert_frame_equal(actual, expected)
 
-@pytest.mark.skip(reason="TODO")
+
 def test_get_eod_prices(repository: Repository):
-    actual = repository.get_eod_prices(asset_id=1)
+    repository.connection.execute("""
+        INSERT INTO eod_prices
+            (day, asset_id, open, high, low, close, volume, theoretical)
+        VALUES
+            (0, 10, 100, 110, 95, 105, 1000, NULL),
+            (1, 10, 105, 115, 100, 112, 1200, NULL),
+            (0, 11, 200, 210, 190, 205, 500, NULL)
+    """)
 
-    # actual = actual.sort_values("asset_id").reset_index(drop=True)
+    actual = repository.get_eod_prices(asset_id=10)
+    actual = actual.sort_values("day").reset_index(drop=True)
 
     expected = pd.DataFrame({
-        "day": [0, 0],
-        "asset_id": [0, 1],
-        "position": [100, 50],
-    })
+        "day": [0, 1],
+        "open": [100.0, 105.0],
+        "high": [110.0, 115.0],
+        "low": [95.0, 100.0],
+        "close": [105.0, 112.0],
+        "volume": [1000.0, 1200.0],
+        "theoretical": [float("nan"), float("nan")],
+    }).astype({"day": "int32"})
 
     pd.testing.assert_frame_equal(actual, expected)
 
-@pytest.mark.skip(reason="TODO")
+
 def test_get_eod_cash(repository: Repository):
-    actual = repository.get_eod_cash(agent_id=1)
+    repository.connection.execute("""
+        INSERT INTO agent_eod_cash
+            (day, agent_id, cash, currency)
+        VALUES
+            (0, 1, 1000, 'PLN'),
+            (0, 1, 100, 'USD'),
+            (1, 1, 1200, 'PLN'),
+            (0, 2, 9999, 'PLN')
+    """)
 
-    # actual = actual.sort_values("asset_id").reset_index(drop=True)
+    actual = repository.get_eod_cash(agent_id=1)
+    actual = actual.sort_values(["day", "currency"]).reset_index(drop=True)
 
     expected = pd.DataFrame({
-        "day": [0, 0],
-        "asset_id": [0, 1],
-        "position": [100, 50],
-    })
+        "day": [0, 0, 1],
+        "currency": ["PLN", "USD", "PLN"],
+        "cash": [1000.0, 100.0, 1200.0],
+    }).astype({"day": "int32"})
 
     pd.testing.assert_frame_equal(actual, expected)
 
-@pytest.mark.skip(reason="TODO")
-def test_get_eod_portfolio_values(repository: Repository):
-    actual = repository.get_eod_portfolio_values(agent_id=1)
 
-    # actual = actual.sort_values("asset_id").reset_index(drop=True)
+def test_get_eod_portfolio_values(repository: Repository):
+    repository.connection.execute("""
+        INSERT INTO agent_eod_portfolio_value
+            (day, agent_id, portfolio_value)
+        VALUES
+            (0, 1, 5200.00),
+            (1, 1, 5276.80),
+            (0, 2, 9999.00)
+    """)
+
+    actual = repository.get_eod_portfolio_values(agent_id=1)
+    actual = actual.sort_values("day").reset_index(drop=True)
 
     expected = pd.DataFrame({
-        "day": [0, 0],
-        "asset_id": [0, 1],
-        "position": [100, 50],
-    })
+        "day": [0, 1],
+        "portfolio_value": [5200.00, 5276.80],
+    }).astype({"day": "int32"})
+
+    pd.testing.assert_frame_equal(actual, expected)
+
+
+def test_save_cash_history(repository: Repository):
+    cash_history_df = pd.DataFrame([
+        {
+            "day": 0,
+            "time_tick": 10,
+            "agent_id": 1,
+            "currency": "PLN",
+            "cash": 1000.0,
+        },
+        {
+            "day": 0,
+            "time_tick": 10,
+            "agent_id": 1,
+            "currency": "USD",
+            "cash": 100.0,
+        },
+        {
+            "day": 0,
+            "time_tick": 20,
+            "agent_id": 1,
+            "currency": "PLN",
+            "cash": 900.0,
+        },
+    ])
+
+    repository.save_cash_history(cash_history_df)
+
+    actual = repository.connection.execute("""
+        SELECT day, time_tick, agent_id, currency, cash
+        FROM agent_cash_history
+        ORDER BY time_tick, currency
+    """).fetchdf()
+
+    expected = (cash_history_df[
+        ["day", "time_tick", "agent_id", "currency", "cash"]
+    ].sort_values(["time_tick", "currency"]).reset_index(drop=True).
+                astype({"day": "int32", "time_tick": "int32", "agent_id": "int32"}))
 
     pd.testing.assert_frame_equal(actual, expected)
 
@@ -219,20 +312,6 @@ def test_save_eod_portfolio_value(repository: Repository,
     assert row["agent_id"] == agent.agent_id
     assert row["portfolio_value"] == agent.portfolio_value
 
-@pytest.mark.skip(reason="intraday!")
-def test_save_cash_history(repository: Repository,
-                           agent_sophisticated_1: Agent):
-    agent = agent_sophisticated_1
-    agent.eod()
-    ret = repository.connection.execute("""SELECT *
-            FROM agent_cash_history""").fetchdf()
-
-    row = ret.iloc[0]
-    assert ret.shape == (1, 4)
-    assert row["day"] == agent.current_day - 1
-    assert row["time_tick"] == 0
-    assert row["agent_id"] == agent.agent_id
-    assert row["cash"] == agent.cash
 
 
 def test_save_eod_cash(repository: Repository,

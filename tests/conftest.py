@@ -3,7 +3,7 @@ from pathlib import Path
 
 from marketsim.database.connectors.duckdb_storage import Repository
 from marketsim.fourheap.order import Order
-from marketsim.market import Price, Security, Option, Index
+from marketsim.market import Price, Security, Option, Index, FXRateProvider
 from marketsim.agent import Agent, MMZOHAgent, NoiseAgent, HBLAgent
 
 
@@ -18,6 +18,16 @@ def repository(tmp_path: Path):
     yield repo
     repo.connection.close()
 
+
+@pytest.fixture
+def fx_rate_provider():
+    fx = FXRateProvider()
+
+    # Synthetic rates for deterministic tests
+    fx.set_rate(day=0, base="USD", quote="PLN", rate="3.80")
+    fx.set_rate(day=0, base="EUR", quote="PLN", rate="4.25")
+
+    return fx
 
 @pytest.fixture
 def order_factory():
@@ -328,16 +338,28 @@ def option_put_at_expiration_otm(stock_tnt: Security,
 ### agents:
 
 @pytest.fixture
-def agent_noise(stock_tnt: Security, stock_mit: Security, repository: Repository):
-    return NoiseAgent(markets=[stock_tnt, stock_mit], repository=repository)
+def agent_noise(stock_tnt: Security,
+                stock_mit: Security,
+                repository: Repository,
+                fx_rate_provider: FXRateProvider):
+    return NoiseAgent(
+        markets=[stock_tnt, stock_mit],
+        repository=repository,
+        fx_rate_provider=fx_rate_provider,
+    )
 
 @pytest.fixture
 def agent_hbl(security: Security, repository: Repository):
     return HBLAgent(markets=[security], repository=repository)
 
 @pytest.fixture
-def agent_mm(stock_tnt: Security, stock_mit:Security, repository: Repository):
-    return MMZOHAgent(markets=[stock_tnt, stock_mit], repository=repository)
+def agent_mm(stock_tnt: Security,
+             stock_mit: Security,
+             repository: Repository,
+             fx_rate_provider: FXRateProvider):
+    return MMZOHAgent(markets=[stock_tnt, stock_mit],
+                      repository=repository,
+                      fx_rate_provider=fx_rate_provider)
 
 
 ## agents with open positions
@@ -367,8 +389,11 @@ def agent_3k_mit_2k_tnt(agent_noise: Agent,
 def agent_long_call_option_expiration_day(stock_tnt: Security,
                                           stock_mit: Security,
                                           option_call_at_expiration_itm: Option,
-                                          repository: Repository):
-    agent =  NoiseAgent(markets=[stock_tnt, stock_mit, option_call_at_expiration_itm], repository=repository)
+                                          repository: Repository,
+                                          fx_rate_provider: FXRateProvider):
+    agent =  NoiseAgent(markets=[stock_tnt, stock_mit, option_call_at_expiration_itm],
+                        repository=repository,
+                        fx_rate_provider=fx_rate_provider)
     option_call_at_expiration_itm.add_agents([agent])
     agent.position[option_call_at_expiration_itm.asset_id] = 10
 
@@ -379,8 +404,11 @@ def agent_long_call_option_expiration_day(stock_tnt: Security,
 def agent_long_put_option_expiration_day(stock_tnt: Security,
                                           stock_mit: Security,
                                           option_put_at_expiration_itm: Option,
-                                          repository: Repository):
-    agent =  NoiseAgent(markets=[stock_tnt, stock_mit, option_put_at_expiration_itm], repository=repository)
+                                          repository: Repository,
+                                          fx_rate_provider: FXRateProvider):
+    agent =  NoiseAgent(markets=[stock_tnt, stock_mit, option_put_at_expiration_itm],
+                        repository=repository,
+                        fx_rate_provider=fx_rate_provider)
     option_put_at_expiration_itm.add_agents([agent])
     agent.position[option_put_at_expiration_itm.asset_id] = 10
 
@@ -390,8 +418,11 @@ def agent_long_put_option_expiration_day(stock_tnt: Security,
 def agent_long_call_option_expiration_day_otm(stock_tnt: Security,
                                           stock_mit: Security,
                                           option_call_at_expiration_otm: Option,
-                                          repository: Repository):
-    agent =  NoiseAgent(markets=[stock_tnt, stock_mit, option_call_at_expiration_otm], repository=repository)
+                                          repository: Repository,
+                                          fx_rate_provider: FXRateProvider):
+    agent =  NoiseAgent(markets=[stock_tnt, stock_mit, option_call_at_expiration_otm],
+                        repository=repository,
+                        fx_rate_provider=fx_rate_provider)
     option_call_at_expiration_otm.add_agents([agent])
     agent.position[option_call_at_expiration_otm.asset_id] = 10
 
@@ -402,8 +433,11 @@ def agent_long_call_option_expiration_day_otm(stock_tnt: Security,
 def agent_long_put_option_expiration_day_otm(stock_tnt: Security,
                                           stock_mit: Security,
                                           option_put_at_expiration_otm: Option,
-                                          repository: Repository):
-    agent =  NoiseAgent(markets=[stock_tnt, stock_mit, option_put_at_expiration_otm], repository=repository)
+                                          repository: Repository,
+                                          fx_rate_provider: FXRateProvider):
+    agent =  NoiseAgent(markets=[stock_tnt, stock_mit, option_put_at_expiration_otm],
+                        repository=repository,
+                        fx_rate_provider=fx_rate_provider)
     option_put_at_expiration_otm.add_agents([agent])
     agent.position[option_put_at_expiration_otm.asset_id] = 10
 

@@ -1,7 +1,7 @@
 import pytest
 
 from marketsim.database.connectors.duckdb_storage import Repository
-from marketsim.market import Index, Future, Security
+from marketsim.market import Index, Future, Security, FXRateProvider
 from marketsim.agent import Agent, NoiseAgent
 
 
@@ -61,11 +61,13 @@ def futures_agents(
     future_short: Future,
     future_long: Future,
     repository: Repository,
+    fx_rate_provider: FXRateProvider
 ) -> dict[str, Agent]:
     agents = {
         name: NoiseAgent(
             markets=futures_markets,
             repository=repository,
+            fx_rate_provider=fx_rate_provider
         )
         for name in ("buyer", "seller", "hedger")
     }

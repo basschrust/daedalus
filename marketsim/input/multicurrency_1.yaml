@@ -1,0 +1,76 @@
+# Multicurrency integration scenario
+seed: 67
+sim_time: 30
+days: 5
+lob_plot_interval: 25
+
+fx_rates:
+  0: {USD/PLN: 3.80, EUR/PLN: 4.30}
+  1: {USD/PLN: 3.85, EUR/PLN: 4.28}
+  2: {USD/PLN: 3.75, EUR/PLN: 4.35}
+  3: {USD/PLN: 3.90, EUR/PLN: 4.32}
+  4: {USD/PLN: 3.82, EUR/PLN: 4.40}
+
+markets:
+  polish_stock:
+    name: "Polish Equity"
+    short_name: "PLST"
+    instrument_class: stock
+    market_type: continuous
+    currency: PLN
+    reference_price: 150.00
+
+  american_stock:
+    name: "American Equity"
+    short_name: "USST"
+    instrument_class: stock
+    market_type: continuous
+    currency: USD
+    reference_price: 100.00
+
+  european_stock:
+    name: "European Equity"
+    short_name: "EUST"
+    instrument_class: stock
+    market_type: continuous
+    currency: EUR
+    reference_price: 80.00
+
+agents:
+  polish_traders:
+    agent_class: NoiseAgent
+    number: 4
+    markets: [polish_stock]
+    config:
+      base_currency: PLN
+      initial_cash:
+        PLN: 100000
+        USD: 10000
+        EUR: 5000
+      lam: 0.5
+      mean_volume: 10
+
+  american_traders:
+    agent_class: NoiseAgent
+    number: 4
+    markets: [american_stock]
+    config:
+      base_currency: USD
+      initial_cash:
+        USD: 20000
+        PLN: 10000
+      lam: 0.5
+      mean_volume: 10
+
+  global_traders:
+    agent_class: NoiseAgent
+    number: 4
+    markets: ALL
+    config:
+      base_currency: EUR
+      initial_cash:
+        EUR: 20000
+        USD: 10000
+        PLN: 20000
+      lam: 0.5
+      mean_volume: 10

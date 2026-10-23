@@ -12,14 +12,15 @@ from marketsim.private_values.private_values import PrivateValues
 from marketsim.fourheap.constants import BUY, SELL
 from typing import List
 import numpy as np
-from marketsim.market.price import Price
+from marketsim.market import Price, FXRateProvider
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
 
 class ZIAgentNotInformed(Agent):
     def __init__(self, *, markets: list[Security], repository: Repository,
-                 group: str = "ZINI", configuration: dict = None, output_dir:Path|str="tmp") -> None:
+                 group: str = "ZINI", configuration: dict = None, output_dir:Path|str="tmp",
+                 fx_rate_provider: FXRateProvider|None=None) -> None:
                  # q_max: int, shade: List, pv_var: float, eta: float = 1.0
                  # , lam=1.0, mean_volume: float = 5.0):
         default_configuration = {"q_max": 1000,
@@ -29,8 +30,12 @@ class ZIAgentNotInformed(Agent):
                               "eta": 1.0,
                               "mean_volume": 5.0 }
         final_configuration = default_configuration | (configuration if configuration is not None else {})
-        super().__init__(markets=markets, repository=repository, group=group,
-                         configuration=final_configuration, output_dir=output_dir)
+        super().__init__(markets=markets,
+                         repository=repository,
+                         group=group,
+                         configuration=final_configuration,
+                         output_dir=output_dir,
+                         fx_rate_provider=fx_rate_provider)
         # self.group = "ZINI"
         self.q_max = final_configuration.get("q_max")
         self.pv_var = final_configuration.get("pv_var")

@@ -8,7 +8,7 @@ from marketsim.market.security import Security
 from marketsim.fourheap.order import Order
 from marketsim.fourheap.constants import BUY, SELL
 import numpy as np
-from marketsim.market.price import Price
+from marketsim.market import Price, FXRateProvider
 from pathlib import Path
 
 if TYPE_CHECKING:
@@ -20,7 +20,8 @@ class NoiseAgent(Agent):
     Noise agent - aware only of last traded price and his own position (but this also only roughly)
     """
     def __init__(self, *, markets: list[Security], repository: Repository, configuration: dict| None = None
-                 , group: str="Noise", output_dir: Path|str = "tmp") -> None:
+                 , group: str="Noise", output_dir: Path|str = "tmp",
+                 fx_rate_provider: FXRateProvider|None=None) -> None:
         default_configuration = { "q_max": 10000,
                                  "lam": 0.2,
                                  "mean_volume": 50.0,
@@ -29,7 +30,8 @@ class NoiseAgent(Agent):
                                   "validity_period": 3, }
         self.configuration = default_configuration | (configuration if configuration is not None else {})
         super().__init__(markets=markets, repository=repository,
-                         configuration=self.configuration, group=group, output_dir=output_dir)
+                         configuration=self.configuration, group=group, output_dir=output_dir,
+                         fx_rate_provider=fx_rate_provider)
 
         self.q_max = self.configuration["q_max"] # check if doesn't collide with mean_volume
         self.lam = self.configuration["lam"] # activity parameter
