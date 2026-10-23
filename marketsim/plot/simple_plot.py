@@ -1,11 +1,10 @@
-from collections import defaultdict
-import matplotlib.pyplot as plt
-import pandas as pd
-import mplfinance as mpf
-from pathlib import Path
 import math
-import numpy as np
+from collections import defaultdict
+from pathlib import Path
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
 
 def simple_plot_old(x: list, y: list, output_file: str) -> None:

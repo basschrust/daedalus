@@ -37,6 +37,7 @@ snowflake = [
 dev = [
     "black",
     "pytest",
+    "ruff",
 ]
 
 [tool.setuptools]
@@ -49,3 +50,19 @@ include = ["marketsim", "marketsim.*"]
 [tool.black]
 line-length = 100
 target-version = ["py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E4",    # Import errors
+    "E7",    # Statement errors
+    "E9",    # Syntax errors
+    "F",     # Pyflakes: unused imports, variables, undefined names
+    "I",     # Import sorting (isort)
+]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true

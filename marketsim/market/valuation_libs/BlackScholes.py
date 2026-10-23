@@ -1,10 +1,10 @@
 #BlackScholes.py
 #module implementing the Black-Scholes Formula
 
-import math, random
+import math
+
 # TODO: import ChrustSolver
 from scipy.stats import distributions
-from torch.ao.nn import intrinsic
 
 from ..price import Price
 

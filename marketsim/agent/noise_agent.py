@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import random
+from pathlib import Path
 from typing import TYPE_CHECKING
 
+import numpy as np
+
 from marketsim.agent.agent import Agent
-from marketsim.market.security import Security
-from marketsim.fourheap.order import Order
 from marketsim.fourheap.constants import BUY, SELL
+from marketsim.fourheap.order import Order
+from marketsim.market import FXRateProvider, Price
+from marketsim.market.security import Security
 import numpy as np
 from marketsim.market import Price, FXRateProvider
 from pathlib import Path

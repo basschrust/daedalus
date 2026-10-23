@@ -1,17 +1,14 @@
 from __future__ import annotations
 
-import duckdb
-import pandas as pd
-from sympy.core import parameters
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from marketsim.input import config
-from marketsim.loggers.basic import terminal
+import duckdb
+import pandas as pd
 
 if TYPE_CHECKING:
     from marketsim.agent import Agent
-    from marketsim.market import Security, Index, Future
+    from marketsim.market import Future, Index, Security
 
 # TODO: create some base class with abstract methods, use instances depending on the configuration
 class Repository:

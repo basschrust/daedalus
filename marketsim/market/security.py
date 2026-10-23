@@ -1,26 +1,31 @@
 from __future__ import annotations
 
-import pandas as pd
+import math
 from collections import defaultdict
 from itertools import accumulate
-from loguru import logger
-from typing import TYPE_CHECKING
-import math
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+import pandas as pd
 
 from marketsim.event import EventQueue
+from marketsim.fourheap import FourHeap
 from marketsim.fundamental.fundamental_abc import Fundamental
-from marketsim.utils.id_generator import id_generator
-from marketsim.plot.simple_plot import (plot_order_book, plot_volume_transfers, plot_cash_transfers
-    , plot_realized_volatility, plot_agent_history_single_market, plot_by_type, plot_bid_ask)
+from marketsim.loggers.basic import setup_market_logger
+from marketsim.market.price import Price
 from marketsim.plot.candle import plot_candlestick
-from marketsim.loggers.basic import setup_logger, setup_subject_logger, setup_market_logger
-from marketsim.market import Price
+from marketsim.plot.simple_plot import (
+    plot_cash_transfers,
+    plot_order_book,
+    plot_volume_transfers,
+)
+from marketsim.utils.id_generator import id_generator
 
 if TYPE_CHECKING:
-    from marketsim.fourheap import Order, MatchedOrder
-    from marketsim.agent import Agent
     from database.connectors.duckdb_storage import Repository
+
+    from marketsim.agent import Agent
+    from marketsim.fourheap import MatchedOrder, Order
     from marketsim.market import Index
 
 
@@ -449,7 +454,7 @@ class Security:
 
 
     def sod(self):
-        from marketsim.fourheap import FourHeap # TODO: beware of circular imports
+        from marketsim.fourheap import FourHeap  # TODO: beware of circular imports
         if self.status == "active":
             self.logger.info(f"Starting Start-of-Day procedure for {self.name}, day: {self.current_day}")
             self.eod_status = "open"
@@ -527,7 +532,7 @@ class Security:
             if self.instrument_class == "stock":
                 self.logger.info(f"Traded_prices_df: {self.traded_prices_df.head()}")
 
-                self.logger.info(f"Saving traded prices for stock...")
+                self.logger.info("Saving traded prices for stock...")
                 self.repository.save_traded_prices(self.traded_prices_df)
 
                 # eod_prices

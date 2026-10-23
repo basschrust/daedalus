@@ -3,13 +3,12 @@
     These data files can then be parsed and graphed.
 '''
 
-from tqdm import tqdm
-import numpy as np
-import matplotlib.pyplot as plt
+import gzip
 import os
 import pickle
-import gzip
 
+import matplotlib.pyplot as plt
+import numpy as np
 
 BASE_PATH = "DEFINE BASE PATH HERE"
 PICKLE_PATH = BASE_PATH + "/pickle"

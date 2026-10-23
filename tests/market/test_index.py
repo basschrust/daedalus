@@ -1,9 +1,5 @@
-import pytest
 
-from marketsim.market import Security, Option, Price, Index
-from marketsim.database.connectors.duckdb_storage import Repository
-
-
+from marketsim.market import Index, Price
 
 ################    test functions         ###################
 

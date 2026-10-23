@@ -1,19 +1,27 @@
-import gymnasium as gym
-from gymnasium import spaces
-import numpy as np
 import math
-
 import random
-from marketsim.fourheap.constants import BUY, SELL
-from marketsim.market.security import Security
-from marketsim.fundamental.lazy_mean_reverting import LazyGaussianMeanReverting
-from marketsim.agent.noise_ZI_agent import ZIAgent
+from collections import defaultdict
+
+import gymnasium as gym
+import numpy as np
+import torch
+import torch.distributions as dist
+from gymnasium import spaces
+
 from marketsim.agent.informed_ZI import ZIAgent as InformedZIAgent
 from marketsim.agent.market_maker_beta import MMAgent
-from marketsim.wrappers.metrics import volume_imbalance, queue_imbalance, realized_volatility, relative_strength_index, midprice_move
-import torch.distributions as dist
-import torch
-from collections import defaultdict
+from marketsim.agent.noise_ZI_agent import ZIAgent
+from marketsim.fourheap.constants import BUY, SELL
+from marketsim.fundamental.lazy_mean_reverting import LazyGaussianMeanReverting
+from marketsim.market.security import Security
+from marketsim.wrappers.metrics import (
+    midprice_move,
+    queue_imbalance,
+    realized_volatility,
+    relative_strength_index,
+    volume_imbalance,
+)
+
 
 def sample_arrivals(p, num_samples):
     geometric_dist = dist.Geometric(torch.tensor([p]))

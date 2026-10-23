@@ -1,12 +1,11 @@
 from sqlalchemy import (
-    Table,
     Column,
-    Integer,
     Float,
+    Integer,
+    Table,
 )
 
 from .base import metadata
-
 
 position_history = Table(
     "position_history",

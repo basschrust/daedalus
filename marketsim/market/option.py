@@ -1,18 +1,18 @@
 from __future__ import annotations
 
-import pandas as pd
-
-from typing_extensions import TYPE_CHECKING
 from pathlib import Path
 
-from marketsim.input import config
+import pandas as pd
+from typing_extensions import TYPE_CHECKING
+
+from marketsim.market.price import Price
+from marketsim.market.security import Security
 from marketsim.market.valuation_libs.BlackScholes import BSCall, BSPut
 from marketsim.plot.candle import plot_candlestick_derivative
-from marketsim.market import Security
-from marketsim.market import Price
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
+
     from marketsim.fourheap import MatchedOrder
 
 

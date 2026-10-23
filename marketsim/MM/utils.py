@@ -1,5 +1,7 @@
 import csv
+
 import numpy as np
+
 
 def write_to_csv(filename, content):
     # Write to a CSV file

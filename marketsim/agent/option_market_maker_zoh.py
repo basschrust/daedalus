@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-from decimal import Decimal
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from decimal import Decimal
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from marketsim.agent.agent import Agent
 from marketsim.market import Security, Price, FXRateProvider
 from marketsim.fourheap.order import Order
 from marketsim.fourheap.constants import BUY, SELL
+from marketsim.fourheap.order import Order
+from marketsim.market import FXRateProvider, Price, Security
 from marketsim.market.valuation_libs.BlackScholes import BSCall, BSPut
 
 if TYPE_CHECKING:
@@ -92,7 +94,7 @@ class OptionMMZOHAgent(Agent):
             # add orders only in rebalance periods:
             if self.should_rebalance(current_time=current_time, market=option_market):
                 # AK - clear previous orders (should we?)
-                self.logger.info(f"Withdrawing previous orders ()") # how to check number of orders of this agent?
+                self.logger.info("Withdrawing previous orders ()") # how to check number of orders of this agent?
                 option_market.withdraw_all(agent_id=self.agent_id)
                 # AK - don't withdraw, but also don't blindly add new orders - just ensure they are balanced
                 # that's basically the same to just withdraw all and create new, the problem might be with timing

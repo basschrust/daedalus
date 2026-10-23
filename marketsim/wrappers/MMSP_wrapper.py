@@ -1,20 +1,27 @@
-import gymnasium as gym
-from gymnasium import spaces
-import numpy as np
 import math
 import random
-from marketsim.fourheap.constants import BUY, SELL
-from marketsim.market.security import Security
-from marketsim.fundamental.mean_reverting import GaussianMeanReverting
-from marketsim.agent.zero_intelligence_agent import ZIAgent
-from marketsim.agent.hbl_agent import HBLAgent
-from marketsim.agent.spoofing import SpoofingAgent
-from marketsim.agent.market_maker import MMAgent
-from marketsim.wrappers.metrics import volume_imbalance, queue_imbalance, realized_volatility, relative_strength_index, midprice_move
-import torch.distributions as dist
-import torch
 from collections import defaultdict
-import matplotlib.pyplot as plt
+
+import gymnasium as gym
+import numpy as np
+import torch
+import torch.distributions as dist
+from gymnasium import spaces
+
+from marketsim.agent.hbl_agent import HBLAgent
+from marketsim.agent.market_maker import MMAgent
+from marketsim.agent.spoofing import SpoofingAgent
+from marketsim.agent.zero_intelligence_agent import ZIAgent
+from marketsim.fourheap.constants import BUY, SELL
+from marketsim.fundamental.mean_reverting import GaussianMeanReverting
+from marketsim.market.security import Security
+from marketsim.wrappers.metrics import (
+    midprice_move,
+    queue_imbalance,
+    realized_volatility,
+    relative_strength_index,
+    volume_imbalance,
+)
 
 #Global variables for training plots
 COUNT = 0
@@ -74,7 +81,7 @@ class MMSPEnv(gym.Env):
 
         self.pvalues = pvalues
 
-        if learning == True:
+        if learning:
             self.sampled_arr = sampled_arr = sample_arrivals(lam,sim_time)
             self.spoofer_arrivals = sample_arrivals(lamSP,sim_time)
             self.MM_arrivals = sample_arrivals(lamMM, sim_time)
@@ -112,7 +119,7 @@ class MMSPEnv(gym.Env):
         # Spoofer
         self.lamSP = lamSP
         self.arrivals_SP = defaultdict(list)
-        if spoofer_arrivals != None:
+        if spoofer_arrivals is not None:
             self.arrival_times_SP = spoofer_arrivals
         else:
             self.arrival_times_SP = sample_arrivals(lamSP, sim_time)
@@ -512,7 +519,7 @@ class MMSPEnv(gym.Env):
                 if agent_id == self.num_agents:
                     self.spoofer.update_position(quantity, cash)
                     self.spoof_position.append(self.spoofer.position)
-                    a = (self.spoofer.position*self.final_fundamental + self.spoofer.cash)
+                    # TODO: a = (self.spoofer.position*self.final_fundamental + self.spoofer.cash)
                     self.spoof_profits.append((self.spoofer.position*self.final_fundamental + self.spoofer.cash))
                 elif agent_id == self.MM_id:
                     self.MM.update_position(quantity, cash)

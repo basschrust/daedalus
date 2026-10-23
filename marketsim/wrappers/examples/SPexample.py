@@ -1,5 +1,6 @@
 from marketsim.wrappers.SP_wrapper import SPEnv
 
+
 def run():
 
     normalizers = {"fundamental": 5e5, "invt": 1e3, "cash": 1e5}

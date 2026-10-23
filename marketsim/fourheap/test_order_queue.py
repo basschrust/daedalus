@@ -1,5 +1,4 @@
 import pytest
-
 from order import Order
 from order_queue import OrderQueue
 

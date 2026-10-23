@@ -1,27 +1,28 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 import copy
 import math
-from typing import TYPE_CHECKING
+from abc import ABC, abstractmethod
 from collections import defaultdict
-from loguru import logger
-import pandas as pd
+from decimal import Decimal
 from pathlib import Path
+from typing import TYPE_CHECKING
 from decimal import Decimal
 
-from marketsim.loggers.basic import setup_logger, setup_agent_logger
-from marketsim.input import config
-from marketsim.utils.id_generator import id_generator
-from marketsim.loggers.basic import terminal
-from marketsim.plot.simple_plot import plot_agent_history_many_markets
+import pandas as pd
+
+from marketsim.loggers.basic import setup_agent_logger
+from marketsim.market import FXRateProvider
 from marketsim.market.price import Price
+from marketsim.plot.simple_plot import plot_agent_history_many_markets
+from marketsim.utils.id_generator import id_generator
 from marketsim.market import FXRateProvider
 
 if TYPE_CHECKING:
-    from marketsim.fourheap import MatchedOrder
-    from marketsim.market import Security, Future
     from database.connectors.duckdb_storage import Repository
+
+    from marketsim.fourheap import MatchedOrder
+    from marketsim.market import Future, Security
 
 
 
@@ -522,7 +523,7 @@ class Agent(ABC):
             self.markets.pop(m_id)
             self.abandoned_markets[m_id] = market
 
-        self.logger.info(f"After removing expired securities agent will be active on the following markets:")
+        self.logger.info("After removing expired securities agent will be active on the following markets:")
         self.logger.info(self.markets)
 
         self.position_history = defaultdict(dict)
@@ -593,7 +594,7 @@ class Agent(ABC):
             )
             futures_position_df["agent_id"] = self.agent_id
             futures_position_df["day"] = self.current_day - 1
-            self.logger.info(f"")
+            self.logger.info("")
             self.repository.save_eod_futures_position(eod_position_df=futures_position_df)
 
             # saving the values of futures

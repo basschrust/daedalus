@@ -1,5 +1,4 @@
 import torch
-
 from fundamental_abc import Fundamental
 
 

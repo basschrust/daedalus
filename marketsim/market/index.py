@@ -1,19 +1,16 @@
 from __future__ import annotations
 
-import pandas as pd
-
-from typing_extensions import TYPE_CHECKING
 from pathlib import Path
 
-from marketsim.input import config
-from marketsim.market.valuation_libs.BlackScholes import BSCall, BSPut
-from marketsim.plot.candle import plot_candlestick_derivative
-from marketsim.market import Security
-from marketsim.market import Price
+import pandas as pd
+from typing_extensions import TYPE_CHECKING
+
+from marketsim.market.price import Price
+from marketsim.market.security import Security
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
-    from marketsim.fourheap import MatchedOrder
+
 
 
 class Index(Security):
@@ -32,15 +29,12 @@ class Index(Security):
 
 
     def validate_components(self):
-        weights_sum = 0.0
         for weight in self.components.values():
             if weight <= 0:
                 self.logger(f"Index components of {self.name} are broken - weights have to be positive, not: {weight}")
                 return False
         self.logger(f"Index components of {self.name} are properly configured")
         # it doesn't need to be 100% in total
-        # if weights_sum == 1:
-        #     self.logger(f"Index components of {self.name} are properly configured")
 
     def calculate_value(self):
         value = 0

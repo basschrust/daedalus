@@ -1,13 +1,12 @@
-from tqdm import tqdm
-import random
-import numpy as np
+
 import matplotlib.pyplot as plt
-import time
+import numpy as np
+import torch
+import torch.distributions as dist
+from tqdm import tqdm
+
 from marketsim.simulator.sampled_arrival_simulator import SimulatorSampledArrival
 from marketsim.wrappers.SP_wrapper import SPEnv
-from marketsim.private_values.private_values import PrivateValues
-import torch.distributions as dist
-import torch
 
 SIM_TIME = 10000
 
@@ -35,8 +34,8 @@ for i in tqdm(range(10000)):
                                   q_max=10,
                                   pv_var=5e6,
                                   shade=[250,500],
-                                  hbl_agent=True,
-                                  fundamental = fundamental)
+                                  hbl_agent=True,)
+                                  # TODO: fundamental = fundamental)
 
     normalizers = {"fundamental": 1e5, "reward":1e4, "min_order_val": 1e5, "invt": 10, "cash": 1e7}
     env = SPEnv(num_background_agents=15,
@@ -49,8 +48,8 @@ for i in tqdm(range(10000)):
                 q_max=10,
                 pv_var=5e6,
                 shade=[250,500],
-                normalizers=normalizers,
-                fundamental = fundamental)
+                normalizers=normalizers,)
+                # TODO fundamental = fundamental)
 
     obs, info = env.reset()
     # random.seed(8)

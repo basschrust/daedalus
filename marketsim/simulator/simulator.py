@@ -1,5 +1,24 @@
 from __future__ import annotations
 
+from pathlib import Path
+
+from loguru import logger
+
+from marketsim.agent import (
+    Agent,
+    HBLAgent,
+    MMZOHAgent,
+    MomentumAgent,
+    NoiseAgent,
+    OptionMMZOHAgent,
+    SpoofingAgent,
+    WashTradingAgent,
+    ZIAgentNotInformed,
+)
+from marketsim.agent.washtrading import WashTradingPool
+from marketsim.database.repositories.factory import create_repository
+from marketsim.loggers.basic import terminal
+from marketsim.market import Future, FXRateProvider, Index, Option, Price, Security
 from loguru import logger
 from pathlib import Path
 
@@ -75,12 +94,14 @@ class Simulator:
                     rate=rate,
                 )
 
-        for m_key, m_conf in markets.items():
-            # TODO: do we need this fundamental at all?
-            fundamental = GaussianMeanReverting(mean=self.mean, final_time=self.sim_time, r=self.r,
-                                                shock_var=self.shock_var)
+                self.fx_rate_provider.set_rate(
+                    day=int(day),
+                    base=base,
+                    quote=quote,
+                    rate=rate,
+                )
 
-            # TODO: how to handle derivatives here?
+        for m_key, m_conf in markets.items():
             instrument_class = m_conf.get("instrument_class", "stock")
             if instrument_class == "option":
                 # let's rock with first option here!
@@ -324,7 +345,7 @@ class Simulator:
             # TODO: we should be asynchronous, redesign this part! No returns!!! :)
             new_orders_matched = market.step(current_time=self.current_time)
 
-            market.logger.info(f"Starting to clear out orders.")
+            market.logger.info("Starting to clear out orders.")
             # initiate market prices instance for the case of no trades: - moved to market.step
 
             for matched_order in new_orders_matched:
@@ -343,7 +364,7 @@ class Simulator:
     def end_sim(self) -> None:
         """ End the simulation and print summary """
         self.logger.info(f"\n\nSimulation ended. time: {self.current_time}")
-        terminal.write(f"Preparing agents summary...\n")
+        terminal.write("Preparing agents summary...\n")
         self.last_progress = -1
         self.show_progress_bar(step=0, total=len(self.agents), step_name="Agents")
         agent_steps = 0
@@ -353,7 +374,7 @@ class Simulator:
             self.show_progress_bar(step=agent_steps, total=len(self.agents), step_name="Agents")
             agent_steps += 1
 
-        terminal.write(f"\n\nPreparing markets summary...\n")
+        terminal.write("\n\nPreparing markets summary...\n")
         self.last_progress = -1
         self.show_progress_bar(step=0, total=len(self.markets), step_name="Markets")
         market_steps = 0

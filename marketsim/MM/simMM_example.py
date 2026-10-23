@@ -1,6 +1,7 @@
+import functools
 import os
 import sys
-import functools
+
 print = functools.partial(print, flush=True)
 
 # Get the current script's directory
@@ -16,14 +17,14 @@ grandparent_dir = os.path.dirname(parent_dir)
 sys.path.append(grandparent_dir)
 
 
-from marketsim.MM.simMM import SimulatorSampledArrival_MM
-import numpy as np
-from absl import app
-from absl import flags
 import datetime
-from marketsim.MM.utils import write_to_csv
+
+import numpy as np
+from absl import app, flags
 from utils import replace_inf_with_nearest_2d
 
+from marketsim.MM.simMM import SimulatorSampledArrival_MM
+from marketsim.MM.utils import write_to_csv
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("game_name", "LadderMM", "Game name.")

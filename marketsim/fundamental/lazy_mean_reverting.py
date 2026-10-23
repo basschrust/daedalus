@@ -1,4 +1,5 @@
 import numpy as np
+
 from marketsim.fundamental.fundamental_abc import Fundamental
 
 

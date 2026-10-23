@@ -2,12 +2,13 @@
     Graph bid ask spread of the market configurations.
 '''
 
-import numpy as np
-import matplotlib.pyplot as plt
 import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 # from colors import COLORS
 from colors import SINGLE_COLOR
-
 
 OVERALL_PATHS = ["A1", "A2", "A3", "B1", "B2", "B3", "C1", "C2", "C3"]
 def run():

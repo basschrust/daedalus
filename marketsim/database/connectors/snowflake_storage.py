@@ -6,11 +6,11 @@ Never commit passwords or private keys.
 """
 from __future__ import annotations
 
+import json
 import os
 import re
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
-import json
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 import snowflake.connector
@@ -18,7 +18,7 @@ from snowflake.connector.pandas_tools import write_pandas
 
 if TYPE_CHECKING:
     from marketsim.agent import Agent
-    from marketsim.market import Security, Index, Future
+    from marketsim.market import Future, Index, Security
 
 # Column names intentionally mirror the existing DuckDB tables.
 # Snowflake's NUMBER(38,0) corresponds to integer values; FLOAT to DuckDB DOUBLE.

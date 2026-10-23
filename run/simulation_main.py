@@ -1,26 +1,21 @@
 from __future__ import annotations
 
 import inspect
+import sys
 from collections.abc import Callable
 from typing import TYPE_CHECKING
-import random
-import numpy as np
-import yaml
-from datetime import datetime
-import sys
-from pathlib import Path
 
-from marketsim.input.config import load_config
+import yaml
+
+from marketsim.input.config import create_run_directory, load_config
+
 # from marketsim.input.config import CONFIG
 # from marketsim.loggers.basic import StreamToLogger
 # from marketsim.plot.simple_plot import simple_plot
 from marketsim.simulator import Simulator
-from marketsim.input.config import load_config, create_run_directory
-
-
 
 if TYPE_CHECKING:
-    from marketsim.market import Price
+    pass
 
 
 def kwargs_for(func: Callable, config: dict) -> dict:

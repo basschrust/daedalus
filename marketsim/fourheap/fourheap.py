@@ -1,18 +1,19 @@
 from __future__ import annotations
 
-from collections import defaultdict
 import math
-import numpy as np
+from collections import defaultdict
 from typing import TYPE_CHECKING
+
+import numpy as np
 from loguru import logger
-from marketsim.fourheap.order_queue import OrderQueue
-from marketsim.market import Price
+
 from marketsim.fourheap import constants
+from marketsim.fourheap.order_queue import OrderQueue
+from marketsim.market.price import Price
 
 if TYPE_CHECKING:
+    from marketsim.fourheap import MatchedOrder, Order
     from marketsim.market import Security
-    from marketsim.fourheap import Order, MatchedOrder
-
 
 
 class FourHeap:

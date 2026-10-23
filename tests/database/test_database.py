@@ -1,10 +1,9 @@
-import pytest
 
 import pandas as pd
 
-from marketsim.database.connectors.duckdb_storage import Repository
-from marketsim.market import Security, Price, Option
 from marketsim.agent import Agent
+from marketsim.database.connectors.duckdb_storage import Repository
+from marketsim.market import Security
 
 
 EXPECTED_TABLES = {

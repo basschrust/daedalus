@@ -1,7 +1,17 @@
-import pytest
-from typing import TYPE_CHECKING
 from decimal import Decimal
 
+from marketsim.agent import (
+    Agent,
+    HBLAgent,
+    MMZOHAgent,
+    MomentumAgent,
+    NoiseAgent,
+    OptionMMZOHAgent,
+    SpoofingAgent,
+    WashTradingAgent,
+    ZIAgentNotInformed,
+)
+from marketsim.database.connectors.duckdb_storage import Repository
 from marketsim.database.connectors.duckdb_storage import Repository
 
 from marketsim.agent import (Agent, NoiseAgent, HBLAgent, MMZOHAgent, MomentumAgent, OptionMMZOHAgent, SpoofingAgent,
@@ -68,7 +78,7 @@ def test_sod_noise_agent(agent_noise: Agent):
     agent_noise.sod()
 
     assert agent_noise is not None
-    assert type(agent_noise) == NoiseAgent
+    assert type(agent_noise) is NoiseAgent
     assert agent_noise.cash == {'USD': Decimal('0.00'), 'EUR': Decimal('0.00'), 'PLN': Decimal('0.00')}
 
 
@@ -78,7 +88,7 @@ def test_eod_noise_agent(agent_noise: Agent):
     agent_noise.eod()
 
     assert agent_noise is not None
-    assert type(agent_noise) == NoiseAgent
+    assert type(agent_noise) is NoiseAgent
     assert agent_noise.cash == {'USD': Decimal('0.00'), 'EUR': Decimal('0.00'), 'PLN': Decimal('0.00')}
 
 

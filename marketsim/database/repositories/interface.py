@@ -1,9 +1,10 @@
-from typing import Protocol, TYPE_CHECKING, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
+
 import pandas as pd
 
 if TYPE_CHECKING:
     from marketsim.agent import Agent
-    from marketsim.market import Security, Index, Future
+    from marketsim.market import Future, Index, Security
 
 
 @runtime_checkable

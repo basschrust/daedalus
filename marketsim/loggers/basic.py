@@ -1,7 +1,7 @@
 import sys
-from loguru import logger
-from datetime import datetime
 from pathlib import Path
+
+from loguru import logger
 
 # Keep reference to the real console
 terminal = sys.stdout

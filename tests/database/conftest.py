@@ -1,7 +1,7 @@
 import pytest
 
-from marketsim.database.connectors.duckdb_storage import Repository
 from marketsim.agent import Agent
+from marketsim.database.connectors.duckdb_storage import Repository
 
 # for testing data extraction:
 
