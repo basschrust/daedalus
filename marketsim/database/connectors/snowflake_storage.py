@@ -573,7 +573,7 @@ class SnowflakeRepository:
         )
 
     def get_execution_volumes_by_group(self) -> pd.DataFrame:
-        columns = ['asset_id', 'agent_group', 'order_side', 'executed_mode', 'volume']
+        columns = ["asset_id", "agent_group", "order_side", "executed_mode", "volume"]
         return self._read(EXECUTION_VOLUME_SQL, (), columns)
 
     ######### calculations
