@@ -18,6 +18,7 @@ import snowflake.connector
 from snowflake.connector.pandas_tools import write_pandas
 
 from marketsim.database.queries.group_flows import GROUP_FLOW_INSERT_SQL
+from marketsim.plot.execution_volumes import EXECUTION_VOLUME_SQL
 
 if TYPE_CHECKING:
     from marketsim.agent import Agent
@@ -558,9 +559,22 @@ class SnowflakeRepository:
             "GROUP BY DAY, TIME_TICK, ASSET_ID, AGENT_GROUP, CP_GROUP "
             "ORDER BY AGENT_GROUP, DAY, TIME_TICK, ASSET_ID, CP_GROUP",
             (),
-            ["day", "time_tick", "asset_id", "agent_group", "cp_group",
-             "volume_buy", "volume_sell", "cash_buy", "cash_sell"],
+            [
+                "day",
+                "time_tick",
+                "asset_id",
+                "agent_group",
+                "cp_group",
+                "volume_buy",
+                "volume_sell",
+                "cash_buy",
+                "cash_sell",
+            ],
         )
+
+    def get_execution_volumes_by_group(self) -> pd.DataFrame:
+        columns = ['asset_id', 'agent_group', 'order_side', 'executed_mode', 'volume']
+        return self._read(EXECUTION_VOLUME_SQL, (), columns)
 
     ######### calculations
 

@@ -7,6 +7,7 @@ import duckdb
 import pandas as pd
 
 from marketsim.database.queries.group_flows import GROUP_FLOW_INSERT_SQL
+from marketsim.plot.execution_volumes import EXECUTION_VOLUME_SQL
 
 if TYPE_CHECKING:
     from marketsim.agent import Agent
@@ -755,6 +756,9 @@ class Repository:
             GROUP BY day, time_tick, asset_id, agent_group, cp_group
             ORDER BY agent_group, day, time_tick, asset_id, cp_group
         """).fetchdf()
+
+    def get_execution_volumes_by_group(self) -> pd.DataFrame:
+        return self.connection.execute(EXECUTION_VOLUME_SQL).fetchdf()
 
     #################################################################################################
     ##          calculations in the DB

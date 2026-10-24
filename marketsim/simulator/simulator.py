@@ -20,7 +20,7 @@ from marketsim.database.repositories.factory import create_repository
 from marketsim.loggers.basic import terminal
 from marketsim.market import Future, FXRateProvider, Index, Option, Price, Security
 from marketsim.plot.group_flows import plot_group_flows
-
+from marketsim.plot.execution_volumes import plot_execution_volumes_by_asset
 
 class Simulator:
     def __init__(
@@ -437,6 +437,12 @@ class Simulator:
         plot_group_flows(
             self.repository.get_all_group_flows(),
             output_dir=Path(self.output_dir) / "group_flows",
+            labels_map=labels_map,
+        )
+
+        plot_execution_volumes_by_asset(
+            self.repository.get_execution_volumes_by_group(),
+            output_dir=Path(self.output_dir) / 'execution_volumes',
             labels_map=labels_map,
         )
 
