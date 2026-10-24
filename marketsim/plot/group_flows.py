@@ -1,84 +1,139 @@
-"""Plot per-agent asset and cash transfers with counterparty groups."""
+"""Group-level asset/cash flows: one multi-panel figure per agent group."""
+
 from pathlib import Path
 
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
+REQUIRED = {
+    "day",
+    "time_tick",
+    "asset_id",
+    "agent_group",
+    "cp_group",
+    "volume_buy",
+    "volume_sell",
+    "cash_buy",
+    "cash_sell",
+}
 
-FLOW_COLUMNS = {'day', 'time_tick', 'asset_id', 'cp_group', 'volume_buy',
-                'volume_sell', 'cash_buy', 'cash_sell'}
 
-
-def plot_agent_group_flows(
+def plot_group_flows(
     flows: pd.DataFrame,
     *,
-    agent_id: int,
     output_dir: str | Path,
     labels_map: dict[int, str] | None = None,
 ) -> list[Path]:
-    """Write two figures per agent (asset volume and cash), one panel per asset.
+    """Write one figure per source group; rows=assets, columns=assets/cash.
 
-    Incoming assets (BUY) are positive; outgoing assets (SELL) are negative.
-    Cash received on SELL is positive; cash paid on BUY is negative.
-    Both figures distinguish counterparty groups and preserve day/tick order.
+    Data is aggregated over all agents of each source group. Within a panel,
+    bars are stacked by counterparty group, separately above and below zero.
+    The horizontal axis labels simulation days, not individual time ticks.
     """
     if flows.empty:
         return []
-    missing = FLOW_COLUMNS - set(flows.columns)
+    missing = REQUIRED - set(flows.columns)
     if missing:
-        raise ValueError(f'Missing group-flow columns: {sorted(missing)}')
+        raise ValueError(f"Missing group-flow columns: {sorted(missing)}")
 
     df = flows.copy()
-    df['cp_group'] = df['cp_group'].fillna('UNGROUPED').astype(str)
-    df = df.sort_values(['day', 'time_tick', 'asset_id', 'cp_group'])
-    # A compact integer x-coordinate for each observed (day, tick) pair avoids
-    # guessing the number of ticks per day and handles sparse trading periods.
-    moments = df[['day', 'time_tick']].drop_duplicates().reset_index(drop=True)
-    moments['step'] = range(len(moments))
-    df = df.merge(moments, on=['day', 'time_tick'], validate='many_to_one')
+    df["agent_group"] = df["agent_group"].fillna("UNGROUPED").astype(str)
+    df["cp_group"] = df["cp_group"].fillna("UNGROUPED").astype(str)
+    for column in ("day", "time_tick", "asset_id"):
+        df[column] = pd.to_numeric(df[column], errors="raise").astype(int)
+    for column in ("volume_buy", "volume_sell", "cash_buy", "cash_sell"):
+        df[column] = pd.to_numeric(df[column], errors="raise")
 
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    # Defensive aggregation: accepts both agent-granularity and group-granularity frames.
+    keys = ["agent_group", "cp_group", "asset_id", "day", "time_tick"]
+    df = df.groupby(keys, as_index=False, dropna=False)[
+        ["volume_buy", "volume_sell", "cash_buy", "cash_sell"]
+    ].sum()
     labels_map = labels_map or {}
-    assets = sorted(df['asset_id'].unique())
-    groups = sorted(df['cp_group'].unique())
-    outputs = []
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    paths = []
 
-    for kind in ('assets', 'cash'):
-        fig, axes = plt.subplots(len(assets), 1, figsize=(12, max(4, 3.5 * len(assets))),
-                                 sharex=True, squeeze=False)
-        for ax, asset_id in zip(axes[:, 0], assets):
-            asset = df[df['asset_id'] == asset_id]
-            for cp_group in groups:
-                subset = asset[asset['cp_group'] == cp_group]
-                if subset.empty:
-                    continue
-                if kind == 'assets':
-                    subset = subset.assign(signed=subset['volume_buy'] - subset['volume_sell'])
-                else:
-                    subset = subset.assign(signed=subset['cash_sell'] - subset['cash_buy'])
-                values = subset.groupby('step', as_index=False)['signed'].sum()
-                ax.bar(values['step'], values['signed'], label=cp_group, alpha=0.75)
-            ax.axhline(0, color='black', linewidth=0.8)
-            ax.set_ylabel('Shares (+in / -out)' if kind == 'assets' else 'Cash (+in / -out)')
-            ax.set_title(labels_map.get(int(asset_id), str(asset_id)))
-            ax.grid(axis='y', alpha=0.25)
-            ax.legend(title='Counterparty group')
-        # Keep labels readable for long simulations.
-        stride = max(1, len(moments) // 12)
-        ticks = moments.iloc[::stride]
-        axes[-1, 0].set_xticks(ticks['step'])
-        axes[-1, 0].set_xticklabels(
-            [f'{int(day)}:{int(tick)}' for day, tick in zip(ticks['day'], ticks['time_tick'])],
-            rotation=45, ha='right',
+    for source_group, group_df in df.groupby("agent_group", sort=True):
+        group_df = group_df.sort_values(["day", "time_tick", "asset_id", "cp_group"])
+        moments = group_df[["day", "time_tick"]].drop_duplicates().reset_index(drop=True)
+        moments["step"] = np.arange(len(moments))
+        group_df = group_df.merge(moments, on=["day", "time_tick"], validate="many_to_one")
+        assets = sorted(group_df["asset_id"].unique())
+        counterparties = sorted(group_df["cp_group"].unique())
+        fig, axes = plt.subplots(
+            len(assets),
+            2,
+            sharex=True,
+            squeeze=False,
+            figsize=(15, max(4, 3.2 * len(assets))),
         )
-        axes[-1, 0].set_xlabel('Day : time tick')
-        fig.suptitle(f'Agent {agent_id} — {kind.capitalize()} flows by counterparty group')
-        fig.tight_layout()
-        path = output_dir / f'{agent_id}_group_{kind}_flows.png'
-        fig.savefig(path, dpi=150)
+        palette = plt.get_cmap("tab20")
+        colors = {cp: palette(i % 20) for i, cp in enumerate(counterparties)}
+
+        for row, asset_id in enumerate(assets):
+            asset_df = group_df[group_df["asset_id"] == asset_id]
+            for col, (positive, negative, ylabel) in enumerate(
+                (
+                    ("volume_buy", "volume_sell", "Asset units (+bought / -sold)"),
+                    ("cash_sell", "cash_buy", "Cash (+received / -paid)"),
+                )
+            ):
+                ax = axes[row, col]
+                positive_base = np.zeros(len(moments), dtype=float)
+                negative_base = np.zeros(len(moments), dtype=float)
+                for cp in counterparties:
+                    cp_df = asset_df[asset_df["cp_group"] == cp]
+                    values = cp_df.groupby("step")[[positive, negative]].sum()
+                    plus = np.zeros(len(moments), dtype=float)
+                    minus = np.zeros(len(moments), dtype=float)
+                    if not values.empty:
+                        positions = values.index.to_numpy(dtype=int)
+                        plus[positions] = values[positive].to_numpy(dtype=float)
+                        minus[positions] = -values[negative].to_numpy(dtype=float)
+                    ax.bar(
+                        moments["step"],
+                        plus,
+                        bottom=positive_base,
+                        width=0.85,
+                        color=colors[cp],
+                        label=cp,
+                    )
+                    ax.bar(
+                        moments["step"], minus, bottom=negative_base, width=0.85, color=colors[cp]
+                    )
+                    positive_base += plus
+                    negative_base += minus
+                ax.axhline(0, color="black", linewidth=0.8)
+                ax.grid(axis="y", alpha=0.2)
+                ax.set_axisbelow(True)
+                ax.set_ylabel(ylabel)
+                ax.set_title(
+                    f"{labels_map.get(int(asset_id), str(asset_id))} — {'Assets' if col == 0 else 'Cash'}"
+                )
+
+        # Exactly one x tick per observed day, positioned at the day's first trade.
+        day_starts = moments.drop_duplicates("day", keep="first")
+        for ax in axes[-1, :]:
+            ax.set_xticks(day_starts["step"])
+            ax.set_xticklabels(day_starts["day"].astype(str))
+            ax.set_xlabel("Simulation day")
+        handles, legend_labels = axes[0, 0].get_legend_handles_labels()
+        fig.legend(
+            handles,
+            legend_labels,
+            title="Counterparty group",
+            loc="upper center",
+            bbox_to_anchor=(0.5, 0.97),
+            ncol=min(5, len(counterparties)),
+        )
+        fig.suptitle(f"Agent group: {source_group} — asset and cash flows", y=1.01)
+        fig.tight_layout(rect=(0, 0, 1, 0.94))
+        # Group names may contain filesystem-unsafe characters.
+        safe_name = "".join(c if c.isalnum() or c in "-_" else "_" for c in source_group)
+        path = out / f"{safe_name}_flows.png"
+        fig.savefig(path, dpi=150, bbox_inches="tight")
         plt.close(fig)
-        outputs.append(path)
-    return outputs
+        paths.append(path)
+    return paths

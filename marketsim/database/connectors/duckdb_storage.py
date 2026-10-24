@@ -744,6 +744,18 @@ class Repository:
             parameters=[agent_id],
         ).df()
 
+    def get_all_group_flows(self) -> pd.DataFrame:
+        return self.connection.execute("""
+            SELECT day, time_tick, asset_id, agent_group, cp_group,
+                   SUM(volume_buy) AS volume_buy,
+                   SUM(volume_sell) AS volume_sell,
+                   SUM(cash_buy) AS cash_buy,
+                   SUM(cash_sell) AS cash_sell
+            FROM l1_group_flows
+            GROUP BY day, time_tick, asset_id, agent_group, cp_group
+            ORDER BY agent_group, day, time_tick, asset_id, cp_group
+        """).fetchdf()
+
     #################################################################################################
     ##          calculations in the DB
     #################################################################################################

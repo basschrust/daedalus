@@ -19,6 +19,7 @@ from marketsim.agent.washtrading import WashTradingPool
 from marketsim.database.repositories.factory import create_repository
 from marketsim.loggers.basic import terminal
 from marketsim.market import Future, FXRateProvider, Index, Option, Price, Security
+from marketsim.plot.group_flows import plot_group_flows
 
 
 class Simulator:
@@ -430,6 +431,14 @@ class Simulator:
         # L1: Calculate derived data from raw simulation records
         self.logger.info("Calculating group flows...")
         self.repository.calculate_group_flows()
+
+        self.logger.info("Plotting group-level asset and cash flows...")
+        labels_map = {asset_id: market.short_name for asset_id, market in self.markets.items()}
+        plot_group_flows(
+            self.repository.get_all_group_flows(),
+            output_dir=Path(self.output_dir) / "group_flows",
+            labels_map=labels_map,
+        )
 
         terminal.write("Preparing agents summary...\n")
         self.last_progress = -1

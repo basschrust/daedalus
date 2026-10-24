@@ -550,6 +550,18 @@ class SnowflakeRepository:
             columns,
         )
 
+    def get_all_group_flows(self) -> pd.DataFrame:
+        return self._read(
+            "SELECT DAY, TIME_TICK, ASSET_ID, AGENT_GROUP, CP_GROUP, "
+            "SUM(VOLUME_BUY), SUM(VOLUME_SELL), SUM(CASH_BUY), SUM(CASH_SELL) "
+            "FROM L1_GROUP_FLOWS "
+            "GROUP BY DAY, TIME_TICK, ASSET_ID, AGENT_GROUP, CP_GROUP "
+            "ORDER BY AGENT_GROUP, DAY, TIME_TICK, ASSET_ID, CP_GROUP",
+            (),
+            ["day", "time_tick", "asset_id", "agent_group", "cp_group",
+             "volume_buy", "volume_sell", "cash_buy", "cash_sell"],
+        )
+
     ######### calculations
 
     def calculate_index_values(self, day: int) -> None:
