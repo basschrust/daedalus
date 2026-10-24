@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import duckdb
 import pandas as pd
 
+from marketsim.database.queries.group_flows import GROUP_FLOW_INSERT_SQL
 
 if TYPE_CHECKING:
     from marketsim.agent import Agent
@@ -782,3 +783,16 @@ class Repository:
                 GROUP BY iv.day, iv.index_id""",
             parameters=[day],
         ).fetchdf()
+
+    ### L1 calculations
+
+    def calculate_group_flows(self) -> None:
+        """Rebuild L1 group flows from persisted two-sided executions."""
+        self.connection.execute("BEGIN TRANSACTION")
+        try:
+            self.connection.execute("DELETE FROM l1_group_flows")
+            self.connection.execute(GROUP_FLOW_INSERT_SQL)
+            self.connection.execute("COMMIT")
+        except Exception:
+            self.connection.execute("ROLLBACK")
+            raise
