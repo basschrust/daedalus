@@ -15,6 +15,7 @@ from marketsim.market import FXRateProvider
 from marketsim.market.price import Price
 from marketsim.plot.simple_plot import plot_agent_history_many_markets
 from marketsim.utils.id_generator import id_generator
+from marketsim.plot.group_flows import plot_agent_group_flows
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
@@ -790,6 +791,15 @@ class Agent(ABC):
             title=f"Agent {self.agent_id} {str(self)} summary",
             labels_map=labels_map,
             time_label="Simulation day",
+        )
+
+        flows_df = self.repository.get_group_flows(agent_id=self.agent_id)
+
+        plot_agent_group_flows(
+            flows_df,
+            agent_id=self.agent_id,
+            output_dir=Path(self.output_dir) / "agent_group_flows",
+            labels_map=labels_map,
         )
 
     def __str__(self) -> str:
