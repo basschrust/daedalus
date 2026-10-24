@@ -2,20 +2,29 @@
 
 Requires the optional Snowflake connector package, but not Snowflake credentials.
 """
+
 from unittest.mock import Mock
 
 import pytest
 
 pytest.importorskip("snowflake.connector")
 
-from marketsim.database.connectors.snowflake_storage import SnowflakeRepository, TABLES
+from marketsim.database.connectors.snowflake_storage import TABLES, SnowflakeRepository
 
 
 def test_l1_table_schema_present():
     assert "l1_group_flows" in TABLES
     assert set(TABLES["l1_group_flows"]) == {
-        "day", "time_tick", "asset_id", "agent_id", "agent_group", "cp_group",
-        "volume_buy", "volume_sell", "cash_buy", "cash_sell",
+        "day",
+        "time_tick",
+        "asset_id",
+        "agent_id",
+        "agent_group",
+        "cp_group",
+        "volume_buy",
+        "volume_sell",
+        "cash_buy",
+        "cash_sell",
     }
 
 
@@ -35,10 +44,12 @@ def test_calculate_group_flows_executes_transaction_and_joins_both_agents():
 
 def test_calculate_group_flows_rolls_back_on_failure():
     repo = object.__new__(SnowflakeRepository)
+
     def execute(sql):
         if "INSERT INTO" in sql:
             raise RuntimeError("query failed")
         calls.append(sql)
+
     calls = []
     repo._execute = execute
     with pytest.raises(RuntimeError, match="query failed"):

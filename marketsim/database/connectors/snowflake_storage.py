@@ -12,6 +12,7 @@ import os
 import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+
 import pandas as pd
 import snowflake.connector
 from snowflake.connector.pandas_tools import write_pandas
@@ -217,11 +218,16 @@ TABLES: dict[str, dict[str, str]] = {
         day="NUMBER(38,0)", asset_id="NUMBER(38,0)", exercise_price="FLOAT", premium="FLOAT"
     ),
     "l1_group_flows": dict(
-        day="NUMBER(38,0)", time_tick="NUMBER(38,0)",
-        asset_id="NUMBER(38,0)", agent_id="NUMBER(38,0)",
-        agent_group="VARCHAR", cp_group="VARCHAR",
-        volume_buy="FLOAT", volume_sell="FLOAT",
-        cash_buy="FLOAT", cash_sell="FLOAT",
+        day="NUMBER(38,0)",
+        time_tick="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
+        agent_group="VARCHAR",
+        cp_group="VARCHAR",
+        volume_buy="FLOAT",
+        volume_sell="FLOAT",
+        cash_buy="FLOAT",
+        cash_sell="FLOAT",
     ),
 }
 
@@ -524,8 +530,16 @@ class SnowflakeRepository:
 
     def get_group_flows(self, agent_id: int) -> pd.DataFrame:
         columns = [
-            "day", "time_tick", "asset_id", "agent_id", "agent_group",
-            "cp_group", "volume_buy", "volume_sell", "cash_buy", "cash_sell",
+            "day",
+            "time_tick",
+            "asset_id",
+            "agent_id",
+            "agent_group",
+            "cp_group",
+            "volume_buy",
+            "volume_sell",
+            "cash_buy",
+            "cash_sell",
         ]
         return self._read(
             "SELECT DAY, TIME_TICK, ASSET_ID, AGENT_ID, AGENT_GROUP, CP_GROUP, "
@@ -583,4 +597,3 @@ class SnowflakeRepository:
         except Exception:
             self._execute("ROLLBACK")
             raise
-
