@@ -426,6 +426,11 @@ class Simulator:
     def end_sim(self) -> None:
         """End the simulation and print summary"""
         self.logger.info(f"\n\nSimulation ended. time: {self.current_time}")
+
+        # L1: Calculate derived data from raw simulation records
+        self.logger.info("Calculating group flows...")
+        self.repository.calculate_group_flows()
+
         terminal.write("Preparing agents summary...\n")
         self.last_progress = -1
         self.show_progress_bar(step=0, total=len(self.agents), step_name="Agents")
