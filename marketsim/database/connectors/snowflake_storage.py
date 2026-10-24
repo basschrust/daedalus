@@ -17,6 +17,9 @@ import pandas as pd
 import snowflake.connector
 from snowflake.connector.pandas_tools import write_pandas
 
+from marketsim.database.queries.group_flows import GROUP_FLOW_INSERT_SQL
+from marketsim.plot.execution_volumes import EXECUTION_VOLUME_SQL
+
 if TYPE_CHECKING:
     from marketsim.agent import Agent
     from marketsim.market import Future, Index, Security
@@ -201,6 +204,7 @@ TABLES: dict[str, dict[str, str]] = {
     "trades": dict(
         day="NUMBER(38,0)",
         asset_id="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
         matched_with="NUMBER(38,0)",
         executed_mode="VARCHAR",
         executed_time="NUMBER(38,0)",
@@ -213,6 +217,18 @@ TABLES: dict[str, dict[str, str]] = {
     ),
     "option_expiration": dict(
         day="NUMBER(38,0)", asset_id="NUMBER(38,0)", exercise_price="FLOAT", premium="FLOAT"
+    ),
+    "l1_group_flows": dict(
+        day="NUMBER(38,0)",
+        time_tick="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
+        agent_group="VARCHAR",
+        cp_group="VARCHAR",
+        volume_buy="FLOAT",
+        volume_sell="FLOAT",
+        cash_buy="FLOAT",
+        cash_sell="FLOAT",
     ),
 }
 
@@ -511,6 +527,57 @@ class SnowflakeRepository:
             ["day", "portfolio_value"],
         )
 
+    ####### getting L1 layer data
+
+    def get_group_flows(self, agent_id: int) -> pd.DataFrame:
+        columns = [
+            "day",
+            "time_tick",
+            "asset_id",
+            "agent_id",
+            "agent_group",
+            "cp_group",
+            "volume_buy",
+            "volume_sell",
+            "cash_buy",
+            "cash_sell",
+        ]
+        return self._read(
+            "SELECT DAY, TIME_TICK, ASSET_ID, AGENT_ID, AGENT_GROUP, CP_GROUP, "
+            "VOLUME_BUY, VOLUME_SELL, CASH_BUY, CASH_SELL "
+            "FROM L1_GROUP_FLOWS WHERE AGENT_ID = %s "
+            "ORDER BY DAY, TIME_TICK, ASSET_ID, CP_GROUP",
+            (agent_id,),
+            columns,
+        )
+
+    def get_all_group_flows(self) -> pd.DataFrame:
+        return self._read(
+            "SELECT DAY, TIME_TICK, ASSET_ID, AGENT_GROUP, CP_GROUP, "
+            "SUM(VOLUME_BUY), SUM(VOLUME_SELL), SUM(CASH_BUY), SUM(CASH_SELL) "
+            "FROM L1_GROUP_FLOWS "
+            "GROUP BY DAY, TIME_TICK, ASSET_ID, AGENT_GROUP, CP_GROUP "
+            "ORDER BY AGENT_GROUP, DAY, TIME_TICK, ASSET_ID, CP_GROUP",
+            (),
+            [
+                "day",
+                "time_tick",
+                "asset_id",
+                "agent_group",
+                "cp_group",
+                "volume_buy",
+                "volume_sell",
+                "cash_buy",
+                "cash_sell",
+            ],
+        )
+
+    def get_execution_volumes_by_group(self) -> pd.DataFrame:
+        columns = ["asset_id", "agent_group", "order_side", "executed_mode", "volume"]
+        return self._read(EXECUTION_VOLUME_SQL, (), columns)
+
+    ######### calculations
+
     def calculate_index_values(self, day: int) -> None:
         self._execute(
             """
@@ -542,3 +609,17 @@ class SnowflakeRepository:
         """,
             (day,),
         )
+
+    ###################################
+    ###  L1 calculations
+
+    def calculate_group_flows(self) -> None:
+        """Rebuild L1 group flows, atomically."""
+        self._execute("BEGIN TRANSACTION")
+        try:
+            self._execute("DELETE FROM L1_GROUP_FLOWS")
+            self._execute(GROUP_FLOW_INSERT_SQL)
+            self._execute("COMMIT")
+        except Exception:
+            self._execute("ROLLBACK")
+            raise

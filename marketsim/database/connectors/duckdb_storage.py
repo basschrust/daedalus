@@ -6,6 +6,9 @@ from typing import TYPE_CHECKING
 import duckdb
 import pandas as pd
 
+from marketsim.database.queries.group_flows import GROUP_FLOW_INSERT_SQL
+from marketsim.plot.execution_volumes import EXECUTION_VOLUME_SQL
+
 if TYPE_CHECKING:
     from marketsim.agent import Agent
     from marketsim.market import Future, Index, Security
@@ -313,6 +316,7 @@ class Repository:
                     CREATE TABLE IF NOT EXISTS trades (
                         day INTEGER,
                         asset_id INTEGER,
+                        agent_id INTEGER,
                         matched_with INTEGER,
                         executed_mode STRING,
                         executed_time INTEGER,
@@ -332,6 +336,24 @@ class Repository:
                     exercise_price DOUBLE,
                     premium DOUBLE)
                 """)
+
+        ##################
+        ###  L1 layer tables
+        ##################
+
+        self.connection.execute("""
+                CREATE TABLE IF NOT EXISTS l1_group_flows (
+                    day             INTEGER,
+                    time_tick       INTEGER,
+                    asset_id        INTEGER,
+                    agent_id        INTEGER,
+                    agent_group     VARCHAR,
+                    cp_group        VARCHAR,
+                    volume_buy      DOUBLE,
+                    volume_sell     DOUBLE,
+                    cash_buy        DOUBLE,
+                    cash_sell       DOUBLE
+                )""")
 
     ############# methods for making data persistent ###############################
 
@@ -595,14 +617,13 @@ class Repository:
 
     def save_trades(self, trades_df: pd.DataFrame) -> None:
         # matched_orders aka trades
-        # with duckdb.connect(self.localdb) as conn:
         self.connection.register("trades_df", trades_df)
-        # terminal.write(f"Columns: {str(trades_df.columns())}")
         self.connection.execute("""
-            INSERT INTO trades (day, asset_id, executed_time, matched_with, executed_mode, executed_price,
+            INSERT INTO trades (day, asset_id, agent_id, executed_time, matched_with, executed_mode, executed_price,
                     order_id, order_side, executed_volume, cash, phase)
             SELECT day,
                     asset_id,
+                    agent_id,
                     executed_time,
                     matched_with,
                     executed_mode,
@@ -702,6 +723,43 @@ class Repository:
             parameters=[agent_id],
         ).fetchdf()
 
+    ### get L1 layer data:
+    def get_group_flows(self, agent_id: int) -> pd.DataFrame:
+        return self.connection.execute(
+            query="""
+            SELECT
+                day,
+                time_tick,
+                asset_id,
+                agent_id,
+                agent_group,
+                cp_group,
+                volume_buy,
+                volume_sell,
+                cash_buy,
+                cash_sell
+            FROM l1_group_flows
+            WHERE agent_id = ?
+            ORDER BY day, time_tick, asset_id, cp_group
+            """,
+            parameters=[agent_id],
+        ).df()
+
+    def get_all_group_flows(self) -> pd.DataFrame:
+        return self.connection.execute("""
+            SELECT day, time_tick, asset_id, agent_group, cp_group,
+                   SUM(volume_buy) AS volume_buy,
+                   SUM(volume_sell) AS volume_sell,
+                   SUM(cash_buy) AS cash_buy,
+                   SUM(cash_sell) AS cash_sell
+            FROM l1_group_flows
+            GROUP BY day, time_tick, asset_id, agent_group, cp_group
+            ORDER BY agent_group, day, time_tick, asset_id, cp_group
+        """).fetchdf()
+
+    def get_execution_volumes_by_group(self) -> pd.DataFrame:
+        return self.connection.execute(EXECUTION_VOLUME_SQL).fetchdf()
+
     #################################################################################################
     ##          calculations in the DB
     #################################################################################################
@@ -741,3 +799,16 @@ class Repository:
                 GROUP BY iv.day, iv.index_id""",
             parameters=[day],
         ).fetchdf()
+
+    ### L1 calculations
+
+    def calculate_group_flows(self) -> None:
+        """Rebuild L1 group flows from persisted two-sided executions."""
+        self.connection.execute("BEGIN TRANSACTION")
+        try:
+            self.connection.execute("DELETE FROM l1_group_flows")
+            self.connection.execute(GROUP_FLOW_INSERT_SQL)
+            self.connection.execute("COMMIT")
+        except Exception:
+            self.connection.execute("ROLLBACK")
+            raise

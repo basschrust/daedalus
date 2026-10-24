@@ -661,6 +661,7 @@ class Security:
                 matched_orders.append(
                     {
                         "asset_id": matched_order.order.asset_id,
+                        "agent_id": matched_order.order.agent_id,
                         "order_id": order_id,
                         "order_side": matched_order.order.order_type,
                         "matched_with": matched_order.order.matched_with,
@@ -677,6 +678,7 @@ class Security:
                 matched_orders,
                 columns=[
                     "asset_id",
+                    "agent_id",
                     "order_id",
                     "order_side",
                     "matched_with",
@@ -693,6 +695,7 @@ class Security:
             matched_orders_df = matched_orders_df.astype(
                 {
                     "asset_id": "int64",
+                    "agent_id": "int64",
                     "order_id": "int64",
                     "order_side": "int64",
                     "matched_with": "int64",

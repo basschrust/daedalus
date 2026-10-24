@@ -30,6 +30,7 @@ EXPECTED_TABLES = {
     "orders",
     "trades",
     "option_expiration",
+    "l1_group_flows",
 }
 
 
@@ -363,7 +364,7 @@ def test_save_trades(repository: Repository):
     ret = repository.connection.execute("""SELECT *
                     FROM trades""").fetchdf()
 
-    assert ret.shape == (0, 11)
+    assert ret.shape == (0, 12)
 
 
 def test_save_option_expiration(repository: Repository, option_call_before_expiration_itm):
