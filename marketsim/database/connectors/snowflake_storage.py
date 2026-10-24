@@ -201,6 +201,7 @@ TABLES: dict[str, dict[str, str]] = {
     "trades": dict(
         day="NUMBER(38,0)",
         asset_id="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
         matched_with="NUMBER(38,0)",
         executed_mode="VARCHAR",
         executed_time="NUMBER(38,0)",

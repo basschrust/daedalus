@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import duckdb
 import pandas as pd
 
+
 if TYPE_CHECKING:
     from marketsim.agent import Agent
     from marketsim.market import Future, Index, Security
@@ -313,6 +314,7 @@ class Repository:
                     CREATE TABLE IF NOT EXISTS trades (
                         day INTEGER,
                         asset_id INTEGER,
+                        agent_id INTEGER,
                         matched_with INTEGER,
                         executed_mode STRING,
                         executed_time INTEGER,
@@ -332,6 +334,24 @@ class Repository:
                     exercise_price DOUBLE,
                     premium DOUBLE)
                 """)
+
+        ##################
+        ###  L1 layer tables
+        ##################
+
+        self.connection.execute("""
+                CREATE TABLE IF NOT EXISTS l1_group_flows (
+                    day             INTEGER,
+                    time_tick       INTEGER,
+                    asset_id        INTEGER,
+                    agent_id        INTEGER,
+                    agent_group     VARCHAR,
+                    cp_group        VARCHAR,
+                    volume_buy      DOUBLE,
+                    volume_sell     DOUBLE,
+                    cash_buy        DOUBLE,
+                    cash_sell       DOUBLE
+                )""")
 
     ############# methods for making data persistent ###############################
 
@@ -595,14 +615,13 @@ class Repository:
 
     def save_trades(self, trades_df: pd.DataFrame) -> None:
         # matched_orders aka trades
-        # with duckdb.connect(self.localdb) as conn:
         self.connection.register("trades_df", trades_df)
-        # terminal.write(f"Columns: {str(trades_df.columns())}")
         self.connection.execute("""
-            INSERT INTO trades (day, asset_id, executed_time, matched_with, executed_mode, executed_price,
+            INSERT INTO trades (day, asset_id, agent_id, executed_time, matched_with, executed_mode, executed_price,
                     order_id, order_side, executed_volume, cash, phase)
             SELECT day,
                     asset_id,
+                    agent_id,
                     executed_time,
                     matched_with,
                     executed_mode,
@@ -701,6 +720,28 @@ class Repository:
             """,
             parameters=[agent_id],
         ).fetchdf()
+
+    ### get L1 layer data:
+    def get_group_flows(self, agent_id: int) -> pd.DataFrame:
+        return self.connection.execute(
+            query="""
+            SELECT
+                day,
+                time_tick,
+                asset_id,
+                agent_id,
+                agent_group,
+                cp_group,
+                volume_buy,
+                volume_sell,
+                cash_buy,
+                cash_sell
+            FROM l1_group_flows
+            WHERE agent_id = ?
+            ORDER BY day, time_tick, asset_id, cp_group
+            """,
+            parameters=[agent_id],
+        ).df()
 
     #################################################################################################
     ##          calculations in the DB
