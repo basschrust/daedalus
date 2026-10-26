@@ -8,21 +8,21 @@ markets:
     short_name: PKO.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 85.16
+    reference_price: 109.54
     currency: PLN
   pkn.wa:
     name: PKN.WA
     short_name: PKN.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 96.11
+    reference_price: 156.34
     currency: PLN
   kgh.wa:
     name: KGH.WA
     short_name: KGH.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 280.8
+    reference_price: 293.2
     currency: PLN
 agents:
   noise:
