@@ -13,6 +13,7 @@ import pandas as pd
 from marketsim.loggers.basic import setup_agent_logger
 from marketsim.market import FXRateProvider
 from marketsim.market.price import Price
+from marketsim.market.knowledge.market_knowledge import MarketKnowledge
 from marketsim.plot.simple_plot import plot_agent_history_many_markets
 from marketsim.utils.id_generator import id_generator
 
@@ -50,6 +51,7 @@ class Agent(ABC):
         output_dir: Path | str = "tmp",
         base_currency: str = "PLN",
         fx_rate_provider: FXRateProvider | None = None,
+        market_knowledge: dict[int,MarketKnowledge] | None = None,
     ):
         self.agent_id = id_generator.next()
 
@@ -113,20 +115,23 @@ class Agent(ABC):
         self.base_currency = base_currency.upper()
         self.fx_rate_provider = fx_rate_provider
 
+        self.market_knowledge = market_knowledge or {}
+
         self.logger = setup_agent_logger(
             agent_id=self.agent_id, output_dir=self.output_dir
-        )  # logger.bind(agent_id=self.agent_id)
+        )
 
         self.repository.save_agent(self)
 
     ####### init ends here  ###########
 
     @property
-    def cash(self):
+    def cash(self) -> dict:
+        # raise
         return self._cash
 
     @cash.setter
-    def cash(self, value):
+    def cash(self, value: dict) -> None:
         # print(f"Agent {id(self)} cash: {self._cash} -> {value}")
         # traceback.print_stack(limit=2)
         self._cash = value
@@ -156,7 +161,7 @@ class Agent(ABC):
         currency = currency or self.base_currency
         return self.cash.get(currency, Price(0))
 
-    def get_cash_balance_all_currencies(self):
+    def get_cash_balance_all_currencies(self) -> dict:
         return self.cash
 
     def credit_cash(self, *, amount: Price, currency: str = "PLN") -> None:
@@ -484,7 +489,7 @@ class Agent(ABC):
 
         return Price(total)
 
-    def settle(self, contract):
+    def settle(self, contract: Future) -> None:
         # final day settlement
         # "avg_initial_price": avg_initial_price,  # the current price
         # "settlement_price": contract.last_traded_price,
@@ -536,7 +541,7 @@ class Agent(ABC):
             # Variation margin has been paid
             values["unsettled_pnl"] = Price(0)
 
-    def sod(self):
+    def sod(self) -> None:
         self.logger.info(
             f"Starting agent {self.agent_id} Start-of-Day procedure of day: {self.current_day}"
         )
@@ -752,7 +757,7 @@ class Agent(ABC):
         else:
             raise ValueError(f"Unknown eod status: {self.eod_status}")
 
-    def show_summary(self):
+    def show_summary(self) -> None:
         agent_output_file = f"{self.output_dir}/agents_multimarket/{self.agent_id}_{str(self)}.png"
 
         positions_df = self.repository.get_eod_positions(agent_id=self.agent_id)
@@ -794,3 +799,6 @@ class Agent(ABC):
 
     def __str__(self) -> str:
         return f"{self.agent_id}_{self.group}"
+
+    def get_market_knowledge(self, asset_id: int) -> MarketKnowledge:
+        return self.market_knowledge.get(asset_id)
