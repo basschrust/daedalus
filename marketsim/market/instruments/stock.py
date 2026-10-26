@@ -42,4 +42,3 @@ class Stock(Security):
             historical_ohlcv=historical_ohlcv,
             simulation_dates=simulation_dates,
         )
-

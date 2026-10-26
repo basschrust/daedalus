@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pandas as pd
 
-
 OHLCV_COLUMNS = ["open", "high", "low", "close", "volume"]
 
 
@@ -31,9 +30,7 @@ def load_historical_prices(
     missing = required - set(df.columns)
 
     if missing:
-        raise ValueError(
-            f"Historical OHLCV missing columns: {sorted(missing)}"
-        )
+        raise ValueError(f"Historical OHLCV missing columns: {sorted(missing)}")
 
     df["date"] = pd.to_datetime(df["date"], errors="raise")
 
@@ -45,18 +42,14 @@ def load_historical_prices(
     result = {}
 
     for symbol, group in df.groupby("symbol"):
-        group = (
-            group.sort_values("date")
-            .drop_duplicates("date", keep="last")
-        )
+        group = group.sort_values("date").drop_duplicates("date", keep="last")
 
         if expected_sessions is not None:
             group = group.tail(int(expected_sessions))
 
             if len(group) != int(expected_sessions):
                 raise ValueError(
-                    f"{symbol}: expected {expected_sessions} "
-                    f"historical sessions, got {len(group)}"
+                    f"{symbol}: expected {expected_sessions} historical sessions, got {len(group)}"
                 )
 
         frame = group.set_index("date")[OHLCV_COLUMNS]
@@ -68,9 +61,7 @@ def load_historical_prices(
             )
 
         if frame.isna().any().any():
-            raise ValueError(
-                f"{symbol}: historical OHLCV contains null values"
-            )
+            raise ValueError(f"{symbol}: historical OHLCV contains null values")
 
         result[str(symbol)] = frame
 
@@ -85,20 +76,12 @@ def load_simulation_dates(config: dict) -> list[date] | None:
     if values is None:
         return None
 
-    dates = [
-        date.fromisoformat(str(value))
-        for value in values
-    ]
+    dates = [date.fromisoformat(str(value)) for value in values]
 
     if len(dates) != config["days"]:
-        raise ValueError(
-            f"Expected {config['days']} simulation dates, "
-            f"got {len(dates)}"
-        )
+        raise ValueError(f"Expected {config['days']} simulation dates, got {len(dates)}")
 
     if dates != sorted(set(dates)):
-        raise ValueError(
-            "Simulation dates must be unique and increasing"
-        )
+        raise ValueError("Simulation dates must be unique and increasing")
 
     return dates

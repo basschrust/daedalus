@@ -51,6 +51,7 @@ def fetch_prices(
         cur.execute(sql, (*symbols, start, end))
         return pd.DataFrame(cur.fetchall(), columns=["ticker", "session_date", "close", "volume"])
 
+
 def fetch_ohlcv(
     conn,
     *,
@@ -80,8 +81,13 @@ def fetch_ohlcv(
     df = pd.DataFrame(
         rows,
         columns=[
-            "symbol", "date", "open", "high",
-            "low", "close", "volume",
+            "symbol",
+            "date",
+            "open",
+            "high",
+            "low",
+            "close",
+            "volume",
         ],
     )
 
@@ -100,11 +106,10 @@ def fetch_ohlcv(
     for symbol in symbols:
         count = int((df["symbol"] == symbol).sum())
         if count != sessions:
-            raise ValueError(
-                f"{symbol}: expected {sessions} sessions, got {count}"
-            )
+            raise ValueError(f"{symbol}: expected {sessions} sessions, got {count}")
 
     return df
+
 
 def calibrate(prices: pd.DataFrame, symbols: tuple[str, ...]) -> dict:
     result = {}

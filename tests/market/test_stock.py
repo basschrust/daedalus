@@ -2,8 +2,9 @@
 
 Run: python -m pytest tests/market/instruments/test_stock.py -v
 """
+
 from datetime import date
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pandas as pd
 import pytest
@@ -45,6 +46,7 @@ def stock_factory(tmp_path, repository):
         )
         defaults.update(kwargs)
         return Stock(**defaults)
+
     return make
 
 
@@ -140,9 +142,7 @@ def test_stock_can_hold_different_historical_data(stock_factory, historical_ohlc
     assert b.historical_ohlcv is None
 
 
-def test_stock_plotting_inputs_do_not_change_reference_price(
-    stock_factory, historical_ohlcv
-):
+def test_stock_plotting_inputs_do_not_change_reference_price(stock_factory, historical_ohlcv):
     stock = stock_factory(historical_ohlcv=historical_ohlcv)
     assert stock.reference_price == Price(109.54)
 

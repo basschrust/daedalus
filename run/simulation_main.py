@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import inspect
 import sys
-from pathlib import Path
 from collections.abc import Callable
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import yaml
@@ -13,7 +13,6 @@ from marketsim.input.historical_prices import (
     load_historical_prices,
     load_simulation_dates,
 )
-
 from marketsim.simulator import Simulator
 
 if TYPE_CHECKING:
@@ -60,10 +59,7 @@ def main():
 
     print(
         "Historical OHLCV:",
-        {
-            symbol: len(frame)
-            for symbol, frame in historical_ohlcv_by_symbol.items()
-        },
+        {symbol: len(frame) for symbol, frame in historical_ohlcv_by_symbol.items()},
     )
     print("Simulation dates:", simulation_dates)
 

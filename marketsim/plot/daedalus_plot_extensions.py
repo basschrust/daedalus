@@ -54,9 +54,7 @@ def combine_candles(
         raise ValueError("Historical candles cannot be empty")
 
     if h.index.has_duplicates or not h.index.is_monotonic_increasing:
-        raise ValueError(
-            "Historical session dates must be unique and increasing"
-        )
+        raise ValueError("Historical session dates must be unique and increasing")
 
     s = simulated.copy()
 
@@ -66,31 +64,19 @@ def combine_candles(
     if s["day"].duplicated().any():
         raise ValueError("Duplicate simulated days")
 
-    dates = pd.DatetimeIndex(
-        pd.to_datetime(list(simulation_dates))
-    ).normalize()
+    dates = pd.DatetimeIndex(pd.to_datetime(list(simulation_dates))).normalize()
 
-    if (
-        len(dates) == 0
-        or dates.has_duplicates
-        or not dates.is_monotonic_increasing
-    ):
-        raise ValueError(
-            "Simulation dates must be nonempty, unique and increasing"
-        )
+    if len(dates) == 0 or dates.has_duplicates or not dates.is_monotonic_increasing:
+        raise ValueError("Simulation dates must be nonempty, unique and increasing")
 
     if dates[0] <= h.index.max():
-        raise ValueError(
-            "Simulation must begin after the historical cutoff"
-        )
+        raise ValueError("Simulation must begin after the historical cutoff")
 
     expected_days = set(range(len(dates)))
     actual_days = set(s["day"].astype(int))
 
     if actual_days != expected_days:
-        raise ValueError(
-            "Simulated days must be 0..N-1 and match the calendar"
-        )
+        raise ValueError("Simulated days must be 0..N-1 and match the calendar")
 
     s.index = dates.take(s["day"].astype(int).to_numpy())
 
@@ -101,9 +87,7 @@ def combine_candles(
         missing = set(cols) - set(frame.columns)
 
         if missing:
-            raise ValueError(
-                f"{name} missing columns: {sorted(missing)}"
-            )
+            raise ValueError(f"{name} missing columns: {sorted(missing)}")
 
     combined = pd.concat(
         [
@@ -142,15 +126,11 @@ def plot_combined_candles(
         gridspec_kw={"height_ratios": [4, 1]},
     )
 
-    historical_end = combined.loc[
-        combined["source"] == "historical"
-    ].index.max()
+    historical_end = combined.loc[combined["source"] == "historical"].index.max()
 
     # Place the boundary between the last historical
     # and the first simulated trading session.
-    boundary = historical_end + (
-        first_simulated - historical_end
-    ) / 2
+    boundary = historical_end + (first_simulated - historical_end) / 2
 
     boundary_x = mdates.date2num(boundary)
 
@@ -292,9 +272,7 @@ def plot_combined_candles(
     )
 
     ax_volume.xaxis.set_major_locator(locator)
-    ax_volume.xaxis.set_major_formatter(
-        mdates.ConciseDateFormatter(locator)
-    )
+    ax_volume.xaxis.set_major_formatter(mdates.ConciseDateFormatter(locator))
 
     fig.autofmt_xdate()
     fig.tight_layout()
@@ -324,9 +302,7 @@ def active_cash_currencies(
     missing = required - set(cash_history.columns)
 
     if missing:
-        raise ValueError(
-            f"Cash history missing columns: {sorted(missing)}"
-        )
+        raise ValueError(f"Cash history missing columns: {sorted(missing)}")
 
     result = {}
 
@@ -341,10 +317,7 @@ def active_cash_currencies(
             errors="raise",
         )
 
-        if (
-            values.notna().sum() >= 2
-            and values.dropna().nunique() > 1
-        ):
+        if values.notna().sum() >= 2 and values.dropna().nunique() > 1:
             result[currency] = frame
 
     return result
@@ -368,9 +341,7 @@ def plot_agent_history_multicurrency(
     labels_map = labels_map or {}
 
     assets = (
-        sorted(
-            position_history["asset_id"].dropna().unique()
-        )
+        sorted(position_history["asset_id"].dropna().unique())
         if "asset_id" in position_history.columns
         else []
     )
@@ -393,18 +364,16 @@ def plot_agent_history_multicurrency(
 
     # Asset positions
     for asset_id in assets:
-        frame = position_history.loc[
-            position_history["asset_id"] == asset_id
-        ].sort_values("time_step")
+        frame = position_history.loc[position_history["asset_id"] == asset_id].sort_values(
+            "time_step"
+        )
 
         axes[i].plot(
             frame["time_step"],
             frame["position"],
         )
 
-        axes[i].set_ylabel(
-            str(labels_map.get(asset_id, asset_id))
-        )
+        axes[i].set_ylabel(str(labels_map.get(asset_id, asset_id)))
         axes[i].grid(alpha=0.3)
 
         i += 1

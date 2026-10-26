@@ -213,9 +213,7 @@ class Simulator:
             elif instrument_class == "stock":
                 symbol = m_conf.get("symbol") or m_conf.get("ticker")
 
-                historical_ohlcv = self.historical_ohlcv_by_symbol.get(
-                    symbol
-                )
+                historical_ohlcv = self.historical_ohlcv_by_symbol.get(symbol)
 
                 if self.historical_ohlcv_by_symbol and historical_ohlcv is None:
                     raise ValueError(

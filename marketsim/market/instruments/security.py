@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import math
+from abc import ABC
 from collections import defaultdict
 from datetime import date
 from itertools import accumulate
 from pathlib import Path
 from typing import TYPE_CHECKING
+
 import pandas as pd
-from abc import ABC, abstractmethod
 
 from marketsim.event import EventQueue
 from marketsim.fourheap import FourHeap
