@@ -14,7 +14,9 @@ from marketsim.loggers.basic import setup_agent_logger
 from marketsim.market import FXRateProvider
 from marketsim.market.knowledge.market_knowledge import MarketKnowledge
 from marketsim.market.price import Price
-from marketsim.plot.simple_plot import plot_agent_history_many_markets
+from marketsim.plot.daedalus_plot_extensions import (
+    plot_agent_history_multicurrency,
+)
 from marketsim.utils.id_generator import id_generator
 
 if TYPE_CHECKING:
@@ -785,7 +787,7 @@ class Agent(ABC):
         for m_id, market in self.abandoned_markets.items():
             labels_map[m_id] = market.short_name
 
-        plot_agent_history_many_markets(
+        plot_agent_history_multicurrency(
             position_history=positions_df,
             cash_history=eod_cash_df,
             value_history=eod_portfolio_values_df,
@@ -794,6 +796,16 @@ class Agent(ABC):
             labels_map=labels_map,
             time_label="Simulation day",
         )
+
+        # plot_agent_history_many_markets(
+        #     position_history=positions_df,
+        #     cash_history=eod_cash_df,
+        #     value_history=eod_portfolio_values_df,
+        #     output_file=agent_output_file,
+        #     title=f"Agent {self.agent_id} {str(self)} summary",
+        #     labels_map=labels_map,
+        #     time_label="Simulation day",
+        # )
 
     def __str__(self) -> str:
         return f"{self.agent_id}_{self.group}"

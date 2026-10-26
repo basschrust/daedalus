@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
+import pandas as pd
 from loguru import logger
 
 from marketsim.agent import (
@@ -42,6 +43,8 @@ class Simulator:
         database: dict | None = None,
         fx_rates: dict | None = None,
         historical_data: dict | None = None,
+        historical_ohlcv_by_symbol: dict[str, pd.DataFrame] | None = None,
+        simulation_dates: list[date] | None = None,
     ):
         self.logger = logger.bind()
         self.logger.info("Initializing simulation with parameters in market_structure.yaml ...")
@@ -59,6 +62,9 @@ class Simulator:
         )
 
         self.logger.info(f"Database backend: {driver}")
+
+        self.historical_ohlcv_by_symbol = historical_ohlcv_by_symbol or {}
+        self.simulation_dates = simulation_dates
 
         self.sim_time = sim_time  # steps per day
         self.days = days
@@ -213,6 +219,8 @@ class Simulator:
                     output_dir=self.output_dir,
                     reference_price=m_conf.get("reference_price"),
                     currency=m_conf.get("currency", "PLN"),
+                    historical_ohlcv=self.historical_ohlcv_by_symbol.get(m_conf.get("symbol")),
+                    simulation_dates=self.simulation_dates,
                 )
                 self.market_map[m_key] = market.asset_id
                 self.markets[market.asset_id] = market
