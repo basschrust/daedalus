@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-from marketsim.market.etf import ETF
+from marketsim.market.instruments.etf import ETF
 from marketsim.market.price import Price
 
 

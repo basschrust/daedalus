@@ -10,7 +10,7 @@ from marketsim.agent.agent import Agent
 from marketsim.fourheap.constants import BUY, SELL
 from marketsim.fourheap.order import Order
 from marketsim.market import FXRateProvider, Price
-from marketsim.market.security import Security
+from marketsim.market.instruments.security import Security
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository

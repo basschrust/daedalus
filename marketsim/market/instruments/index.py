@@ -6,7 +6,7 @@ import pandas as pd
 from typing_extensions import TYPE_CHECKING
 
 from marketsim.market.price import Price
-from marketsim.market.security import Security
+from marketsim.market.instruments.security import Security
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
