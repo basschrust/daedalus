@@ -6,8 +6,8 @@ import pandas as pd
 from typing_extensions import TYPE_CHECKING
 
 from marketsim.market.instruments.index import Index
-from marketsim.market.price import Price
 from marketsim.market.instruments.security import Security
+from marketsim.market.price import Price
 from marketsim.plot.candle import plot_candlestick_derivative
 
 if TYPE_CHECKING:

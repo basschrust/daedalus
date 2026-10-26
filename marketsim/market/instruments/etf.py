@@ -3,8 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from marketsim.market.price import Price
 from marketsim.market.instruments.security import Security
+from marketsim.market.price import Price
 
 if TYPE_CHECKING:
     from marketsim.database.repositories.interface import RepositoryInterface
