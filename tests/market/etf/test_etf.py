@@ -3,6 +3,7 @@
 These tests target the ETF(Security) API discussed for Daedalus v1.
 They do not require a running database or full simulation.
 """
+
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -25,6 +26,7 @@ def underlying():
 @pytest.fixture
 def etf_factory(underlying, tmp_path):
     """Construct ETF without writing to the repository in Security.__init__."""
+
     def create(**overrides):
         kwargs = {
             "underlying": underlying,
@@ -37,6 +39,7 @@ def etf_factory(underlying, tmp_path):
         kwargs.update(overrides)
         with patch.object(ETF, "save"):
             return ETF(**kwargs)
+
     return create
 
 
