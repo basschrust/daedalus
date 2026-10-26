@@ -38,6 +38,8 @@ class NoiseAgent(Agent):
             "mean_spread": Price(0.8),
             "withdraw_old": False,
             "validity_period": 3,
+            "use_historical_volatility": False,
+            "historical_volatility_scale": 0.1,
         }
         self.configuration = default_configuration | (
             configuration if configuration is not None else {}
@@ -79,10 +81,27 @@ class NoiseAgent(Agent):
                 # side chosen randomly and stick to that, but later this agent may place many orders on chosen side
                 quantity = np.random.poisson(lam=self.mean_volume)  # AK why not volume?
                 # quantity = 3 if side == BUY else 5 # just for tests - use prime numbers to check splittings properly
+
                 spread_side = random.choice([-1, 1])
+                mean_spread = float(self.mean_spread)
+
+                knowledge = self.get_market_knowledge(asset_id)
+
+                if knowledge is not None and self.configuration["use_historical_volatility"]:
+                    mean_spread = (
+                        float(market.last_traded_price)
+                        * knowledge.expected_volatility()
+                        * float(self.configuration["historical_volatility_scale"])
+                    )
+
                 price = market.last_traded_price + spread_side * np.random.poisson(
-                    lam=float(self.mean_spread)
+                    lam=max(0.0, mean_spread)
                 )
+
+                # spread_side = random.choice([-1, 1])
+                # price = market.last_traded_price + spread_side * np.random.poisson(
+                #     lam=float(self.mean_spread)
+                # )
 
                 if price > 0:
                     order = Order(

@@ -12,8 +12,8 @@ import pandas as pd
 
 from marketsim.loggers.basic import setup_agent_logger
 from marketsim.market import FXRateProvider
-from marketsim.market.price import Price
 from marketsim.market.knowledge.market_knowledge import MarketKnowledge
+from marketsim.market.price import Price
 from marketsim.plot.simple_plot import plot_agent_history_many_markets
 from marketsim.utils.id_generator import id_generator
 
@@ -51,7 +51,7 @@ class Agent(ABC):
         output_dir: Path | str = "tmp",
         base_currency: str = "PLN",
         fx_rate_provider: FXRateProvider | None = None,
-        market_knowledge: dict[int,MarketKnowledge] | None = None,
+        market_knowledge: dict[int, MarketKnowledge] | None = None,
     ):
         self.agent_id = id_generator.next()
 
@@ -117,9 +117,7 @@ class Agent(ABC):
 
         self.market_knowledge = market_knowledge or {}
 
-        self.logger = setup_agent_logger(
-            agent_id=self.agent_id, output_dir=self.output_dir
-        )
+        self.logger = setup_agent_logger(agent_id=self.agent_id, output_dir=self.output_dir)
 
         self.repository.save_agent(self)
 

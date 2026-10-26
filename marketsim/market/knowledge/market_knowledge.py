@@ -1,5 +1,6 @@
 from .historical_market_data import HistoricalMarketData
 
+
 class MarketKnowledge:
     def __init__(
         self,
@@ -10,9 +11,9 @@ class MarketKnowledge:
         self.confidence = confidence
 
     def expected_price(self, days_ahead: float = 1.0) -> float:
-        return self.historical.reference_price * (
-            1 + self.historical.daily_mean_return
-        ) ** days_ahead
+        return (
+            self.historical.reference_price * (1 + self.historical.daily_mean_return) ** days_ahead
+        )
 
     def expected_volatility(self) -> float:
         return self.historical.daily_volatility

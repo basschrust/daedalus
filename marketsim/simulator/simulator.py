@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 
 from loguru import logger
@@ -19,6 +20,7 @@ from marketsim.agent.washtrading import WashTradingPool
 from marketsim.database.repositories.factory import create_repository
 from marketsim.loggers.basic import terminal
 from marketsim.market import Future, FXRateProvider, Index, Option, Price, Security
+from marketsim.market.knowledge import HistoricalMarketData, MarketKnowledge
 from marketsim.plot.execution_volumes import plot_execution_volumes_by_asset
 from marketsim.plot.group_flows import plot_group_flows
 
@@ -39,6 +41,7 @@ class Simulator:
         output_dir: Path | str = "tmp",
         database: dict | None = None,
         fx_rates: dict | None = None,
+        historical_data: dict | None = None,
     ):
         self.logger = logger.bind()
         self.logger.info("Initializing simulation with parameters in market_structure.yaml ...")
@@ -74,6 +77,21 @@ class Simulator:
         self.last_progress = -1
         self.bar_length = 40
         self.day = 0  # day counter for SoD and EoD procedures
+
+        self.historical_data = {
+            symbol: HistoricalMarketData(
+                symbol=symbol,
+                as_of=date.fromisoformat(values["last_session"]),
+                reference_price=values["reference_price"],
+                daily_mean_return=values["daily_mean_return"],
+                daily_volatility=values["daily_volatility"],
+                median_daily_volume=values["median_daily_volume"],
+                observations=values["observations"],
+            )
+            for symbol, values in (historical_data or {}).items()
+        }
+
+        self.market_knowledge_by_asset = {}
 
         self.fx_rate_provider = FXRateProvider()
         for day, rates in (fx_rates or {}).items():
@@ -198,6 +216,10 @@ class Simulator:
                 )
                 self.market_map[m_key] = market.asset_id
                 self.markets[market.asset_id] = market
+
+                symbol = m_conf.get("symbol") or m_conf.get("ticker")
+                if symbol in self.historical_data:
+                    self.market_knowledge_by_asset[market.asset_id] = self.historical_data[symbol]
                 self.asset_names_map[market.asset_id] = {
                     "name": market.name,
                     # "short_name": market.short_name,
@@ -354,6 +376,15 @@ class Simulator:
         for agent in agents:
             self.logger.info(f"Adding agent {str(agent)} to the simulation")
             agent.fx_rate_provider = self.fx_rate_provider
+
+            for asset_id in agent.markets:
+                historical = self.market_knowledge_by_asset.get(asset_id)
+
+                if historical is not None:
+                    agent.market_knowledge.setdefault(
+                        asset_id,
+                        MarketKnowledge(historical),
+                    )
 
             config = agent.configuration or {}
             agent.base_currency = config.get("base_currency", "PLN").upper()

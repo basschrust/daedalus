@@ -29,15 +29,18 @@ def test_historical_fields(historical):
     assert historical.observations == 250
 
 
-@pytest.mark.parametrize("field,value", [
-    ("symbol", "KGH.WA"),
-    ("as_of", date(2026, 10, 22)),
-    ("reference_price", 200.0),
-    ("daily_mean_return", -0.01),
-    ("daily_volatility", 0.04),
-    ("median_daily_volume", 100_000.0),
-    ("observations", 10),
-])
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("symbol", "KGH.WA"),
+        ("as_of", date(2026, 10, 22)),
+        ("reference_price", 200.0),
+        ("daily_mean_return", -0.01),
+        ("daily_volatility", 0.04),
+        ("median_daily_volume", 100_000.0),
+        ("observations", 10),
+    ],
+)
 def test_historical_immutable(historical, field, value):
     with pytest.raises(FrozenInstanceError):
         setattr(historical, field, value)
@@ -100,8 +103,11 @@ def test_volatility_and_volume(historical):
 
 def test_security_specific_knowledge(historical):
     kgh = replace(
-        historical, symbol="KGH.WA", reference_price=293.2,
-        daily_volatility=0.03452413086969201, median_daily_volume=790501.5,
+        historical,
+        symbol="KGH.WA",
+        reference_price=293.2,
+        daily_volatility=0.03452413086969201,
+        median_daily_volume=790501.5,
     )
     pko_knowledge = MarketKnowledge(historical)
     kgh_knowledge = MarketKnowledge(kgh)
