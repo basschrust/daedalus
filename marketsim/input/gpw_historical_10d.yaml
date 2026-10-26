@@ -1,0 +1,42 @@
+seed: 67
+days: 10
+sim_time: 390
+lob_plot_interval: 10000
+markets:
+  pko.wa:
+    name: PKO.WA
+    short_name: PKO.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: 85.16
+    currency: PLN
+  pkn.wa:
+    name: PKN.WA
+    short_name: PKN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: 96.11
+    currency: PLN
+  kgh.wa:
+    name: KGH.WA
+    short_name: KGH.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: 280.8
+    currency: PLN
+agents:
+  noise:
+    agent_class: NoiseAgent
+    number: 12
+    config:
+      lam: 0.15
+      mean_volume: 20
+      mean_spread: 1.0
+      initial_cash:
+        PLN: 1000000
+  market_makers:
+    agent_class: MMZOHAgent
+    number: 2
+  hbl:
+    agent_class: HBLAgent
+    number: 3
