@@ -2,16 +2,18 @@ from __future__ import annotations
 
 import inspect
 import sys
+from pathlib import Path
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 import yaml
 
 from marketsim.input.config import create_run_directory, load_config
+from marketsim.input.historical_prices import (
+    load_historical_prices,
+    load_simulation_dates,
+)
 
-# from marketsim.input.config import CONFIG
-# from marketsim.loggers.basic import StreamToLogger
-# from marketsim.plot.simple_plot import simple_plot
 from marketsim.simulator import Simulator
 
 if TYPE_CHECKING:
@@ -41,7 +43,31 @@ def main():
     config["output_dir"] = output_dir
 
     # run simulation...
-    sim = Simulator(**kwargs_for(Simulator, config))
+    config_dir = Path("marketsim/input")
+
+    historical_ohlcv_by_symbol = load_historical_prices(
+        config=config,
+        config_dir=config_dir,
+    )
+
+    simulation_dates = load_simulation_dates(config)
+
+    sim_kwargs = kwargs_for(Simulator, config)
+
+    # These are prepared Python objects, not raw YAML values.
+    sim_kwargs["historical_ohlcv_by_symbol"] = historical_ohlcv_by_symbol
+    sim_kwargs["simulation_dates"] = simulation_dates
+
+    print(
+        "Historical OHLCV:",
+        {
+            symbol: len(frame)
+            for symbol, frame in historical_ohlcv_by_symbol.items()
+        },
+    )
+    print("Simulation dates:", simulation_dates)
+
+    sim = Simulator(**sim_kwargs)
 
     try:
         sim.run()

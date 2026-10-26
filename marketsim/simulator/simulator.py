@@ -211,6 +211,26 @@ class Simulator:
                     "name": market.name,
                 }
             elif instrument_class == "stock":
+                symbol = m_conf.get("symbol") or m_conf.get("ticker")
+
+                historical_ohlcv = self.historical_ohlcv_by_symbol.get(
+                    symbol
+                )
+
+                if self.historical_ohlcv_by_symbol and historical_ohlcv is None:
+                    raise ValueError(
+                        f"No historical OHLCV for stock {m_key!r}, "
+                        f"symbol={symbol!r}. Available symbols: "
+                        f"{list(self.historical_ohlcv_by_symbol)}"
+                    )
+
+                self.logger.info(
+                    f"Creating stock {symbol}: "
+                    f"historical rows="
+                    f"{len(historical_ohlcv) if historical_ohlcv is not None else 0}, "
+                    f"simulation dates={len(self.simulation_dates or [])}"
+                )
+
                 market = Stock(
                     market_type=m_conf.get("market_type"),
                     name=m_conf.get("name"),
@@ -219,7 +239,9 @@ class Simulator:
                     output_dir=self.output_dir,
                     reference_price=m_conf.get("reference_price"),
                     currency=m_conf.get("currency", "PLN"),
-                    historical_ohlcv=self.historical_ohlcv_by_symbol.get(m_conf.get("symbol")),
+                    symbol=symbol,
+                    exchange="GPW",
+                    historical_ohlcv=historical_ohlcv,
                     simulation_dates=self.simulation_dates,
                 )
                 self.market_map[m_key] = market.asset_id

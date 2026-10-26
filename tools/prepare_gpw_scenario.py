@@ -51,6 +51,60 @@ def fetch_prices(
         cur.execute(sql, (*symbols, start, end))
         return pd.DataFrame(cur.fetchall(), columns=["ticker", "session_date", "close", "volume"])
 
+def fetch_ohlcv(
+    conn,
+    *,
+    symbols: tuple[str, ...],
+    end: date,
+    sessions: int = 250,
+) -> pd.DataFrame:
+    """Fetch the last N historical sessions per symbol from Snowflake."""
+
+    if not symbols:
+        raise ValueError("At least one symbol is required")
+
+    placeholders = ", ".join(["%s"] * len(symbols))
+
+    sql = f"""
+        SELECT SYMBOL, DATE, OPEN, HIGH, LOW, CLOSE, VOLUME
+        FROM {TABLE}
+        WHERE SYMBOL IN ({placeholders})
+          AND DATE <= %s
+        ORDER BY SYMBOL, DATE
+    """
+
+    with conn.cursor() as cur:
+        cur.execute(sql, (*symbols, end))
+        rows = cur.fetchall()
+
+    df = pd.DataFrame(
+        rows,
+        columns=[
+            "symbol", "date", "open", "high",
+            "low", "close", "volume",
+        ],
+    )
+
+    if df.empty:
+        raise ValueError("No historical OHLCV data returned")
+
+    df["date"] = pd.to_datetime(df["date"])
+    df = (
+        df.sort_values(["symbol", "date"])
+        .drop_duplicates(["symbol", "date"], keep="last")
+        .groupby("symbol", group_keys=False)
+        .tail(sessions)
+        .reset_index(drop=True)
+    )
+
+    for symbol in symbols:
+        count = int((df["symbol"] == symbol).sum())
+        if count != sessions:
+            raise ValueError(
+                f"{symbol}: expected {sessions} sessions, got {count}"
+            )
+
+    return df
 
 def calibrate(prices: pd.DataFrame, symbols: tuple[str, ...]) -> dict:
     result = {}
@@ -81,6 +135,7 @@ def build_scenario(stats: dict, *, seed: int = 67) -> dict:
         markets[symbol.lower()] = {
             "name": SYMBOLS.get(symbol, symbol),
             "short_name": symbol,
+            "symbol": symbol,  # NEW: required for OHLCV matching
             "instrument_class": "stock",
             "market_type": "continuous",
             "reference_price": values["reference_price"],
@@ -145,15 +200,59 @@ def main() -> None:
             end=args.end,
             symbols=tuple(args.symbols),
         )
+
+        ohlcv = fetch_ohlcv(
+            connection,
+            symbols=tuple(args.symbols),
+            end=args.end,
+            sessions=250,
+        )
     finally:
         connection.close()
     stats = calibrate(prices, tuple(args.symbols))
+
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(yaml.safe_dump(build_scenario(stats), sort_keys=False), encoding="utf-8")
-    args.output.with_suffix(".calibration.yaml").write_text(
-        yaml.safe_dump(stats, sort_keys=False), encoding="utf-8"
+
+    # Save the historical snapshot alongside the scenario.
+    ohlcv_path = args.output.with_suffix(".ohlcv.csv")
+    ohlcv.to_csv(ohlcv_path, index=False)
+
+    scenario = build_scenario(stats)
+
+    scenario["historical_prices"] = {
+        "enabled": True,
+        "path": ohlcv_path.name,
+        "lookback_sessions": 250,
+        "cutoff_date": args.end.isoformat(),
+    }
+
+    # Explicit GPW trading dates for this 10-session scenario.
+    # Keeping them in YAML makes the run reproducible.
+    scenario["simulation_dates"] = [
+        "2026-10-26",
+        "2026-10-27",
+        "2026-10-28",
+        "2026-10-29",
+        "2026-10-30",
+        "2026-11-02",
+        "2026-11-03",
+        "2026-11-04",
+        "2026-11-05",
+        "2026-11-06",
+    ]
+
+    args.output.write_text(
+        yaml.safe_dump(scenario, sort_keys=False),
+        encoding="utf-8",
     )
-    print(f"Wrote {args.output}; calibration: {stats}")
+
+    args.output.with_suffix(".calibration.yaml").write_text(
+        yaml.safe_dump(stats, sort_keys=False),
+        encoding="utf-8",
+    )
+
+    print(f"Wrote {args.output}")
+    print(f"Wrote {ohlcv_path}: {len(ohlcv)} historical rows")
 
 
 if __name__ == "__main__":
