@@ -20,7 +20,7 @@ from marketsim.agent import (
 from marketsim.agent.washtrading import WashTradingPool
 from marketsim.database.repositories.factory import create_repository
 from marketsim.loggers.basic import terminal
-from marketsim.market import Future, FXRateProvider, Index, Option, Price, Security
+from marketsim.market import Future, FXRateProvider, Index, Option, Price, Security, Stock
 from marketsim.market.knowledge import HistoricalMarketData, MarketKnowledge
 from marketsim.plot.execution_volumes import plot_execution_volumes_by_asset
 from marketsim.plot.group_flows import plot_group_flows
@@ -211,7 +211,7 @@ class Simulator:
                     "name": market.name,
                 }
             elif instrument_class == "stock":
-                market = Security(
+                market = Stock(
                     market_type=m_conf.get("market_type"),
                     name=m_conf.get("name"),
                     repository=self.repository,

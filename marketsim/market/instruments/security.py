@@ -6,8 +6,8 @@ from datetime import date
 from itertools import accumulate
 from pathlib import Path
 from typing import TYPE_CHECKING
-
 import pandas as pd
+from abc import ABC, abstractmethod
 
 from marketsim.event import EventQueue
 from marketsim.fourheap import FourHeap
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from marketsim.market import Index
 
 
-class Security:
+class Security(ABC):
     def __init__(
         self,
         *,
