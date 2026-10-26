@@ -28,21 +28,73 @@ markets:
     reference_price: 293.2
     currency: PLN
 agents:
-  noise:
+  noise_tight:
     agent_class: NoiseAgent
-    number: 12
+    number: 20
     config:
-      lam: 0.15
-      mean_volume: 20
-      mean_spread: 1.0
+      lam: 0.40
+      mean_volume: 150
+      mean_spread: 0.3
+      validity_period: 3
       initial_cash:
         PLN: 1000000
+
+  noise_medium:
+    agent_class: NoiseAgent
+    number: 25
+    config:
+      lam: 0.30
+      mean_volume: 200
+      mean_spread: 1.5
+      validity_period: 15
+      initial_cash:
+        PLN: 1000000
+
+  noise_wide:
+    agent_class: NoiseAgent
+    number: 15
+    config:
+      lam: 0.20
+      mean_volume: 250
+      mean_spread: 4.0
+      validity_period: 40
+      initial_cash:
+        PLN: 1000000
+
   market_makers:
     agent_class: MMZOHAgent
-    number: 2
+    number: 1
+    config:
+      xi: 0.1
+      K: 3
+      omega: 0.1
+      rebalance_by: time
+      rebalance_period: 30
+      volume: 20
+      q_max: 3000
+
+  momentum_fast:
+    agent_class: MomentumAgent
+    number: 3
+    config:
+      period: 10
+      threshold: 0.003
+      q_max: 100
+      lam: 0.15
+
+  momentum_slow:
+    agent_class: MomentumAgent
+    number: 3
+    config:
+      period: 60
+      threshold: 0.008
+      q_max: 100
+      lam: 0.08
+
   hbl:
     agent_class: HBLAgent
-    number: 3
+    number: 6
+
 historical_prices:
   enabled: true
   path: gpw_historical_10d.ohlcv.csv

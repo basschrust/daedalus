@@ -60,7 +60,7 @@ class MomentumAgent(Agent):
             # if price[t-1] > (1+threshold) * price[t-period] -> buy
             # if price[t-1] < (1-threshold) * price[t-period] -> sell
             # amounts? and lambda? yet ignore, take into account in next iteration, price limit?
-            if current_time >= self.period:
+            if current_time >= self.period and random.random() < self.lam:
                 market.withdraw_all(agent_id=self.agent_id)
                 previous_price = market.traded_prices[current_time - self.period]["close"]
                 limit = Price(float(market.last_traded_price) * (0.95 + 0.1 * random.uniform(0, 1)))
