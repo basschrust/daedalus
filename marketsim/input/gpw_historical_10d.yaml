@@ -65,12 +65,12 @@ agents:
     agent_class: MMZOHAgent
     number: 1
     config:
-      xi: 0.1
-      K: 3
-      omega: 0.1
       rebalance_by: time
-      rebalance_period: 30
+      rebalance_period: 60
       volume: 20
+      K: 3
+      xi: 0.1
+      omega: 0.1
       q_max: 3000
 
   momentum_fast:
@@ -94,6 +94,22 @@ agents:
   hbl:
     agent_class: HBLAgent
     number: 6
+
+  regime_traders:
+    agent_class: RegimeTraderAgent
+    number: 12
+    config:
+      lam: 0.20
+      mean_volume: 120
+      regime_switch_probability: 0.002
+      bullish_probability: 0.45
+      bearish_probability: 0.45
+      aggression_ticks: 5
+      tick_size: 0.01
+      validity_period: 2
+      max_position: 5000
+      initial_cash:
+        PLN: 2000000
 
 historical_prices:
   enabled: true

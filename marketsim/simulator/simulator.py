@@ -17,6 +17,7 @@ from marketsim.agent import (
     WashTradingAgent,
     ZIAgentNotInformed,
 )
+from marketsim.agent.regime_trader import RegimeTraderAgent
 from marketsim.agent.washtrading import WashTradingPool
 from marketsim.database.repositories.factory import create_repository
 from marketsim.loggers.basic import terminal
@@ -374,6 +375,16 @@ class Simulator:
                     markets=markets,
                     configuration=configuration,
                     repository=self.repository,
+                    output_dir=self.output_dir,
+                )
+                self.add_agents([agent])
+
+            if agent_group["agent_class"] == "RegimeTraderAgent":
+                agent = RegimeTraderAgent(
+                    markets=markets,
+                    configuration=configuration,
+                    repository=self.repository,
+                    group=group_name,
                     output_dir=self.output_dir,
                 )
                 self.add_agents([agent])
