@@ -3,12 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from marketsim.market.instruments.security import Security
 from marketsim.market.price import Price
-from marketsim.market.security import Security
 
 if TYPE_CHECKING:
     from marketsim.database.repositories.interface import RepositoryInterface
-    from marketsim.market.index import Index
+    from marketsim.market.instruments.index import Index
 
 
 class ETF(Security):

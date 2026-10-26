@@ -1,0 +1,21 @@
+PKO.WA:
+  reference_price: 109.54
+  daily_volatility: 0.016532928071032425
+  daily_mean_return: 0.0015490790089025827
+  median_daily_volume: 2367521.5
+  observations: 250
+  last_session: '2026-10-23'
+PKN.WA:
+  reference_price: 156.34
+  daily_volatility: 0.021390418314712095
+  daily_mean_return: 0.0021206163454520104
+  median_daily_volume: 1630695.5
+  observations: 250
+  last_session: '2026-10-23'
+KGH.WA:
+  reference_price: 293.2
+  daily_volatility: 0.03452413086969201
+  daily_mean_return: 0.00231573983065693
+  median_daily_volume: 790501.5
+  observations: 250
+  last_session: '2026-10-23'

@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import math
 from collections import defaultdict
+from datetime import date
 from itertools import accumulate
 from pathlib import Path
 from typing import TYPE_CHECKING
-
 import pandas as pd
+from abc import ABC, abstractmethod
 
 from marketsim.event import EventQueue
 from marketsim.fourheap import FourHeap
@@ -14,6 +15,7 @@ from marketsim.fundamental.fundamental_abc import Fundamental
 from marketsim.loggers.basic import setup_market_logger
 from marketsim.market.price import Price
 from marketsim.plot.candle import plot_candlestick
+from marketsim.plot.daedalus_plot_extensions import plot_combined_candles
 from marketsim.plot.simple_plot import (
     plot_cash_transfers,
     plot_order_book,
@@ -29,7 +31,7 @@ if TYPE_CHECKING:
     from marketsim.market import Index
 
 
-class Security:
+class Security(ABC):
     def __init__(
         self,
         *,
@@ -41,6 +43,8 @@ class Security:
         short_name: str | None = None,
         output_dir: str | Path = "tmp",
         currency: str = "PLN",
+        historical_ohlcv: pd.DataFrame | None = None,
+        simulation_dates: list[date] | None = None,
     ) -> None:
         self.asset_id = id_generator.next()
         self.instrument_class = instrument_class
@@ -75,6 +79,10 @@ class Security:
         self.output_dir = output_dir
         self.currency = currency
         self.indices_member = {}  # index_id: Index
+
+        # if running with historical part:
+        self.historical_ohlcv = historical_ohlcv
+        self.simulation_dates = simulation_dates
 
         self.save()
 
@@ -471,11 +479,24 @@ class Security:
 
         # plot the security values history for all period - take data from DB:
         # TODO: for one day simulations plot the daily candlestick
+
+        # Get simulated daily OHLCV from repository
         eod_prices_df = self.repository.get_eod_prices(asset_id=self.asset_id)
-        self.logger.info(f"EoD prices DF: {eod_prices_df}")
-        eod_prices = eod_prices_df.set_index("day").to_dict(orient="index")
-        self.logger.info(f"EOD prices: {eod_prices}")
-        self.plot_history(traded_prices=eod_prices)
+
+        candlestick_filename = Path(self.output_dir) / f"candlestick_{self}.png"
+
+        if self.historical_ohlcv is not None and self.simulation_dates is not None:
+            plot_combined_candles(
+                historical=self.historical_ohlcv,
+                simulated=eod_prices_df,
+                simulation_dates=self.simulation_dates,
+                output_file=str(candlestick_filename),
+                title=self.name,
+            )
+        else:
+            # Preserve existing behavior
+            eod_prices = eod_prices_df.set_index("day").to_dict(orient="index")
+            self.plot_history(traded_prices=eod_prices)
 
         # plotting by type - TODO: take overall data from DB:
         # plot_by_type(self.orders_by_agent_type,
