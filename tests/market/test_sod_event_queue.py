@@ -1,8 +1,8 @@
 from unittest.mock import MagicMock
 
-from marketsim.fourheap.event_queue import EventQueue
 from marketsim.fourheap import FourHeap
 from marketsim.fourheap.constants import BUY
+from marketsim.fourheap.event_queue import EventQueue
 from marketsim.fourheap.order import Order
 from marketsim.market import Price
 from marketsim.market.instruments.security import Security

@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
-from marketsim.fourheap.event_queue import EventQueue
 from marketsim.fourheap import FourHeap
+from marketsim.fourheap.event_queue import EventQueue
 from marketsim.loggers.basic import setup_market_logger
 from marketsim.market.price import Price
 from marketsim.plot.candle import plot_candlestick
@@ -232,16 +232,11 @@ class Security(ABC):
     def get_midprices(self) -> list:
         return self.order_book.midprices
 
-    def reset(self, fundamental: Fundamental) -> None:
+    def reset(self) -> None:
         self.logger.info("Resetting market...")
         self.order_book = FourHeap(plus_one=True, market=self)
         self.event_queue = EventQueue()
         self.matched_orders = []
-        self.fundamental = (
-            fundamental  # AK: this implies some market consensus on the fundamental value
-        )
-        # it may make sense for the ZI agents group, but probably should be kept out of here
-        # and belong to the groups
 
     def record_volume_and_price(self, matched_order: MatchedOrder) -> None:
         # overriden in derivatives to include theoretical
