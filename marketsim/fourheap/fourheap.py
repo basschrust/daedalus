@@ -27,6 +27,7 @@ class FourHeap:
         market_id: int | None = None,
     ):
         self.plus_one = plus_one
+        self.market_id = market_id
         self.logger = logger.bind(market_id=market_id)
 
         self.buy_matched = OrderQueue(is_max_heap=False, is_matched=True, logger=self.logger)
