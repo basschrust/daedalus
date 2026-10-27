@@ -66,12 +66,12 @@ agents:
     number: 1
     config:
       rebalance_by: time
-      rebalance_period: 60
-      volume: 20
+      rebalance_period: 15
+      volume: 150
       K: 3
       xi: 0.1
       omega: 0.1
-      q_max: 3000
+      q_max: 10000
 
   momentum_fast:
     agent_class: MomentumAgent
@@ -99,17 +99,17 @@ agents:
     agent_class: RegimeTraderAgent
     number: 12
     config:
-      lam: 0.20
-      mean_volume: 120
+      lam: 0.55
+      mean_volume: 400
       regime_switch_probability: 0.002
       bullish_probability: 0.45
       bearish_probability: 0.45
-      aggression_ticks: 5
+      aggression_ticks: 10
       tick_size: 0.01
-      validity_period: 2
-      max_position: 5000
+      validity_period: 3
+      max_position: 20000
       initial_cash:
-        PLN: 2000000
+        PLN: 10000000
 
 historical_prices:
   enabled: true

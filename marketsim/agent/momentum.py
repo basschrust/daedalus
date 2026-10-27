@@ -3,6 +3,7 @@ from __future__ import annotations
 import random
 from pathlib import Path
 from typing import TYPE_CHECKING
+import math
 
 from marketsim.agent.agent import Agent
 from marketsim.fourheap.constants import BUY, SELL
@@ -63,7 +64,30 @@ class MomentumAgent(Agent):
             if current_time >= self.period and random.random() < self.lam:
                 market.withdraw_all(agent_id=self.agent_id)
                 previous_price = market.traded_prices[current_time - self.period]["close"]
-                limit = Price(float(market.last_traded_price) * (0.95 + 0.1 * random.uniform(0, 1)))
+
+                # more aggressive limit calculation:
+                best_ask = market.order_book.get_best_ask()
+                best_bid = market.order_book.get_best_bid()
+
+                last_price = float(market.last_traded_price)
+                aggression = float(
+                    self.configuration.get("aggression", 0.002)
+                )
+
+                buy_limit = None
+                sell_limit = None
+
+                if math.isfinite(float(best_ask)):
+                    buy_limit = Price(
+                        float(best_ask) + last_price * aggression
+                    )
+
+                if math.isfinite(float(best_bid)):
+                    sell_price = float(best_bid) - last_price * aggression
+                    if sell_price > 0:
+                        sell_limit = Price(sell_price)
+
+                # limit = Price(float(market.last_traded_price) * (0.95 + 0.1 * random.uniform(0, 1)))
                 # asymptotic approaching the q_max - but let it also reverse the trend when position is high...
                 if market.last_traded_price > float(previous_price) * (1 + self.threshold):
                     if self.position[asset_id] > 0:
@@ -72,10 +96,10 @@ class MomentumAgent(Agent):
                     else:
                         # reversing the trend
                         quantity = int(self.q_max / 10)
-                    if quantity > 0:
+                    if buy_limit is not None and quantity > 0:
                         orders.append(
                             Order(
-                                price=limit,
+                                price=buy_limit,
                                 quantity=quantity,
                                 agent_id=self.agent_id,
                                 time=current_time,
@@ -90,10 +114,10 @@ class MomentumAgent(Agent):
                     else:
                         # reversing the trend
                         quantity = int(self.q_max / 10)
-                    if quantity > 0:
+                    if sell_limit is not None and quantity > 0:
                         orders.append(
                             Order(
-                                price=limit,
+                                price=sell_limit,
                                 quantity=quantity,
                                 agent_id=self.agent_id,
                                 time=current_time,
