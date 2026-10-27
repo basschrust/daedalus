@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from marketsim.event import EventQueue
+from marketsim.fourheap.event_queue import EventQueue
 from marketsim.fourheap import FourHeap
 from marketsim.fourheap.constants import BUY
 from marketsim.fourheap.order import Order

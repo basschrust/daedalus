@@ -1,4 +1,4 @@
-from marketsim.event.event_queue import EventQueue
+from marketsim.fourheap.event_queue import EventQueue
 from marketsim.fourheap.constants import BUY
 from marketsim.fourheap.order import Order
 from marketsim.market.price import Price

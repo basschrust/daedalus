@@ -10,9 +10,8 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
-from marketsim.event import EventQueue
+from marketsim.fourheap.event_queue import EventQueue
 from marketsim.fourheap import FourHeap
-from marketsim.fundamental.fundamental_abc import Fundamental
 from marketsim.loggers.basic import setup_market_logger
 from marketsim.market.price import Price
 from marketsim.plot.candle import plot_candlestick
