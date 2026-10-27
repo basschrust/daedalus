@@ -67,29 +67,37 @@ agents:
     config:
       rebalance_by: time
       rebalance_period: 15
-      volume: 150
+      volume: 300
       K: 3
       xi: 0.1
       omega: 0.1
-      q_max: 10000
+      q_max: 100000
 
   momentum_fast:
     agent_class: MomentumAgent
-    number: 3
+    number: 8
     config:
-      period: 10
-      threshold: 0.003
-      q_max: 100
-      lam: 0.15
+      period: 5
+      threshold: 0.001
+      lam: 0.60
+      mean_volume: 500
+      q_max: 10000
+      aggression: 0.005
+      initial_cash:
+        PLN: 10000000
 
   momentum_slow:
     agent_class: MomentumAgent
-    number: 3
+    number: 6
     config:
-      period: 60
-      threshold: 0.008
-      q_max: 100
-      lam: 0.08
+      period: 30
+      threshold: 0.003
+      lam: 0.35
+      mean_volume: 700
+      q_max: 15000
+      aggression: 0.005
+      initial_cash:
+        PLN: 10000000
 
   hbl:
     agent_class: HBLAgent

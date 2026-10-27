@@ -4,6 +4,7 @@ import random
 from pathlib import Path
 from typing import TYPE_CHECKING
 import math
+import numpy as np
 
 from marketsim.agent.agent import Agent
 from marketsim.fourheap.constants import BUY, SELL
@@ -53,80 +54,133 @@ class MomentumAgent(Agent):
     def get_id(self) -> int:
         return self.agent_id
 
-    def take_action(self, current_time: int):
+    def get_daily_momentum(self, market, lookback: int = 10) -> float:
+        historical = market.historical_ohlcv
+
+        if historical is None or historical.empty:
+            return 0.0
+
+        # Historical OHLCV uses lowercase column names.
+        closes = historical["close"].astype(float).tolist()
+
+        # Include completed simulated sessions, never today's
+        # unfinished close.
+        completed_closes = getattr(
+            market, "completed_daily_closes", []
+        )
+
+        closes.extend(float(p) for p in completed_closes)
+
+        if len(closes) <= lookback:
+            return 0.0
+
+        return closes[-1] / closes[-1 - lookback] - 1.0
+
+    def take_action(self, current_time: int) -> None:
         for asset_id, market in self.markets.items():
-            orders = []
-            # compute the momentum
-            # compare last traded price (in t-1 - or maybe current last traded?) with price period ticks ago (why not MA?)
-            # if price[t-1] > (1+threshold) * price[t-period] -> buy
-            # if price[t-1] < (1-threshold) * price[t-period] -> sell
-            # amounts? and lambda? yet ignore, take into account in next iteration, price limit?
-            if current_time >= self.period and random.random() < self.lam:
-                market.withdraw_all(agent_id=self.agent_id)
-                previous_price = market.traded_prices[current_time - self.period]["close"]
+            if market.instrument_class == "index":
+                continue
 
-                # more aggressive limit calculation:
-                best_ask = market.order_book.get_best_ask()
-                best_bid = market.order_book.get_best_bid()
+            if current_time < self.period or random.random() >= self.lam:
+                continue
 
-                last_price = float(market.last_traded_price)
-                aggression = float(
-                    self.configuration.get("aggression", 0.002)
+            previous_tick = current_time - self.period
+            previous = market.traded_prices.get(previous_tick)
+
+            if previous is None:
+                continue
+
+            previous_price = float(previous["close"])
+            current_price = float(market.last_traded_price)
+
+            if previous_price <= 0:
+                continue
+
+            momentum = current_price / previous_price - 1.0
+
+            if momentum > self.threshold:
+                side = BUY
+            elif momentum < -self.threshold:
+                side = SELL
+            else:
+                continue
+
+            position = self.position[asset_id]
+
+            # Genuine maximum net position, allowing short positions.
+            capacity = (
+                self.q_max - position
+                if side == BUY
+                else self.q_max + position
+            )
+
+            if capacity <= 0:
+                continue
+
+            mean_volume = float(
+                self.configuration.get("mean_volume", 300)
+            )
+
+            quantity = min(
+                max(1, int(np.random.poisson(mean_volume))),
+                capacity,
+            )
+
+            if side == BUY:
+                opposing = market.order_book.get_best_ask()
+            else:
+                opposing = market.order_book.get_best_bid()
+
+            if opposing is None or not math.isfinite(float(opposing)):
+                continue
+
+            aggression = float(
+                self.configuration.get("aggression", 0.003)
+            )
+
+            if side == BUY:
+                limit = float(opposing) + current_price * aggression
+            else:
+                limit = max(
+                    0.01,
+                    float(opposing) - current_price * aggression
                 )
 
-                buy_limit = None
-                sell_limit = None
+            if not math.isfinite(limit) or Price(limit) <= 0:
+                self.logger.warning(
+                    f"Momentum invalid price: "
+                    f"asset={asset_id}, "
+                    f"time={current_time}, "
+                    f"side={side}, "
+                    f"last={current_price}, "
+                    f"opposing={opposing}, "
+                    f"aggression={aggression}, "
+                    f"limit={limit}"
+                )
+                continue
 
-                if math.isfinite(float(best_ask)):
-                    buy_limit = Price(
-                        float(best_ask) + last_price * aggression
-                    )
+            if not math.isfinite(limit) or limit <= 0:
+                continue
 
-                if math.isfinite(float(best_bid)):
-                    sell_price = float(best_bid) - last_price * aggression
-                    if sell_price > 0:
-                        sell_limit = Price(sell_price)
+            order_price = Price(limit)
 
-                # limit = Price(float(market.last_traded_price) * (0.95 + 0.1 * random.uniform(0, 1)))
-                # asymptotic approaching the q_max - but let it also reverse the trend when position is high...
-                if market.last_traded_price > float(previous_price) * (1 + self.threshold):
-                    if self.position[asset_id] > 0:
-                        # asymptotic approach
-                        quantity = int(self.q_max - abs(self.position[asset_id]) / 10)
-                    else:
-                        # reversing the trend
-                        quantity = int(self.q_max / 10)
-                    if buy_limit is not None and quantity > 0:
-                        orders.append(
-                            Order(
-                                price=buy_limit,
-                                quantity=quantity,
-                                agent_id=self.agent_id,
-                                time=current_time,
-                                order_type=BUY,
-                                asset_id=asset_id,
-                            )
-                        )
-                elif market.last_traded_price < float(previous_price) * (1 - self.threshold):
-                    if self.position[asset_id] < 0:
-                        # asymptotic approach
-                        quantity = int(self.q_max - abs(self.position[asset_id]) / 10)
-                    else:
-                        # reversing the trend
-                        quantity = int(self.q_max / 10)
-                    if sell_limit is not None and quantity > 0:
-                        orders.append(
-                            Order(
-                                price=sell_limit,
-                                quantity=quantity,
-                                agent_id=self.agent_id,
-                                time=current_time,
-                                order_type=SELL,
-                                asset_id=asset_id,
-                            )
-                        )
+            # Validate after tick-size rounding.
+            if order_price <= 0:
+                continue
 
-            market.add_orders(orders)
+            market.withdraw_all(agent_id=self.agent_id)
+
+            market.add_orders([
+                Order(
+                    price=order_price,
+                    quantity=quantity,
+                    agent_id=self.agent_id,
+                    time=current_time,
+                    order_type=side,
+                    asset_id=asset_id,
+                    valid_until=current_time + 3,
+                )
+            ])
 
     def get_pos_value(self) -> float:
         # TODO: wtf is this function for?
