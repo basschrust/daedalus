@@ -39,4 +39,6 @@ class Stock(Security):
             market_type=market_type,
             output_dir=output_dir,
             currency=currency,
+            historical_ohlcv=historical_ohlcv,
+            simulation_dates=simulation_dates,
         )

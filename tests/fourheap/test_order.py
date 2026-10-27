@@ -10,6 +10,12 @@ BUY = 1
 SELL = -1
 
 
+@pytest.fixture
+def fourheap(stock_tnt) -> FourHeap:
+    fourheap = FourHeap(market_id=stock_tnt.asset_id)
+    return fourheap
+
+
 #############   test functions  #############################33
 
 
@@ -111,7 +117,7 @@ def test_copy_and_decrease_preserves_order_properties():
 
 
 def test_large_sell_order_against_many_small_buy_orders(stock):
-    fourheap = FourHeap(market=stock)
+    fourheap = FourHeap(market_id=stock.asset_id)
 
     number_of_orders = 2493
 
@@ -157,7 +163,7 @@ def test_large_sell_order_against_many_small_buy_orders(stock):
 
 
 def test_large_sell_order_leaves_remaining_quantity(stock):
-    fourheap = FourHeap(market=stock)
+    fourheap = FourHeap(market_id=stock.asset_id)
 
     resting_quantity = 2000
     incoming_quantity = 2493
@@ -196,7 +202,7 @@ def test_large_sell_order_leaves_remaining_quantity(stock):
 
 
 def test_order_price_match_99(stock_tnt: Security, buy_order_99: Order, sell_order_99: Order):
-    fourheap = FourHeap(market=stock_tnt)
+    fourheap = FourHeap(market_id=stock_tnt.asset_id)
     fourheap.insert(buy_order_99)
     fourheap.insert(sell_order_99)
 
@@ -211,7 +217,7 @@ def test_order_price_match_99(stock_tnt: Security, buy_order_99: Order, sell_ord
 
 
 def test_order_price_match_99_2(stock_tnt: Security, buy_order_99: Order, sell_order_99: Order):
-    fourheap = FourHeap(market=stock_tnt)
+    fourheap = FourHeap(market_id=stock_tnt.asset_id)
     fourheap.insert(sell_order_99)
     fourheap.insert(buy_order_99)
 
@@ -228,7 +234,7 @@ def test_order_price_match_99_2(stock_tnt: Security, buy_order_99: Order, sell_o
 def test_order_price_no_match_99_101(
     stock_tnt: Security, buy_order_99: Order, sell_order_101: Order
 ):
-    fourheap = FourHeap(market=stock_tnt)
+    fourheap = FourHeap(market_id=stock_tnt.asset_id)
     fourheap.insert(buy_order_99)
     fourheap.insert(sell_order_101)
 
@@ -245,7 +251,7 @@ def test_order_price_no_match_99_101(
 def test_order_price_no_match_99_101_2(
     stock_tnt: Security, buy_order_99: Order, sell_order_101: Order
 ):
-    fourheap = FourHeap(market=stock_tnt)
+    fourheap = FourHeap(market_id=stock_tnt.asset_id)
 
     fourheap.insert(sell_order_101)
     fourheap.insert(buy_order_99)
@@ -261,7 +267,7 @@ def test_order_price_no_match_99_101_2(
 
 
 def test_order_price_match_101_99(stock_tnt: Security, buy_order_101: Order, sell_order_99: Order):
-    fourheap = FourHeap(market=stock_tnt)
+    fourheap = FourHeap(market_id=stock_tnt.asset_id)
     fourheap.insert(buy_order_101)
     fourheap.insert(sell_order_99)
 
@@ -278,7 +284,7 @@ def test_order_price_match_101_99(stock_tnt: Security, buy_order_101: Order, sel
 def test_order_price_match_101_99_2(
     stock_tnt: Security, buy_order_101: Order, sell_order_99: Order
 ):
-    fourheap = FourHeap(market=stock_tnt)
+    fourheap = FourHeap(market_id=stock_tnt.asset_id)
     fourheap.insert(sell_order_99)
     fourheap.insert(buy_order_101)
 
@@ -296,7 +302,7 @@ def test_order_price_match_101_99_2(
 
 
 def test_order_price_match_99_q(stock_tnt: Security, buy_order_99: Order, sell_order_99: Order):
-    fourheap = FourHeap(market=stock_tnt)
+    fourheap = FourHeap(market_id=stock_tnt.asset_id)
     buy_order_99.quantity = 12
     fourheap.insert(buy_order_99)
     fourheap.insert(sell_order_99)
@@ -312,7 +318,7 @@ def test_order_price_match_99_q(stock_tnt: Security, buy_order_99: Order, sell_o
 
 
 def test_order_price_match_99_2_q(stock_tnt: Security, buy_order_99: Order, sell_order_99: Order):
-    fourheap = FourHeap(market=stock_tnt)
+    fourheap = FourHeap(market_id=stock_tnt.asset_id)
     sell_order_99.quantity = 14
     fourheap.insert(sell_order_99)
     fourheap.insert(buy_order_99)
@@ -330,7 +336,7 @@ def test_order_price_match_99_2_q(stock_tnt: Security, buy_order_99: Order, sell
 def test_order_price_no_match_99_101_q(
     stock_tnt: Security, buy_order_99: Order, sell_order_101: Order
 ):
-    fourheap = FourHeap(market=stock_tnt)
+    fourheap = FourHeap(market_id=stock_tnt.asset_id)
     buy_order_99.quantity = 17
     fourheap.insert(buy_order_99)
     fourheap.insert(sell_order_101)
@@ -348,7 +354,7 @@ def test_order_price_no_match_99_101_q(
 def test_order_price_no_match_99_101_2_q(
     stock_tnt: Security, buy_order_99: Order, sell_order_101: Order
 ):
-    fourheap = FourHeap(market=stock_tnt)
+    fourheap = FourHeap(market_id=stock_tnt.asset_id)
 
     sell_order_101.quantity = 45
     fourheap.insert(sell_order_101)
@@ -367,7 +373,7 @@ def test_order_price_no_match_99_101_2_q(
 def test_order_price_match_101_99_q(
     stock_tnt: Security, buy_order_101: Order, sell_order_99: Order
 ):
-    fourheap = FourHeap(market=stock_tnt)
+    fourheap = FourHeap(market_id=stock_tnt.asset_id)
     sell_order_99.quantity = 88
     fourheap.insert(buy_order_101)
     fourheap.insert(sell_order_99)
@@ -385,7 +391,7 @@ def test_order_price_match_101_99_q(
 def test_order_price_match_101_99_2_q(
     stock_tnt: Security, buy_order_101: Order, sell_order_99: Order
 ):
-    fourheap = FourHeap(market=stock_tnt)
+    fourheap = FourHeap(market_id=stock_tnt.asset_id)
     buy_order_101.quantity = 81
     fourheap.insert(sell_order_99)
     fourheap.insert(buy_order_101)
@@ -406,7 +412,7 @@ def test_order_price_match_101_99_2_q(
 def test_order_price_match_99_3(
     stock_tnt: Security, buy_order_99: Order, sell_order_101: Order, sell_order_99: Order
 ):
-    fourheap = FourHeap(market=stock_tnt)
+    fourheap = FourHeap(market_id=stock_tnt.asset_id)
     fourheap.insert(sell_order_101)
     fourheap.insert(buy_order_99)
     fourheap.insert(sell_order_99)
@@ -426,7 +432,7 @@ def test_order_price_match_99_3(
 def test_order_price_match_99_3_2(
     stock_tnt: Security, buy_order_99: Order, sell_order_99: Order, sell_order_101: Order
 ):
-    fourheap = FourHeap(market=stock_tnt)
+    fourheap = FourHeap(market_id=stock_tnt.asset_id)
     fourheap.insert(sell_order_101)
     fourheap.insert(sell_order_99)
     fourheap.insert(buy_order_99)
@@ -446,7 +452,7 @@ def test_order_price_match_99_3_2(
 def test_order_price_no_match_99_101_3(
     stock_tnt: Security, buy_order_99: Order, sell_order_101: Order, buy_order: Order
 ):
-    fourheap = FourHeap(market=stock_tnt)
+    fourheap = FourHeap(market_id=stock_tnt.asset_id)
     fourheap.insert(buy_order)  # has default limit 100.00
     fourheap.insert(buy_order_99)
     fourheap.insert(sell_order_101)
@@ -469,7 +475,7 @@ def test_order_price_no_match_99_101_3(
 def test_order_price_no_match_99_101_3_2(
     stock_tnt: Security, buy_order_99: Order, sell_order: Order, sell_order_101: Order
 ):
-    fourheap = FourHeap(market=stock_tnt)
+    fourheap = FourHeap(market_id=stock_tnt.asset_id)
 
     fourheap.insert(sell_order)  # 100
     fourheap.insert(sell_order_101)
@@ -493,7 +499,7 @@ def test_order_price_no_match_99_101_3_2(
 def test_order_price_match_101_99_partial(
     stock_tnt: Security, buy_order: Order, buy_order_101: Order, sell_order_99: Order
 ):
-    fourheap = FourHeap(market=stock_tnt)
+    fourheap = FourHeap(market_id=stock_tnt.asset_id)
     buy_order_101.quantity = 6
     fourheap.insert(buy_order)
     fourheap.insert(buy_order_101)
@@ -516,9 +522,12 @@ def test_order_price_match_101_99_partial(
 
 
 def test_order_price_match_101_99_partial_2(
-    stock_tnt: Security, buy_order_101: Order, sell_order_99: Order, sell_order: Order
+    stock_tnt: Security,
+    buy_order_101: Order,
+    sell_order_99: Order,
+    sell_order: Order,
+    fourheap: FourHeap,
 ):
-    fourheap = FourHeap(market=stock_tnt)
     sell_order_99.quantity = 4
     fourheap.insert(sell_order)
     fourheap.insert(sell_order_99)
@@ -544,9 +553,12 @@ def test_order_price_match_101_99_partial_2(
 
 
 def test_order_price_match_99_3_q(
-    stock_tnt: Security, buy_order_99: Order, sell_order_99: Order, buy_order_101: Order
+    stock_tnt: Security,
+    buy_order_99: Order,
+    sell_order_99: Order,
+    buy_order_101: Order,
+    fourheap: FourHeap,
 ):
-    fourheap = FourHeap(market=stock_tnt)
     buy_order_99.quantity = 7
     fourheap.insert(buy_order_99)
     fourheap.insert(sell_order_99)
@@ -568,9 +580,12 @@ def test_order_price_match_99_3_q(
 
 
 def test_order_price_match_99_3_2_q(
-    stock_tnt: Security, buy_order_99: Order, sell_order_99: Order, sell_order_101: Order
+    stock_tnt: Security,
+    buy_order_99: Order,
+    sell_order_99: Order,
+    sell_order_101: Order,
+    fourheap: FourHeap,
 ):
-    fourheap = FourHeap(market=stock_tnt)
     sell_order_99.quantity = 6
     fourheap.insert(sell_order_99)
     fourheap.insert(buy_order_99)
@@ -591,9 +606,12 @@ def test_order_price_match_99_3_2_q(
 
 
 def test_order_price_no_match_99_101_3_q(
-    stock_tnt: Security, buy_order_99: Order, sell_order_101: Order, buy_order_101: Order
+    stock_tnt: Security,
+    buy_order_99: Order,
+    sell_order_101: Order,
+    buy_order_101: Order,
+    fourheap: FourHeap,
 ):
-    fourheap = FourHeap(market=stock_tnt)
     buy_order_101.quantity = 17
     fourheap.insert(buy_order_99)
     fourheap.insert(sell_order_101)
@@ -615,10 +633,12 @@ def test_order_price_no_match_99_101_3_q(
 
 
 def test_order_price_no_match_99_101_3_2_q(
-    stock_tnt: Security, buy_order_99: Order, sell_order_101: Order, sell_order_99: Order
+    stock_tnt: Security,
+    buy_order_99: Order,
+    sell_order_101: Order,
+    sell_order_99: Order,
+    fourheap: FourHeap,
 ):
-    fourheap = FourHeap(market=stock_tnt)
-
     sell_order_101.quantity = 45
     sell_order_99.quantity = 4
     fourheap.insert(sell_order_101)
@@ -641,9 +661,12 @@ def test_order_price_no_match_99_101_3_2_q(
 
 
 def test_order_price_match_101_99_3_q(
-    stock_tnt: Security, buy_order_101: Order, sell_order_99: Order, buy_order: Order
+    stock_tnt: Security,
+    buy_order_101: Order,
+    sell_order_99: Order,
+    buy_order: Order,
+    fourheap: FourHeap,
 ):
-    fourheap = FourHeap(market=stock_tnt)
     sell_order_99.quantity = 88
     fourheap.insert(buy_order_101)
     fourheap.insert(sell_order_99)
@@ -664,9 +687,12 @@ def test_order_price_match_101_99_3_q(
 
 
 def test_order_price_match_101_99_3_2_q(
-    stock_tnt: Security, buy_order_101: Order, sell_order_99: Order, sell_order_101: Order
+    stock_tnt: Security,
+    buy_order_101: Order,
+    sell_order_99: Order,
+    sell_order_101: Order,
+    fourheap: FourHeap,
 ):
-    fourheap = FourHeap(market=stock_tnt)
     buy_order_101.quantity = 81
     fourheap.insert(sell_order_99)
     fourheap.insert(buy_order_101)

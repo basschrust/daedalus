@@ -29,8 +29,32 @@ class OrderQueue:
         executed_mode: str | None = None,
         matched_with: int | None = None,
     ) -> None:
+        # self.logger.debug(
+        #     f"order_queue.add_order {order} with executed_price: {executed_price}, executed_mode: {executed_mode}, matched_with: {matched_with}"
+        # )
         self.logger.debug(
-            f"order_queue.add_order {order} with executed_price: {executed_price}, executed_mode: {executed_mode}, matched_with: {matched_with}"
+            "QUEUE ADD | matched_queue={} "
+            "object_id={} order_id={} parent_id={} "
+            "asset_id={} agent_id={} "
+            "price={} qty={} valid_until={} "
+            "previous_match={} new_match={} "
+            "previous_exec_price={} new_exec_price={} "
+            "previous_mode={} new_mode={}",
+            self.is_matched,
+            id(order),
+            order.order_id,
+            order.parent_id,
+            order.asset_id,
+            order.agent_id,
+            order.price,
+            order.quantity,
+            order.valid_until,
+            order.matched_with,
+            matched_with,
+            order.executed_price,
+            executed_price,
+            order.executed_mode,
+            executed_mode,
         )
         price = order.price if not self.is_max_heap else -order.price
         order_id = order.order_id
@@ -44,6 +68,13 @@ class OrderQueue:
         else:
             heapq.heappush(self.heap, (price, order.order_id))
             self.order_dict[order.order_id] = order
+            if self.is_matched:
+                assert order.executed_price is None, (
+                    f"Order {order.order_id} already executed at {order.executed_price}"
+                )
+                assert order.matched_with is None, (
+                    f"Order {order.order_id} already matched with {order.matched_with}"
+                )
             if self.is_matched:
                 order.executed_price = (
                     executed_price  # hmm, the price from the other side peek which is not

@@ -1,37 +1,12 @@
-historical_data:
-  PKO.WA:
-    last_session: "2026-10-23"
-    reference_price: 109.54
-    daily_mean_return: 0.001549079
-    daily_volatility: 0.016532928
-    median_daily_volume: 2367521.5
-    observations: 250
-
-  PKN.WA:
-    last_session: "2026-10-23"
-    reference_price: 156.34
-    daily_mean_return: 0.002120616
-    daily_volatility: 0.021390418
-    median_daily_volume: 1630695.5
-    observations: 250
-
-  KGH.WA:
-    last_session: "2026-10-23"
-    reference_price: 293.20
-    daily_mean_return: 0.002315740
-    daily_volatility: 0.034524131
-    median_daily_volume: 790501.5
-    observations: 250
-
-
 seed: 67
 days: 10
-sim_time: 390
+sim_time: 40
 lob_plot_interval: 10000
 markets:
   pko.wa:
     name: PKO.WA
     short_name: PKO.WA
+    symbol: PKO.WA
     instrument_class: stock
     market_type: continuous
     reference_price: 109.54
@@ -39,6 +14,7 @@ markets:
   pkn.wa:
     name: PKN.WA
     short_name: PKN.WA
+    symbol: PKN.WA
     instrument_class: stock
     market_type: continuous
     reference_price: 156.34
@@ -46,26 +22,118 @@ markets:
   kgh.wa:
     name: KGH.WA
     short_name: KGH.WA
+    symbol: KGH.WA
     instrument_class: stock
     market_type: continuous
     reference_price: 293.2
     currency: PLN
 agents:
-  noise:
+  noise_tight:
     agent_class: NoiseAgent
-    number: 12
+    number: 10
     config:
-      lam: 0.15
-      mean_volume: 20
-      mean_spread: 1.0
-      use_historical_volatility: true
-      historical_volatility_scale: 0.1
+      lam: 0.40
+      mean_volume: 150
+      mean_spread: 0.3
+      validity_period: 3
+      initial_cash:
+        PLN: 1000000
+
+  noise_medium:
+    agent_class: NoiseAgent
+    number: 15
+    config:
+      lam: 0.30
+      mean_volume: 200
+      mean_spread: 1.5
+      validity_period: 10
+      initial_cash:
+        PLN: 1000000
+
+  noise_wide:
+    agent_class: NoiseAgent
+    number: 10
+    config:
+      lam: 0.20
+      mean_volume: 250
+      mean_spread: 4.0
+      validity_period: 20
       initial_cash:
         PLN: 1000000
 
   market_makers:
     agent_class: MMZOHAgent
-    number: 2
+    number: 1
+    config:
+      rebalance_by: time
+      rebalance_period: 10
+      volume: 500
+      K: 3
+      xi: 0.1
+      omega: 0.1
+      q_max: 1000000
+
+  momentum_fast:
+    agent_class: MomentumAgent
+    number: 5
+    config:
+      momentum_mode: intraday
+      period: 5
+      threshold: 0.001
+      lam: 0.30
+      mean_volume: 250
+      q_max: 10000
+      aggression: 0.003
+      initial_cash:
+        PLN: 10000000
+
+  momentum_slow:
+    agent_class: MomentumAgent
+    number: 4
+    config:
+      momentum_mode: daily
+      daily_lookback: 10
+      threshold: 0.01
+      lam: 0.20
+      mean_volume: 350
+      q_max: 15000
+      aggression: 0.003
+      initial_cash:
+        PLN: 10000000
+
   hbl:
     agent_class: HBLAgent
-    number: 3
+    number: 6
+
+  regime_traders:
+    agent_class: RegimeTraderAgent
+    number: 12
+    config:
+      lam: 0.55
+      mean_volume: 400
+      regime_switch_probability: 0.002
+      bullish_probability: 0.45
+      bearish_probability: 0.45
+      aggression_ticks: 10
+      tick_size: 0.01
+      validity_period: 3
+      max_position: 20000
+      initial_cash:
+        PLN: 10000000
+
+historical_prices:
+  enabled: true
+  path: gpw_historical_10d.ohlcv.csv
+  lookback_sessions: 250
+  cutoff_date: '2026-10-23'
+simulation_dates:
+- '2026-10-26'
+- '2026-10-27'
+- '2026-10-28'
+- '2026-10-29'
+- '2026-10-30'
+- '2026-11-02'
+- '2026-11-03'
+- '2026-11-04'
+- '2026-11-05'
+- '2026-11-06'

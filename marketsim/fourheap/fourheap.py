@@ -13,7 +13,6 @@ from marketsim.market.price import Price
 
 if TYPE_CHECKING:
     from marketsim.fourheap import MatchedOrder, Order
-    from marketsim.market import Security
 
 
 class FourHeap:
@@ -22,13 +21,14 @@ class FourHeap:
     theory and implementation" (Wurman, 98)
     """
 
-    def __init__(self, plus_one=False, market: Security | None = None):
-        self.plus_one = (
-            plus_one  # AK - wtf is that? if True gets ask price in clearing, bid otherwise
-        )
-
-        self.market = market
-        self.logger = logger.bind(market_id=market.asset_id)
+    def __init__(
+        self,
+        plus_one: bool = False,
+        market_id: int | None = None,
+    ):
+        self.plus_one = plus_one
+        self.market_id = market_id
+        self.logger = logger.bind(market_id=market_id)
 
         self.buy_matched = OrderQueue(is_max_heap=False, is_matched=True, logger=self.logger)
         self.buy_unmatched = OrderQueue(is_max_heap=True, is_matched=False, logger=self.logger)
