@@ -125,6 +125,26 @@ class RegimeTraderAgent(Agent):
             limit = float(opposing) + offset if regime == BUY else float(opposing) - offset
             if limit <= 0:
                 continue
+            self.logger.warning(
+                "REGIME ORDER DIAGNOSTIC | "
+                f"asset={asset_id} "
+                f"day={market.current_day} "
+                f"tick={current_time} "
+                f"agent={self.agent_id} "
+                f"side={regime} "
+                f"bid={market.order_book.get_best_bid()} "
+                f"ask={market.order_book.get_best_ask()} "
+                f"opposing={opposing} "
+                f"offset={offset} "
+                f"limit={limit} "
+                f"last={market.last_traded_price}"
+            )
+            if regime == BUY and Price(limit) < Price(opposing):
+                raise AssertionError("Regime BUY limit below opposing ask")
+
+            if regime == SELL and Price(limit) > Price(opposing):
+                raise AssertionError("Regime SELL limit above opposing bid")
+
             market.add_orders(
                 [
                     Order(

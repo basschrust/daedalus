@@ -206,6 +206,12 @@ class Security(ABC):
         for order in orders:
             if order.quantity <= 0:
                 continue
+            if order.executed_price is not None or order.matched_with is not None:
+                raise AssertionError(
+                    f"Previously matched order re-entering book: "
+                    f"day={self.current_day}, tick={current_time}, "
+                    f"order={order}"
+                )
             self.logger.info(f"Inserting order: {order}")
             self.order_book.insert(order)
             # if we are in continuous mode we should clear the market here, after entering each order
@@ -536,6 +542,7 @@ class Security(ABC):
             self.eod_status = "open"
 
             self.order_book = FourHeap(plus_one=True, market=self)
+            self.event_queue = EventQueue()
             self.matched_orders = []  # stores a list of all trades from the beginning of trading to the end of simulation
             self.matched_orders_hashed = {}  # {order_id: { "price": price, "quantity":quantity }}
 

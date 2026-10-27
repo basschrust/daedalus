@@ -87,19 +87,19 @@ agents:
       initial_cash:
         PLN: 10000000
 
-    momentum_slow:
-      agent_class: MomentumAgent
-      number: 4
-      config:
-        momentum_mode: daily
-        daily_lookback: 10
-        threshold: 0.01
-        lam: 0.20
-        mean_volume: 350
-        q_max: 15000
-        aggression: 0.003
-        initial_cash:
-          PLN: 10000000
+  momentum_slow:
+    agent_class: MomentumAgent
+    number: 4
+    config:
+      momentum_mode: daily
+      daily_lookback: 10
+      threshold: 0.01
+      lam: 0.20
+      mean_volume: 350
+      q_max: 15000
+      aggression: 0.003
+      initial_cash:
+        PLN: 10000000
 
   hbl:
     agent_class: HBLAgent
