@@ -70,12 +70,10 @@ class OrderQueue:
             self.order_dict[order.order_id] = order
             if self.is_matched:
                 assert order.executed_price is None, (
-                    f"Order {order.order_id} already executed at "
-                    f"{order.executed_price}"
+                    f"Order {order.order_id} already executed at {order.executed_price}"
                 )
                 assert order.matched_with is None, (
-                    f"Order {order.order_id} already matched with "
-                    f"{order.matched_with}"
+                    f"Order {order.order_id} already matched with {order.matched_with}"
                 )
             if self.is_matched:
                 order.executed_price = (

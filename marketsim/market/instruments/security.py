@@ -61,16 +61,15 @@ class Security(ABC):
         # TODO: check if this fundamental (externally provided value) is needed here
         # self.fundamental = fundamental
 
+        self.order_book = self._create_order_book()
         self.event_queue = EventQueue()
-        # self.end_time = time_steps
+
         self.market_type = (
             market_type  # "discrete" or "continuous" # TODO: what if two phased? or more phased :)
         )
         self.agents = {}
         self.name = name
-        # TODO: add logger
-        # setup_logger(subject="market", subject_id=self.asset_id)
-        # self.logger = logger.bind(market_id=self.asset_id)
+
         self.logger = setup_market_logger(asset_id=self.asset_id, output_dir=output_dir)
 
         self.current_day = 0
@@ -236,9 +235,9 @@ class Security(ABC):
 
     def reset(self, fundamental: Fundamental) -> None:
         self.logger.info("Resetting market...")
-        self.order_book = FourHeap()
-        self.matched_orders = []
+        self.order_book = FourHeap(plus_one=True, market=self)
         self.event_queue = EventQueue()
+        self.matched_orders = []
         self.fundamental = (
             fundamental  # AK: this implies some market consensus on the fundamental value
         )
@@ -533,7 +532,6 @@ class Security(ABC):
     ##################      SoD  and  EoD      ##########################################
 
     def sod(self):
-        from marketsim.fourheap import FourHeap  # TODO: beware of circular imports
 
         if self.status == "active":
             self.logger.info(
@@ -541,7 +539,7 @@ class Security(ABC):
             )
             self.eod_status = "open"
 
-            self.order_book = FourHeap(plus_one=True, market=self)
+            self.order_book = self._create_order_book()
             self.event_queue = EventQueue()
             self.matched_orders = []  # stores a list of all trades from the beginning of trading to the end of simulation
             self.matched_orders_hashed = {}  # {order_id: { "price": price, "quantity":quantity }}
@@ -773,3 +771,9 @@ class Security(ABC):
         self.trades_by_agent_type = None
         self.trades_by_agent_type_ext = None
         self.trade_history_by_groups = None
+
+    def _create_order_book(self) -> FourHeap:
+        return FourHeap(
+            plus_one=True,
+            market_id=self.asset_id,
+        )
