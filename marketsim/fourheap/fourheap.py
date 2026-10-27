@@ -133,6 +133,12 @@ class FourHeap:
 
     def insert(self, order: Order, trading_phase: str = "continuous") -> None:
         # very important method in continuous market - determines the price in CDA (Cont.Double Auction)
+        if self.market_id is not None:
+            assert order.asset_id == self.market_id, (
+                f"Cross-asset order detected: "
+                f"order.asset_id={order.asset_id}, "
+                f"market_id={self.market_id}"
+            )
         self.logger.debug(f"fourheap.insert {order}, trading_phase: {trading_phase}")
         if trading_phase == "continuous":
             self.agent_id_map[order.agent_id].append(order.order_id)
