@@ -30,7 +30,7 @@ markets:
 agents:
   noise_tight:
     agent_class: NoiseAgent
-    number: 20
+    number: 10
     config:
       lam: 0.40
       mean_volume: 150
@@ -41,23 +41,23 @@ agents:
 
   noise_medium:
     agent_class: NoiseAgent
-    number: 25
+    number: 15
     config:
       lam: 0.30
       mean_volume: 200
       mean_spread: 1.5
-      validity_period: 15
+      validity_period: 10
       initial_cash:
         PLN: 1000000
 
   noise_wide:
     agent_class: NoiseAgent
-    number: 15
+    number: 10
     config:
       lam: 0.20
       mean_volume: 250
       mean_spread: 4.0
-      validity_period: 40
+      validity_period: 20
       initial_cash:
         PLN: 1000000
 
@@ -66,38 +66,40 @@ agents:
     number: 1
     config:
       rebalance_by: time
-      rebalance_period: 15
-      volume: 300
+      rebalance_period: 10
+      volume: 500
       K: 3
       xi: 0.1
       omega: 0.1
-      q_max: 100000
+      q_max: 1000000
 
   momentum_fast:
     agent_class: MomentumAgent
-    number: 8
+    number: 5
     config:
+      momentum_mode: intraday
       period: 5
       threshold: 0.001
-      lam: 0.60
-      mean_volume: 500
+      lam: 0.30
+      mean_volume: 250
       q_max: 10000
-      aggression: 0.005
+      aggression: 0.003
       initial_cash:
         PLN: 10000000
 
-  momentum_slow:
-    agent_class: MomentumAgent
-    number: 6
-    config:
-      period: 30
-      threshold: 0.003
-      lam: 0.35
-      mean_volume: 700
-      q_max: 15000
-      aggression: 0.005
-      initial_cash:
-        PLN: 10000000
+    momentum_slow:
+      agent_class: MomentumAgent
+      number: 4
+      config:
+        momentum_mode: daily
+        daily_lookback: 10
+        threshold: 0.01
+        lam: 0.20
+        mean_volume: 350
+        q_max: 15000
+        aggression: 0.003
+        initial_cash:
+          PLN: 10000000
 
   hbl:
     agent_class: HBLAgent

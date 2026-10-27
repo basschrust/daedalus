@@ -75,6 +75,7 @@ def test_invalid_probabilities():
     with pytest.raises(ValueError):
         make_agent(bullish_probability=0.8, bearish_probability=0.8)
 
+
 @pytest.mark.parametrize(
     "bullish, bearish, quote",
     [
@@ -82,9 +83,7 @@ def test_invalid_probabilities():
         (0.0, 1.0, float("-inf")),
     ],
 )
-def test_empty_order_book_does_not_create_orders(
-    bullish, bearish, quote
-):
+def test_empty_order_book_does_not_create_orders(bullish, bearish, quote):
     agent, market = make_agent(
         lam=1,
         bullish_probability=bullish,

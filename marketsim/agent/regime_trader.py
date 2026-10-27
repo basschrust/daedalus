@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import math
 import random
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
-import math
 
 from marketsim.agent.agent import Agent
 from marketsim.fourheap.constants import BUY, SELL

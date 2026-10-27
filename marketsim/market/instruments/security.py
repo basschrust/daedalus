@@ -85,6 +85,8 @@ class Security(ABC):
         self.historical_ohlcv = historical_ohlcv
         self.simulation_dates = simulation_dates
 
+        self.completed_daily_closes = []
+
         self.save()
 
         #### end of __init__
@@ -645,6 +647,8 @@ class Security(ABC):
                 )
 
                 self.repository.save_eod_prices(eod_prices_df=eod_prices_df)
+
+                self.completed_daily_closes.append(float(eod_prices_df["close"].iloc[0]))
 
             # orders and trades
             orders = []
