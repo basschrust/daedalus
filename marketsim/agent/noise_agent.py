@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import random
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -80,7 +81,6 @@ class NoiseAgent(Agent):
                 side = random.choice([BUY, SELL])
                 # side chosen randomly and stick to that, but later this agent may place many orders on chosen side
                 quantity = np.random.poisson(lam=self.mean_volume)  # AK why not volume?
-                # quantity = 3 if side == BUY else 5 # just for tests - use prime numbers to check splittings properly
 
                 spread_side = random.choice([-1, 1])
                 mean_spread = float(self.mean_spread)
@@ -94,14 +94,42 @@ class NoiseAgent(Agent):
                         * float(self.configuration["historical_volatility_scale"])
                     )
 
-                price = market.last_traded_price + spread_side * np.random.poisson(
-                    lam=max(0.0, mean_spread)
+                best_bid = market.order_book.get_best_bid()
+                best_ask = market.order_book.get_best_ask()
+
+                best_bid = (
+                    float(best_bid)
+                    if best_bid is not None and math.isfinite(float(best_bid))
+                    else None
+                )
+                best_ask = (
+                    float(best_ask)
+                    if best_ask is not None and math.isfinite(float(best_ask))
+                    else None
                 )
 
-                # spread_side = random.choice([-1, 1])
-                # price = market.last_traded_price + spread_side * np.random.poisson(
-                #     lam=float(self.mean_spread)
-                # )
+                last_price = float(market.last_traded_price)
+
+                # Maximum price deviation for noise orders.
+                max_deviation = float(self.configuration.get("max_price_deviation", 0.02))
+
+                if side == BUY:
+                    reference = best_ask if best_ask is not None else last_price
+                else:
+                    reference = best_bid if best_bid is not None else last_price
+
+                # Preserve random positive/negative deviations,
+                # but impose a hard bound.
+                raw_offset = spread_side * np.random.poisson(lam=max(0.0, mean_spread))
+
+                max_offset = reference * max_deviation
+
+                offset = max(
+                    -max_offset,
+                    min(max_offset, raw_offset),
+                )
+
+                price = reference + offset
 
                 if price > 0:
                     order = Order(

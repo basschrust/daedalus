@@ -501,8 +501,10 @@ class Simulator:
 
         # L1: Calculate derived data from raw simulation records
         self.logger.info("Calculating group flows...")
+        terminal.write("Calculating group flows...")
         self.repository.calculate_group_flows()
 
+        terminal.write("Plotting group flows...")
         self.logger.info("Plotting group-level asset and cash flows...")
         labels_map = {asset_id: market.short_name for asset_id, market in self.markets.items()}
         plot_group_flows(
