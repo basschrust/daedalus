@@ -80,7 +80,12 @@ class NoiseAgent(Agent):
                     )  # TODO: check the impact on resistance/support
                 side = random.choice([BUY, SELL])
                 # side chosen randomly and stick to that, but later this agent may place many orders on chosen side
-                quantity = np.random.poisson(lam=self.mean_volume)  # AK why not volume?
+                # quantity = np.random.poisson(lam=self.mean_volume)  # AK why not volume?
+                mean_volume = self.get_order_mean_volume(
+                    asset_id,
+                    fallback=self.mean_volume,
+                )
+                quantity = max(1, int(np.random.poisson(mean_volume)))
 
                 spread_side = random.choice([-1, 1])
                 mean_spread = float(self.mean_spread)

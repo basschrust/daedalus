@@ -812,3 +812,55 @@ class Agent(ABC):
 
     def get_market_knowledge(self, asset_id: int) -> MarketKnowledge:
         return self.market_knowledge.get(asset_id)
+
+
+    def get_order_mean_volume(
+        self,
+        asset_id: int,
+        fallback: float,
+    ) -> float:
+        """Calculate an agent's mean order size for one asset.
+
+        volume_fraction: share of historical daily volume targeted
+                         per agent across its expected daily orders.
+        sim_time: ticks per simulation day.
+        """
+        cfg = self.configuration or {}
+        fraction = cfg.get("volume_fraction")
+
+        if fraction is None:
+            return float(fallback)
+
+        fraction = float(fraction)
+        if not math.isfinite(fraction) or not 0 < fraction <= 1:
+            raise ValueError("volume_fraction must be in (0, 1]")
+
+        market = self.markets[asset_id]
+        history = getattr(market, "historical_ohlcv", None)
+
+        if history is None or history.empty or "volume" not in history:
+            return float(fallback)
+
+        volumes = pd.to_numeric(history["volume"], errors="coerce")
+        volumes = volumes.dropna()
+        volumes = volumes[
+            (volumes >= 0) & volumes.map(math.isfinite)
+        ]
+
+        if volumes.empty:
+            return float(fallback)
+
+        daily_volume = float(volumes.mean())
+        sim_time = int(cfg.get("sim_time", 40))
+        activity = float(cfg.get("lam", 1.0))
+
+        if sim_time <= 0 or not 0 < activity <= 1:
+            raise ValueError("Invalid sim_time or lam")
+
+        expected_orders = sim_time * activity
+
+        return max(
+            1.0,
+            daily_volume * fraction / expected_orders,
+        )
+

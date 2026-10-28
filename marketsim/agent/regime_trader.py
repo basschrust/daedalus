@@ -112,7 +112,16 @@ class RegimeTraderAgent(Agent):
             capacity = max_position - position if regime == BUY else max_position + position
             if capacity <= 0:
                 continue
-            quantity = min(max(1, int(np.random.poisson(cfg["mean_volume"]))), capacity)
+
+            mean_volume = self.get_order_mean_volume(
+                asset_id,
+                fallback=float(cfg["mean_volume"]),
+            )
+            quantity = min(
+                max(1, int(np.random.poisson(mean_volume))),
+                capacity,
+            )
+
             opposing = (
                 market.order_book.get_best_ask()
                 if regime == BUY

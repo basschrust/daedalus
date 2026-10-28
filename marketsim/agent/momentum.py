@@ -135,7 +135,10 @@ class MomentumAgent(Agent):
             if capacity <= 0:
                 continue
 
-            mean_volume = float(self.configuration.get("mean_volume", 300))
+            mean_volume = self.get_order_mean_volume(
+                asset_id,
+                fallback=float(self.configuration.get("mean_volume", 300)),
+            )
 
             quantity = min(
                 max(1, int(np.random.poisson(mean_volume))),

@@ -514,6 +514,8 @@ class Simulator:
             labels_map=labels_map,
         )
 
+        terminal.write("Plotting execution volumes...\n")
+        self.logger.info("Plotting execution volumes...")
         plot_execution_volumes_by_asset(
             self.repository.get_execution_volumes_by_group(),
             output_dir=Path(self.output_dir) / "execution_volumes",

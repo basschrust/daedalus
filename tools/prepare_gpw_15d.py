@@ -376,7 +376,7 @@ def main() -> None:
     mm["volume_fraction"] = 0.10
 
     csv_path = (
-        input_dir
+        input_dir / "market_data"
         / "gpw_15d_auto.ohlcv.csv"
     )
 
