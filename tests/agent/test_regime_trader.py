@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from marketsim.agent.regime_trader import RegimeTraderAgent
-from marketsim.fourheap.constants import BUY, SELL
+from marketsim.market.fourheap.constants import BUY, SELL
 
 
 def make_agent(**config):

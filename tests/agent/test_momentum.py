@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 
 from marketsim.agent.momentum import MomentumAgent
-from marketsim.fourheap.constants import BUY, SELL
+from marketsim.market.fourheap.constants import BUY, SELL
 
 
 def make_agent(**config):

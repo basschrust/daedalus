@@ -6,9 +6,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from marketsim.agent.agent import Agent
-from marketsim.fourheap.constants import BUY, SELL
-from marketsim.fourheap.order import Order
 from marketsim.market import FXRateProvider, Price, Security
+from marketsim.market.fourheap.constants import BUY, SELL
+from marketsim.market.fourheap.order import Order
 from marketsim.market.valuation_libs.BlackScholes import BSCall, BSPut
 
 if TYPE_CHECKING:

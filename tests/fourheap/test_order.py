@@ -2,9 +2,9 @@ import math
 
 import pytest
 
-from marketsim.fourheap import FourHeap
-from marketsim.fourheap.order import Order
-from marketsim.market import Price, Security
+from marketsim.market import Price, Security, Stock
+from marketsim.market.fourheap import FourHeap
+from marketsim.market.fourheap.order import Order
 
 BUY = 1
 SELL = -1
@@ -19,13 +19,13 @@ def fourheap(stock_tnt) -> FourHeap:
 #############   test functions  #############################33
 
 
-def test_order_creation(buy_order: Order):
+def test_order_creation(buy_order: Order, stock_tnt: Stock):
     assert buy_order.price == Price(100)
     assert buy_order.order_type == BUY
     assert buy_order.quantity == 10
     assert buy_order.agent_id == 1
     assert buy_order.time == 1
-    assert buy_order.asset_id == 1
+    assert buy_order.asset_id == stock_tnt.asset_id
 
     assert buy_order.order_id is not None
     assert buy_order.parent_id is None
@@ -129,7 +129,7 @@ def test_large_sell_order_against_many_small_buy_orders(stock):
             quantity=1,
             agent_id=i,
             time=i,
-            asset_id=1,
+            asset_id=stock.asset_id,
         )
         fourheap.insert(order)
 
@@ -143,7 +143,7 @@ def test_large_sell_order_against_many_small_buy_orders(stock):
         quantity=number_of_orders,
         agent_id=9999,
         time=number_of_orders + 1,
-        asset_id=1,
+        asset_id=stock.asset_id,
     )
 
     fourheap.insert(sell_order)
@@ -175,7 +175,7 @@ def test_large_sell_order_leaves_remaining_quantity(stock):
             quantity=1,
             agent_id=i,
             time=i,
-            asset_id=1,
+            asset_id=stock.asset_id,
         )
         fourheap.insert(order)
 
@@ -185,7 +185,7 @@ def test_large_sell_order_leaves_remaining_quantity(stock):
         quantity=incoming_quantity,
         agent_id=9999,
         time=resting_quantity + 1,
-        asset_id=1,
+        asset_id=stock.asset_id,
     )
 
     fourheap.insert(sell_order)

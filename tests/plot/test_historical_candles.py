@@ -5,11 +5,14 @@ from unittest.mock import MagicMock, patch
 import matplotlib
 
 matplotlib.use("Agg")
+from datetime import date
+
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 
+from marketsim.input.historical_prices import load_simulation_dates
 from marketsim.plot.daedalus_plot_extensions import combine_candles, plot_combined_candles
 
 
@@ -256,12 +259,19 @@ def test_snapshot_loader_rejects_short_history(tmp_path):
         loader.load_historical_prices(config, tmp_path)
 
 
-def test_calendar_loader_rejects_wrong_length():
-    loader = pytest.importorskip("marketsim.input.historical_prices")
-    with pytest.raises(ValueError, match="Expected 10"):
-        loader.load_simulation_dates(
-            {
-                "days": 10,
-                "simulation_dates": ["2026-10-26"],
-            }
-        )
+def test_calendar_loader_generates_trading_days():
+    config = {
+        "days": 5,
+        "start_date": "2026-11-09",
+        "non_trading_dates": ["2026-11-11"],
+    }
+
+    dates = load_simulation_dates(config)
+
+    assert dates == [
+        date(2026, 11, 9),
+        date(2026, 11, 10),
+        date(2026, 11, 12),
+        date(2026, 11, 13),
+        date(2026, 11, 16),
+    ]

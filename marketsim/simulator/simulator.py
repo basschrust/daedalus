@@ -313,6 +313,7 @@ class Simulator:
                     configuration=configuration,
                     repository=self.repository,
                     group=group_name,
+                    output_dir=self.output_dir,
                 )
                 self.add_agents([agent])
 
@@ -333,7 +334,9 @@ class Simulator:
                     markets=markets,
                     configuration=configuration,
                     repository=self.repository,
+                    group=group_name,
                     output_dir=self.output_dir,
+                    sim_time=self.sim_time,
                 )
                 self.add_agents([agent])
 
@@ -343,6 +346,7 @@ class Simulator:
                     markets=markets,
                     configuration=configuration,
                     repository=self.repository,
+                    group=group_name,
                     output_dir=self.output_dir,
                 )
                 self.add_agents([agent])
@@ -353,6 +357,7 @@ class Simulator:
                     markets=markets,
                     configuration=configuration,
                     repository=self.repository,
+                    group=group_name,
                     output_dir=self.output_dir,
                 )
                 self.add_agents([agent])
@@ -375,6 +380,7 @@ class Simulator:
                     markets=markets,
                     configuration=configuration,
                     repository=self.repository,
+                    group=group_name,
                     output_dir=self.output_dir,
                 )
                 self.add_agents([agent])
@@ -415,6 +421,7 @@ class Simulator:
         for agent in agents:
             self.logger.info(f"Adding agent {str(agent)} to the simulation")
             agent.fx_rate_provider = self.fx_rate_provider
+            agent.sim_time = self.sim_time
 
             for asset_id in agent.markets:
                 historical = self.market_knowledge_by_asset.get(asset_id)
@@ -501,10 +508,10 @@ class Simulator:
 
         # L1: Calculate derived data from raw simulation records
         self.logger.info("Calculating group flows...")
-        terminal.write("Calculating group flows...")
+        terminal.write("Calculating group flows...\n")
         self.repository.calculate_group_flows()
 
-        terminal.write("Plotting group flows...")
+        terminal.write("Plotting group flows...\n")
         self.logger.info("Plotting group-level asset and cash flows...")
         labels_map = {asset_id: market.short_name for asset_id, market in self.markets.items()}
         plot_group_flows(
@@ -513,6 +520,8 @@ class Simulator:
             labels_map=labels_map,
         )
 
+        terminal.write("Plotting execution volumes...\n")
+        self.logger.info("Plotting execution volumes...")
         plot_execution_volumes_by_asset(
             self.repository.get_execution_volumes_by_group(),
             output_dir=Path(self.output_dir) / "execution_volumes",

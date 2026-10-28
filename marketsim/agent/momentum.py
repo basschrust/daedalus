@@ -9,9 +9,9 @@ import numpy as np
 import pandas as pd
 
 from marketsim.agent.agent import Agent
-from marketsim.fourheap.constants import BUY, SELL
-from marketsim.fourheap.order import Order
 from marketsim.market import FXRateProvider, Price
+from marketsim.market.fourheap.constants import BUY, SELL
+from marketsim.market.fourheap.order import Order
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
@@ -135,7 +135,10 @@ class MomentumAgent(Agent):
             if capacity <= 0:
                 continue
 
-            mean_volume = float(self.configuration.get("mean_volume", 300))
+            mean_volume = self.get_order_mean_volume(
+                asset_id,
+                fallback=float(self.configuration.get("mean_volume", 300)),
+            )
 
             quantity = min(
                 max(1, int(np.random.poisson(mean_volume))),

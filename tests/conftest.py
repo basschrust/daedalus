@@ -4,8 +4,8 @@ import pytest
 
 from marketsim.agent import Agent, HBLAgent, MMZOHAgent, NoiseAgent
 from marketsim.database.connectors.duckdb_storage import Repository
-from marketsim.fourheap.order import Order
-from marketsim.market import FXRateProvider, Index, Option, Price, Security
+from marketsim.market import FXRateProvider, Index, Option, Price, Security, Stock
+from marketsim.market.fourheap.order import Order
 
 BUY = 1
 SELL = -1
@@ -21,6 +21,18 @@ def repository(tmp_path: Path):
 
 
 @pytest.fixture
+def stock_tnt(repository: Repository):
+    return Security(
+        reference_price=Price(167.00),
+        name="stock TNT",
+        repository=repository,
+        market_type="continuous",
+        instrument_class="stock",
+        short_name="TNT",
+    )
+
+
+@pytest.fixture
 def fx_rate_provider():
     fx = FXRateProvider()
 
@@ -32,14 +44,14 @@ def fx_rate_provider():
 
 
 @pytest.fixture
-def order_factory():
+def order_factory(stock_tnt: Stock):
     def _create_order(
         price: int = 100,
         order_type: int = BUY,
         quantity: int = 10,
         agent_id: int = 1,
         time: int = 1,
-        asset_id: int = 1,
+        asset_id: int = stock_tnt.asset_id,
         valid_until: int | None = None,
     ):
         return Order(
@@ -93,18 +105,6 @@ def stock(repository: Repository):
         repository=repository,
         market_type="continuous",
         instrument_class="stock",
-    )
-
-
-@pytest.fixture
-def stock_tnt(repository: Repository):
-    return Security(
-        reference_price=Price(167.00),
-        name="stock TNT",
-        repository=repository,
-        market_type="continuous",
-        instrument_class="stock",
-        short_name="TNT",
     )
 
 

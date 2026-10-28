@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -69,19 +69,30 @@ def load_historical_prices(
 
 
 def load_simulation_dates(config: dict) -> list[date] | None:
-    """Read explicit simulated trading dates from scenario YAML."""
+    """Generate trading dates, excluding weekends and specified holidays."""
 
-    values = config.get("simulation_dates")
+    start_value = config.get("start_date")
 
-    if values is None:
+    if start_value is None:
         return None
 
-    dates = [date.fromisoformat(str(value)) for value in values]
+    start = date.fromisoformat(str(start_value))
+    days = int(config["days"])
 
-    if len(dates) != config["days"]:
-        raise ValueError(f"Expected {config['days']} simulation dates, got {len(dates)}")
+    if days <= 0:
+        raise ValueError("days must be positive")
 
-    if dates != sorted(set(dates)):
-        raise ValueError("Simulation dates must be unique and increasing")
+    non_trading_dates = {
+        date.fromisoformat(str(value)) for value in config.get("non_trading_dates", [])
+    }
+
+    dates = []
+    current = start
+
+    while len(dates) < days:
+        if current.weekday() < 5 and current not in non_trading_dates:
+            dates.append(current)
+
+        current += timedelta(days=1)
 
     return dates
