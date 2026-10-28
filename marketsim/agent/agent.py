@@ -54,7 +54,14 @@ class Agent(ABC):
         base_currency: str = "PLN",
         fx_rate_provider: FXRateProvider | None = None,
         market_knowledge: dict[int, MarketKnowledge] | None = None,
+        sim_time: int | None = None,
     ):
+        # TODO: looks stupid, but we'll check later:
+        # if self.sim_time is None or self.sim_time <= 0:
+        #     raise ValueError(
+        #         "Agent sim_time must be initialized by Simulator"
+        #     )
+        self.sim_time = sim_time
         self.agent_id = id_generator.next()
 
         self.group = group  # previously group_name
@@ -851,7 +858,7 @@ class Agent(ABC):
             return float(fallback)
 
         daily_volume = float(volumes.mean())
-        sim_time = int(cfg.get("sim_time", 40))
+        sim_time = int(self.sim_time)
         activity = float(cfg.get("lam", 1.0))
 
         if sim_time <= 0 or not 0 < activity <= 1:

@@ -416,6 +416,7 @@ class Simulator:
         for agent in agents:
             self.logger.info(f"Adding agent {str(agent)} to the simulation")
             agent.fx_rate_provider = self.fx_rate_provider
+            agent.sim_time = self.sim_time
 
             for asset_id in agent.markets:
                 historical = self.market_knowledge_by_asset.get(asset_id)

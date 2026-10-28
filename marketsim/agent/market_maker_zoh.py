@@ -3,6 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
+import math
 
 from marketsim.agent.agent import Agent
 from marketsim.fourheap.constants import BUY, SELL
@@ -116,10 +117,14 @@ class MMZOHAgent(Agent):
                     f"Invalid historical volume for {market.name}"
                 )
 
+            rebalance_count = math.ceil(
+                sim_time / self.rebalance_period
+            )
+
             quantity = round(
                 daily_volume
                 * float(self.volume_fraction)
-                / (sim_time * 2 * self.K)
+                / (rebalance_count * 2 * self.K)
             )
 
             self.volume_by_asset[asset_id] = max(1, quantity)

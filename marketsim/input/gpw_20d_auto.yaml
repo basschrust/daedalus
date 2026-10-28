@@ -77,17 +77,19 @@ agents:
       volume_fraction: 0.0025
       initial_cash:
         PLN: 1000000
+
   market_makers:
     agent_class: MMZOHAgent
     number: 1
     config:
       rebalance_by: time
-      rebalance_period: 10
-      volume_fraction: 0.1
+      rebalance_period: 3
+      volume_fraction: 0.15
       K: 3
       xi: 0.1
       omega: 0.1
       q_max: 1000000
+
   momentum_fast:
     agent_class: MomentumAgent
     number: 2
@@ -98,8 +100,8 @@ agents:
       lam: 0.3
       mean_volume: 150
       q_max: 10000
-      aggression: 0.003
-      volume_fraction: 0.01
+      aggression: 0.0005
+      volume_fraction: 0.003
       initial_cash:
         PLN: 10000000
   momentum_slow:
@@ -112,8 +114,8 @@ agents:
       lam: 0.2
       mean_volume: 150
       q_max: 5000
-      aggression: 0.003
-      volume_fraction: 0.01
+      aggression: 0.0005
+      volume_fraction: 0.003
       initial_cash:
         PLN: 10000000
   hbl:
