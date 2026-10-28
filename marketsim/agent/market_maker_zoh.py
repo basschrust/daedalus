@@ -29,6 +29,7 @@ class MMZOHAgent(Agent):
         group: str = "MMZOH",
         output_dir: Path | str = "tmp",
         fx_rate_provider: FXRateProvider | None = None,
+        sim_time: int = 40,
     ) -> None:
         default_configuration = {
             "xi": 0.1,
@@ -64,8 +65,72 @@ class MMZOHAgent(Agent):
         self.last_rebalance_time = 0
         self.cum_volume = 0
 
-        self.volume = final_configuration["volume"]
+        # self.volume = final_configuration["volume"]
         self.q_max = final_configuration["q_max"]
+
+        # calculating the volume for each asset by fraction of historical data:
+        self.volume_fraction = Decimal(
+            str(final_configuration.get("volume_fraction", "0.10"))
+        )
+
+        if not 0 < self.volume_fraction <= 1:
+            raise ValueError("volume_fraction must be in (0, 1]")
+
+        self.volume = final_configuration.get("volume", 5)
+
+        if sim_time <= 0:
+            raise ValueError("sim_time must be positive")
+
+        self.volume_by_asset = {}
+
+        for asset_id, market in self.markets.items():
+            history = getattr(market, "historical_ohlcv", None)
+
+            if history is None or history.empty:
+                # Preserve existing fixed-volume behavior.
+                self.volume_by_asset[asset_id] = int(self.volume)
+                continue
+
+            volumes = history["volume"]
+
+            if (
+                    volumes.isna().any()
+                    or not (volumes >= 0).all()
+                    or not (volumes < float("inf")).all()
+            ):
+                raise ValueError(
+                    f"Invalid historical volume for {market.name}"
+                )
+
+            daily_volume = float(volumes.mean())
+
+            if daily_volume <= 0:
+                raise ValueError(
+                    f"Invalid historical volume for {market.name}"
+                )
+
+            daily_volume = float(history["volume"].mean())
+
+            if not 0 < daily_volume < float("inf"):
+                raise ValueError(
+                    f"Invalid historical volume for {market.name}"
+                )
+
+            quantity = round(
+                daily_volume
+                * float(self.volume_fraction)
+                / (sim_time * 2 * self.K)
+            )
+
+            self.volume_by_asset[asset_id] = max(1, quantity)
+
+            self.logger.info(
+                f"MM volume calibration: {market.name}, "
+                f"average_daily_volume={daily_volume:.0f}, "
+                f"fraction={self.volume_fraction}, "
+                f"order_quantity={self.volume_by_asset[asset_id]}"
+            )
+
 
     def get_id(self) -> int:
         return self.agent_id
@@ -126,8 +191,9 @@ class MMZOHAgent(Agent):
                 st = max(estimate + HALF * self.omega, best_bid)
                 bt = min(estimate - HALF * self.omega, best_ask)
                 self.logger.info(f"Setting basic spread to: {bt}, {st}")
-                buy_volume = self.volume  # TODO: per market!
-                sell_volume = self.volume
+                # volumes for this market:
+                buy_volume = self.volume_by_asset[asset_id]
+                sell_volume = self.volume_by_asset[asset_id]
                 # TODO: adjust the spread for position rebalancing
                 if abs(self.position[asset_id]) > self.q_max / 2:
                     if self.position[asset_id] > 0:

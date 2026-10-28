@@ -30,7 +30,7 @@ markets:
 agents:
   noise_tight:
     agent_class: NoiseAgent
-    number: 10
+    number: 7
     config:
       lam: 0.40
       mean_volume: 150
@@ -41,7 +41,7 @@ agents:
 
   noise_medium:
     agent_class: NoiseAgent
-    number: 15
+    number: 10
     config:
       lam: 0.30
       mean_volume: 200
@@ -52,7 +52,7 @@ agents:
 
   noise_wide:
     agent_class: NoiseAgent
-    number: 10
+    number: 8
     config:
       lam: 0.20
       mean_volume: 250
@@ -67,7 +67,7 @@ agents:
     config:
       rebalance_by: time
       rebalance_period: 10
-      volume: 500
+      volume: 2000
       K: 3
       xi: 0.1
       omega: 0.1
@@ -75,13 +75,13 @@ agents:
 
   momentum_fast:
     agent_class: MomentumAgent
-    number: 5
+    number: 2
     config:
       momentum_mode: intraday
       period: 5
       threshold: 0.001
       lam: 0.30
-      mean_volume: 250
+      mean_volume: 150
       q_max: 10000
       aggression: 0.003
       initial_cash:
@@ -89,14 +89,14 @@ agents:
 
   momentum_slow:
     agent_class: MomentumAgent
-    number: 4
+    number: 2
     config:
       momentum_mode: daily
       daily_lookback: 10
       threshold: 0.01
       lam: 0.20
       mean_volume: 350
-      q_max: 15000
+      q_max: 5000
       aggression: 0.003
       initial_cash:
         PLN: 10000000
@@ -107,10 +107,10 @@ agents:
 
   regime_traders:
     agent_class: RegimeTraderAgent
-    number: 12
+    number: 6
     config:
       lam: 0.55
-      mean_volume: 400
+      mean_volume: 200
       regime_switch_probability: 0.002
       bullish_probability: 0.45
       bearish_probability: 0.45
