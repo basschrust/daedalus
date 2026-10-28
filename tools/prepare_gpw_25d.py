@@ -21,6 +21,7 @@ import os
 from contextlib import closing
 from datetime import date
 from pathlib import Path
+from decimal import Decimal
 
 import pandas as pd
 import yaml
@@ -83,6 +84,17 @@ WHERE
 ORDER BY TO_DATE("DATE") DESC
 LIMIT 250
 """
+
+def represent_decimal(dumper, value):
+    return dumper.represent_scalar(
+        "tag:yaml.org,2002:float",
+        format(value, "f"),
+    )
+
+yaml.SafeDumper.add_representer(
+    Decimal,
+    represent_decimal,
+)
 
 
 def fetch_history(connection, symbol: str) -> pd.DataFrame:
@@ -317,7 +329,9 @@ def main() -> None:
             "symbol": symbol,
             "instrument_class": "stock",
             "market_type": "continuous",
-            "reference_price": float(history_by_symbol[symbol]["close"].iloc[-1]),
+            "reference_price": Decimal(
+                str(history_by_symbol[symbol]["close"].iloc[-1])
+            ),
             "currency": "PLN",
         }
 
@@ -328,7 +342,9 @@ def main() -> None:
         if symbol in SYMBOLS:
             hist = next(f for f in frames if f["symbol"].iloc[0] == symbol)
 
-            market["reference_price"] = float(hist["close"].iloc[-1])
+            market["reference_price"] = Decimal(
+                str(hist["close"].iloc[-1])
+            )
 
     # Preserve dynamic market-maker sizing.
     mm = scenario["agents"]["market_makers"]["config"]

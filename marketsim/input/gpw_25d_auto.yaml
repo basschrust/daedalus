@@ -9,7 +9,7 @@ markets:
     symbol: PKO.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 115.55999755859375
+    reference_price: 115.4800033569336
     currency: PLN
   pkn.wa:
     name: PKN.WA
@@ -17,7 +17,7 @@ markets:
     symbol: PKN.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 154.16000366210938
+    reference_price: 153.32000732421875
     currency: PLN
   kgh.wa:
     name: KGH.WA
@@ -25,7 +25,7 @@ markets:
     symbol: KGH.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 305.20001220703125
+    reference_price: 305.54998779296875
     currency: PLN
   ale.wa:
     name: ALE.WA
@@ -33,7 +33,7 @@ markets:
     symbol: ALE.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 58.220001220703125
+    reference_price: 58.79999923706055
     currency: PLN
   pco.wa:
     name: PCO.WA
@@ -41,7 +41,7 @@ markets:
     symbol: PCO.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 48.790000915527344
+    reference_price: 48.79999923706055
     currency: PLN
   tpe.wa:
     name: TPE.WA
@@ -49,7 +49,7 @@ markets:
     symbol: TPE.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 9.279999732971191
+    reference_price: 9.265999794006348
     currency: PLN
 agents:
   noise_tight:
