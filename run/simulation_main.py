@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 import yaml
 
 from marketsim.input.config import create_run_directory, load_config
-from marketsim.input.historical_prices import (
+from marketsim.market.historical_prices import (
     load_historical_prices,
     load_simulation_dates,
 )

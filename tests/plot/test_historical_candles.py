@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 
-from marketsim.input.historical_prices import load_simulation_dates
+from marketsim.market.historical_prices import load_simulation_dates
 from marketsim.plot.daedalus_plot_extensions import combine_candles, plot_combined_candles
 
 
