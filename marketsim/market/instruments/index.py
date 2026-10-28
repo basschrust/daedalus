@@ -37,6 +37,7 @@ class Index(Security):
             short_name=short_name,
             output_dir=output_dir,
         )
+        self.is_tradable = False
 
     def validate_components(self):
         for weight in self.components.values():

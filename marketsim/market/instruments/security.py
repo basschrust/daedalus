@@ -48,6 +48,7 @@ class Security(ABC):
     ) -> None:
         self.asset_id = id_generator.next()
         self.instrument_class = instrument_class
+        self.is_tradable = True
         if short_name is None:
             self.short_name = f"{self.instrument_class} {self.asset_id}"
         else:
@@ -385,6 +386,9 @@ class Security(ABC):
         return dict(items)
 
     def plot_lob(self, current_time: int):
+        if not self.is_tradable:
+            self.logger.info(f"Not tradable instrument {self.name}, skipping LOB plotting.")
+            return
         bids = self.aggregate_order_queue(order_queue=self.order_book.buy_unmatched.heap)
         asks = self.aggregate_order_queue(order_queue=self.order_book.sell_unmatched.heap)
 
