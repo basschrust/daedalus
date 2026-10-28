@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from marketsim.agent import MMZOHAgent, NoiseAgent
-from marketsim.fourheap import Order
+from marketsim.market.fourheap import Order
 from marketsim.market import Security
 
 # from tests.conftest import stock_tnt

@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 
 from marketsim.agent.market_maker_zoh import MMZOHAgent
-from marketsim.fourheap.constants import BUY, SELL
+from marketsim.market.fourheap.constants import BUY, SELL
 from marketsim.market import Price
 
 

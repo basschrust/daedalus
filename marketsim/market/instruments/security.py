@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
-from marketsim.fourheap import FourHeap
-from marketsim.fourheap.event_queue import EventQueue
+from marketsim.market.fourheap import FourHeap
+from marketsim.market.fourheap.event_queue import EventQueue
 from marketsim.loggers.basic import setup_market_logger
 from marketsim.market.price import Price
 from marketsim.plot.candle import plot_candlestick

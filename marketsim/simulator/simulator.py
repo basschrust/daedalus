@@ -313,6 +313,7 @@ class Simulator:
                     configuration=configuration,
                     repository=self.repository,
                     group=group_name,
+                    output_dir=self.output_dir,
                 )
                 self.add_agents([agent])
 
@@ -333,6 +334,7 @@ class Simulator:
                     markets=markets,
                     configuration=configuration,
                     repository=self.repository,
+                    group=group_name,
                     output_dir=self.output_dir,
                     sim_time=self.sim_time,
                 )
@@ -344,6 +346,7 @@ class Simulator:
                     markets=markets,
                     configuration=configuration,
                     repository=self.repository,
+                    group=group_name,
                     output_dir=self.output_dir,
                 )
                 self.add_agents([agent])
@@ -354,6 +357,7 @@ class Simulator:
                     markets=markets,
                     configuration=configuration,
                     repository=self.repository,
+                    group=group_name,
                     output_dir=self.output_dir,
                 )
                 self.add_agents([agent])
@@ -376,6 +380,7 @@ class Simulator:
                     markets=markets,
                     configuration=configuration,
                     repository=self.repository,
+                    group=group_name,
                     output_dir=self.output_dir,
                 )
                 self.add_agents([agent])

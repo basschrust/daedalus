@@ -4,7 +4,7 @@ import pytest
 
 from marketsim.agent import Agent, HBLAgent, MMZOHAgent, NoiseAgent
 from marketsim.database.connectors.duckdb_storage import Repository
-from marketsim.fourheap.order import Order
+from marketsim.market.fourheap.order import Order
 from marketsim.market import FXRateProvider, Index, Option, Price, Security, Stock
 
 BUY = 1

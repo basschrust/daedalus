@@ -4,10 +4,10 @@ import heapq
 import math
 from typing import TYPE_CHECKING
 
-from marketsim.fourheap.order import MatchedOrder
+from marketsim.market.fourheap.order import MatchedOrder
 
 if TYPE_CHECKING:
-    from marketsim.fourheap.order import Order
+    from marketsim.market.fourheap.order import Order
     from marketsim.market.price import Price
 
 

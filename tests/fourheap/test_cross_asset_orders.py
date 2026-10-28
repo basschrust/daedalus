@@ -1,8 +1,8 @@
 import pytest
 
-from marketsim.fourheap import FourHeap
-from marketsim.fourheap.constants import BUY, SELL
-from marketsim.fourheap.order import Order
+from marketsim.market.fourheap import FourHeap
+from marketsim.market.fourheap.constants import BUY, SELL
+from marketsim.market.fourheap.order import Order
 from marketsim.market.price import Price
 
 PKO_ID = 100

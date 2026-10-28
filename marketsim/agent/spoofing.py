@@ -5,9 +5,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from marketsim.agent.agent import Agent
-from marketsim.fourheap.order import Order
+from marketsim.market.fourheap.order import Order
 from marketsim.market import FXRateProvider, Price
-from marketsim.private_values.private_values import PrivateValues
+from marketsim.market.private_values.private_values import PrivateValues
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository

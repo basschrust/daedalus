@@ -1,6 +1,6 @@
 import numpy as np
 
-from marketsim.fourheap.constants import SELL
+from marketsim.market.fourheap.constants import SELL
 
 
 class PrivateValues:
