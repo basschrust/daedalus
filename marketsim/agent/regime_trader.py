@@ -10,9 +10,9 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from marketsim.agent.agent import Agent
+from marketsim.market import Price
 from marketsim.market.fourheap.constants import BUY, SELL
 from marketsim.market.fourheap.order import Order
-from marketsim.market import Price
 
 if TYPE_CHECKING:
     from marketsim.market import FXRateProvider

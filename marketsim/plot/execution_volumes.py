@@ -1,11 +1,11 @@
 """Execution volumes by asset, agent group, side and execution mode."""
 
+import re
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import re
 
 EXECUTION_VOLUME_SQL = """
 SELECT
@@ -104,18 +104,13 @@ def plot_execution_volumes_by_asset(
         ax.legend(ncol=2)
         fig.tight_layout()
         # calculating nice & safe file name:
-        asset_name = str(
-            labels_map.get(int(asset_id), f"asset_{asset_id}")
-        )
+        asset_name = str(labels_map.get(int(asset_id), f"asset_{asset_id}"))
         safe_name = re.sub(
             r"[^A-Za-z0-9._-]+",
             "_",
             asset_name,
         ).strip("._")
-        path = (
-                output_dir
-                / f"{safe_name}_{asset_id}_execution_volumes.png"
-        )
+        path = output_dir / f"{safe_name}_{asset_id}_execution_volumes.png"
         fig.savefig(path, dpi=150)
         plt.close(fig)
         result.append(path)

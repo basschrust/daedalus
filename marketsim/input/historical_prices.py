@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+from datetime import date, timedelta
 from pathlib import Path
 
 import pandas as pd
-from datetime import date, timedelta
 
 OHLCV_COLUMNS = ["open", "high", "low", "close", "volume"]
 
@@ -83,8 +83,7 @@ def load_simulation_dates(config: dict) -> list[date] | None:
         raise ValueError("days must be positive")
 
     non_trading_dates = {
-        date.fromisoformat(str(value))
-        for value in config.get("non_trading_dates", [])
+        date.fromisoformat(str(value)) for value in config.get("non_trading_dates", [])
     }
 
     dates = []
@@ -97,4 +96,3 @@ def load_simulation_dates(config: dict) -> list[date] | None:
         current += timedelta(days=1)
 
     return dates
-

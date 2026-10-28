@@ -1,14 +1,14 @@
 from __future__ import annotations
 
+import math
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
-import math
 
 from marketsim.agent.agent import Agent
+from marketsim.market import FXRateProvider, Price
 from marketsim.market.fourheap.constants import BUY, SELL
 from marketsim.market.fourheap.order import Order
-from marketsim.market import FXRateProvider, Price
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
@@ -70,9 +70,7 @@ class MMZOHAgent(Agent):
         self.q_max = final_configuration["q_max"]
 
         # calculating the volume for each asset by fraction of historical data:
-        self.volume_fraction = Decimal(
-            str(final_configuration.get("volume_fraction", "0.10"))
-        )
+        self.volume_fraction = Decimal(str(final_configuration.get("volume_fraction", "0.10")))
 
         if not 0 < self.volume_fraction <= 1:
             raise ValueError("volume_fraction must be in (0, 1]")
@@ -95,36 +93,26 @@ class MMZOHAgent(Agent):
             volumes = history["volume"]
 
             if (
-                    volumes.isna().any()
-                    or not (volumes >= 0).all()
-                    or not (volumes < float("inf")).all()
+                volumes.isna().any()
+                or not (volumes >= 0).all()
+                or not (volumes < float("inf")).all()
             ):
-                raise ValueError(
-                    f"Invalid historical volume for {market.name}"
-                )
+                raise ValueError(f"Invalid historical volume for {market.name}")
 
             daily_volume = float(volumes.mean())
 
             if daily_volume <= 0:
-                raise ValueError(
-                    f"Invalid historical volume for {market.name}"
-                )
+                raise ValueError(f"Invalid historical volume for {market.name}")
 
             daily_volume = float(history["volume"].mean())
 
             if not 0 < daily_volume < float("inf"):
-                raise ValueError(
-                    f"Invalid historical volume for {market.name}"
-                )
+                raise ValueError(f"Invalid historical volume for {market.name}")
 
-            rebalance_count = math.ceil(
-                sim_time / self.rebalance_period
-            )
+            rebalance_count = math.ceil(sim_time / self.rebalance_period)
 
             quantity = round(
-                daily_volume
-                * float(self.volume_fraction)
-                / (rebalance_count * 2 * self.K)
+                daily_volume * float(self.volume_fraction) / (rebalance_count * 2 * self.K)
             )
 
             self.volume_by_asset[asset_id] = max(1, quantity)
@@ -135,7 +123,6 @@ class MMZOHAgent(Agent):
                 f"fraction={self.volume_fraction}, "
                 f"order_quantity={self.volume_by_asset[asset_id]}"
             )
-
 
     def get_id(self) -> int:
         return self.agent_id

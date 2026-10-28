@@ -1,4 +1,3 @@
-
 """Group-level asset/cash flows: daily stacked bars per agent group."""
 
 from pathlib import Path
@@ -46,39 +45,26 @@ def plot_group_flows(
 
     missing = REQUIRED - set(flows.columns)
     if missing:
-        raise ValueError(
-            f"Missing group-flow columns: {sorted(missing)}"
-        )
+        raise ValueError(f"Missing group-flow columns: {sorted(missing)}")
 
     df = flows.copy()
 
     for column in ("agent_group", "cp_group"):
-        df[column] = (
-            df[column]
-            .fillna("UNGROUPED")
-            .astype(str)
-        )
+        df[column] = df[column].fillna("UNGROUPED").astype(str)
 
     for column in ("day", "asset_id"):
-        df[column] = pd.to_numeric(
-            df[column], errors="raise"
-        ).astype(int)
+        df[column] = pd.to_numeric(df[column], errors="raise").astype(int)
 
     for column in FLOW_COLUMNS:
-        df[column] = pd.to_numeric(
-            df[column], errors="raise"
-        )
+        df[column] = pd.to_numeric(df[column], errors="raise")
 
     # Key optimization:
     # Aggregate all intraday ticks before creating bars.
-    daily = (
-        df.groupby(
-            ["agent_group", "cp_group", "asset_id", "day"],
-            as_index=False,
-            sort=False,
-        )[FLOW_COLUMNS]
-        .sum()
-    )
+    daily = df.groupby(
+        ["agent_group", "cp_group", "asset_id", "day"],
+        as_index=False,
+        sort=False,
+    )[FLOW_COLUMNS].sum()
 
     labels_map = labels_map or {}
     out = Path(output_dir)
@@ -86,19 +72,14 @@ def plot_group_flows(
 
     paths = []
 
-    for source_group, group_df in daily.groupby(
-        "agent_group", sort=True
-    ):
+    for source_group, group_df in daily.groupby("agent_group", sort=True):
         days = np.sort(group_df["day"].unique())
         assets = sorted(group_df["asset_id"].unique())
         counterparties = sorted(group_df["cp_group"].unique())
 
         x = np.arange(len(days))
         palette = plt.get_cmap("tab20")
-        colors = {
-            cp: palette(i % 20)
-            for i, cp in enumerate(counterparties)
-        }
+        colors = {cp: palette(i % 20) for i, cp in enumerate(counterparties)}
 
         fig, axes = plt.subplots(
             len(assets),
@@ -109,9 +90,7 @@ def plot_group_flows(
         )
 
         for row, asset_id in enumerate(assets):
-            asset_df = group_df.loc[
-                group_df["asset_id"] == asset_id
-            ]
+            asset_df = group_df.loc[group_df["asset_id"] == asset_id]
 
             for col, (positive, negative, ylabel) in enumerate(
                 (
@@ -133,24 +112,14 @@ def plot_group_flows(
                 negative_base = np.zeros(len(days))
 
                 for cp in counterparties:
-                    cp_df = asset_df.loc[
-                        asset_df["cp_group"] == cp
-                    ]
+                    cp_df = asset_df.loc[asset_df["cp_group"] == cp]
 
                     values = (
-                        cp_df.groupby("day")[
-                            [positive, negative]
-                        ]
-                        .sum()
-                        .reindex(days, fill_value=0)
+                        cp_df.groupby("day")[[positive, negative]].sum().reindex(days, fill_value=0)
                     )
 
-                    plus = values[positive].to_numpy(
-                        dtype=float
-                    )
-                    minus = -values[negative].to_numpy(
-                        dtype=float
-                    )
+                    plus = values[positive].to_numpy(dtype=float)
+                    minus = -values[negative].to_numpy(dtype=float)
 
                     ax.bar(
                         x,
@@ -181,26 +150,18 @@ def plot_group_flows(
                 ax.set_axisbelow(True)
                 ax.set_ylabel(ylabel)
 
-                asset_name = labels_map.get(
-                    int(asset_id), str(asset_id)
-                )
+                asset_name = labels_map.get(int(asset_id), str(asset_id))
 
-                flow_name = (
-                    "Assets" if col == 0 else "Cash"
-                )
+                flow_name = "Assets" if col == 0 else "Cash"
 
-                ax.set_title(
-                    f"{asset_name} — {flow_name}"
-                )
+                ax.set_title(f"{asset_name} — {flow_name}")
 
         for ax in axes[-1, :]:
             ax.set_xticks(x)
             ax.set_xticklabels(days.astype(str))
             ax.set_xlabel("Simulation day")
 
-        handles, legend_labels = (
-            axes[0, 0].get_legend_handles_labels()
-        )
+        handles, legend_labels = axes[0, 0].get_legend_handles_labels()
 
         if handles:
             fig.legend(
@@ -217,14 +178,9 @@ def plot_group_flows(
             y=1.01,
         )
 
-        fig.tight_layout(
-            rect=(0, 0, 1, 0.94)
-        )
+        fig.tight_layout(rect=(0, 0, 1, 0.94))
 
-        safe_name = "".join(
-            c if c.isalnum() or c in "-_" else "_"
-            for c in source_group
-        )
+        safe_name = "".join(c if c.isalnum() or c in "-_" else "_" for c in source_group)
 
         path = out / f"{safe_name}_flows.png"
 

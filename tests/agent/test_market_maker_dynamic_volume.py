@@ -1,4 +1,4 @@
-
+import math
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -6,8 +6,23 @@ import pandas as pd
 import pytest
 
 from marketsim.agent.market_maker_zoh import MMZOHAgent
-from marketsim.market.fourheap.constants import BUY, SELL
 from marketsim.market import Price
+from marketsim.market.fourheap.constants import BUY, SELL
+
+
+def expected_mm_volume(
+    daily_volume: float,
+    fraction: float = 0.10,
+    sim_time: int = 40,
+    rebalance_period: int = 3,
+    levels: int = 5,
+) -> int:
+    rebalance_count = math.ceil(sim_time / rebalance_period)
+
+    return max(
+        1,
+        round(daily_volume * fraction / (rebalance_count * 2 * levels)),
+    )
 
 
 def make_market(asset_id, symbol, volumes):
@@ -55,18 +70,25 @@ def make_mm(markets, tmp_path, **config):
     )
 
 
-def test_volume_uses_arithmetic_mean(tmp_path):
-    market = make_market(
-        asset_id=1,
-        symbol="PKO.WA",
-        volumes=[100_000, 200_000, 300_000],
+@pytest.mark.parametrize(
+    ("fraction", "expected"),
+    [
+        (0.05, 71),
+        (0.10, 143),
+        (0.20, 286),
+        (1.00, 1429),
+    ],
+)
+def test_configurable_volume_fraction(tmp_path, fraction, expected):
+    market = make_market(1, "PKO.WA", [200_000])
+
+    mm = make_mm(
+        [market],
+        tmp_path,
+        volume_fraction=fraction,
     )
 
-    mm = make_mm([market], tmp_path)
-
-    # Mean = 200,000
-    # 200,000 * 0.10 / (40 * 2 * 5) = 50
-    assert mm.volume_by_asset[1] == 50
+    assert mm.volume_by_asset[1] == expected
 
 
 def test_different_assets_get_different_quantities(tmp_path):
@@ -79,42 +101,17 @@ def test_different_assets_get_different_quantities(tmp_path):
     mm = make_mm(markets, tmp_path)
 
     assert mm.volume_by_asset == {
-        1: 500,
-        2: 250,
-        3: 125,
+        1: 1429,
+        2: 714,
+        3: 357,
     }
-
-
-@pytest.mark.parametrize(
-    ("fraction", "expected"),
-    [
-        (0.05, 25),
-        (0.10, 50),
-        (0.20, 100),
-        (1.00, 500),
-    ],
-)
-def test_configurable_volume_fraction(
-    tmp_path, fraction, expected
-):
-    market = make_market(1, "PKO.WA", [200_000])
-
-    mm = make_mm(
-        [market],
-        tmp_path,
-        volume_fraction=fraction,
-    )
-
-    assert mm.volume_by_asset[1] == expected
 
 
 @pytest.mark.parametrize(
     "fraction",
     [-1, -0.1, 0, 1.01, 2],
 )
-def test_invalid_volume_fraction_is_rejected(
-    tmp_path, fraction
-):
+def test_invalid_volume_fraction_is_rejected(tmp_path, fraction):
     market = make_market(1, "PKO.WA", [200_000])
 
     with pytest.raises(
@@ -135,9 +132,7 @@ def test_invalid_volume_fraction_is_rejected(
         [],
     ],
 )
-def test_missing_history_uses_fixed_volume(
-    tmp_path, volumes
-):
+def test_missing_history_uses_fixed_volume(tmp_path, volumes):
     market = make_market(1, "PKO.WA", volumes)
 
     mm = make_mm(
@@ -158,9 +153,7 @@ def test_missing_history_uses_fixed_volume(
         [float("inf")],
     ],
 )
-def test_invalid_historical_volume_is_rejected(
-    tmp_path, volumes
-):
+def test_invalid_historical_volume_is_rejected(tmp_path, volumes):
     market = make_market(1, "PKO.WA", volumes)
 
     with pytest.raises(
@@ -190,9 +183,7 @@ def test_mm_uses_calibrated_quantity_in_orders(tmp_path):
     # Position is initially neutral.
     mm.take_action(current_time=0)
 
-    market.withdraw_all.assert_called_once_with(
-        agent_id=mm.agent_id
-    )
+    market.withdraw_all.assert_called_once_with(agent_id=mm.agent_id)
     market.add_orders.assert_called_once()
 
     orders = market.add_orders.call_args.args[0]
@@ -200,7 +191,7 @@ def test_mm_uses_calibrated_quantity_in_orders(tmp_path):
     # Five levels, two sides.
     assert len(orders) == 10
 
-    assert all(order.quantity == 50 for order in orders)
+    assert all(order.quantity == 143 for order in orders)
     assert all(order.asset_id == 1 for order in orders)
 
     assert sum(o.order_type == BUY for o in orders) == 5
@@ -220,8 +211,8 @@ def test_multiasset_orders_use_correct_quantities(tmp_path):
     assert len(pko_orders) == 10
     assert len(kgh_orders) == 10
 
-    assert {o.quantity for o in pko_orders} == {50}
-    assert {o.quantity for o in kgh_orders} == {20}
+    assert {o.quantity for o in pko_orders} == {143}
+    assert {o.quantity for o in kgh_orders} == {57}
 
     assert {o.asset_id for o in pko_orders} == {1}
     assert {o.asset_id for o in kgh_orders} == {2}

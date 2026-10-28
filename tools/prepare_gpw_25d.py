@@ -1,4 +1,3 @@
-
 """Prepare a 15-day GPW simulation using Snowflake historical market data.
 
 Run from the Daedalus project root:
@@ -26,8 +25,14 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-
-SYMBOLS = ("PKO.WA", "PKN.WA", "KGH.WA", "ALE.WA", "PCO.WA", "TPE.WA",)
+SYMBOLS = (
+    "PKO.WA",
+    "PKN.WA",
+    "KGH.WA",
+    "ALE.WA",
+    "PCO.WA",
+    "TPE.WA",
+)
 
 CUTOFF = date(2026, 10, 27)
 
@@ -104,25 +109,18 @@ def fetch_history(connection, symbol: str) -> pd.DataFrame:
     )
 
     if len(frame) != 250:
-        raise ValueError(
-            f"{symbol}: expected 250 sessions, got {len(frame)}"
-        )
+        raise ValueError(f"{symbol}: expected 250 sessions, got {len(frame)}")
 
     frame["date"] = pd.to_datetime(frame["date"])
     frame = frame.sort_values("date")
 
     if frame["date"].duplicated().any():
-        raise ValueError(
-            f"{symbol}: duplicate historical dates"
-        )
+        raise ValueError(f"{symbol}: duplicate historical dates")
 
     last = frame["date"].iloc[-1].date()
 
     if last != CUTOFF:
-        raise ValueError(
-            f"{symbol}: latest session is {last}, "
-            f"expected {CUTOFF}"
-        )
+        raise ValueError(f"{symbol}: latest session is {last}, expected {CUTOFF}")
 
     numeric = [
         "open",
@@ -138,26 +136,16 @@ def fetch_history(connection, symbol: str) -> pd.DataFrame:
     )
 
     if frame[numeric].isna().any().any():
-        raise ValueError(
-            f"{symbol}: incomplete OHLCV"
-        )
+        raise ValueError(f"{symbol}: incomplete OHLCV")
 
     if not frame[numeric].map(math.isfinite).all().all():
-        raise ValueError(
-            f"{symbol}: nonfinite OHLCV"
-        )
+        raise ValueError(f"{symbol}: nonfinite OHLCV")
 
-    if not (
-        frame[["open", "high", "low", "close"]] > 0
-    ).all().all():
-        raise ValueError(
-            f"{symbol}: nonpositive OHLC prices"
-        )
+    if not (frame[["open", "high", "low", "close"]] > 0).all().all():
+        raise ValueError(f"{symbol}: nonpositive OHLC prices")
 
     if not (frame["volume"] >= 0).all():
-        raise ValueError(
-            f"{symbol}: negative volume"
-        )
+        raise ValueError(f"{symbol}: negative volume")
 
     frame["date"] = frame["date"].dt.strftime("%Y-%m-%d")
 
@@ -166,9 +154,7 @@ def fetch_history(connection, symbol: str) -> pd.DataFrame:
 
 def main() -> None:
 
-    parser = argparse.ArgumentParser(
-        description=__doc__
-    )
+    parser = argparse.ArgumentParser(description=__doc__)
 
     parser.add_argument(
         "--daedalus-root",
@@ -228,33 +214,17 @@ def main() -> None:
         "SNOWFLAKE_USER",
     )
 
-    missing = [
-        name
-        for name in required
-        if not os.getenv(name)
-    ]
+    missing = [name for name in required if not os.getenv(name)]
 
-    if (
-        args.authenticator == "snowflake"
-        and not os.getenv("SNOWFLAKE_PASSWORD")
-    ):
+    if args.authenticator == "snowflake" and not os.getenv("SNOWFLAKE_PASSWORD"):
         missing.append("SNOWFLAKE_PASSWORD")
 
     if missing:
-        parser.error(
-            "Missing environment variables: "
-            + ", ".join(missing)
-        )
+        parser.error("Missing environment variables: " + ", ".join(missing))
 
     def identifier(value: str) -> str:
-        if (
-            not value
-            or not value.replace("_", "").isalnum()
-            or not value[0].isalpha()
-        ):
-            parser.error(
-                f"Invalid Snowflake identifier: {value!r}"
-            )
+        if not value or not value.replace("_", "").isalnum() or not value[0].isalpha():
+            parser.error(f"Invalid Snowflake identifier: {value!r}")
 
         return value.upper()
 
@@ -272,36 +242,24 @@ def main() -> None:
     }
 
     if args.authenticator == "snowflake":
-        connection_args["password"] = os.environ[
-            "SNOWFLAKE_PASSWORD"
-        ]
+        connection_args["password"] = os.environ["SNOWFLAKE_PASSWORD"]
 
     if args.role:
         connection_args["role"] = args.role
 
-    input_dir = (
-        args.daedalus_root.resolve()
-        / "marketsim"
-        / "input"
-    )
+    input_dir = args.daedalus_root.resolve() / "marketsim" / "input"
 
     source_path = input_dir / args.source_yaml
 
     if not source_path.is_file():
-        parser.error(
-            f"Source scenario not found: {source_path}"
-        )
+        parser.error(f"Source scenario not found: {source_path}")
 
-    with source_path.open(
-        encoding="utf-8"
-    ) as stream:
+    with source_path.open(encoding="utf-8") as stream:
         scenario = yaml.safe_load(stream)
 
     frames = []
 
-    connection = snowflake.connector.connect(
-        **connection_args
-    )
+    connection = snowflake.connector.connect(**connection_args)
 
     try:
         for symbol in SYMBOLS:
@@ -328,9 +286,7 @@ def main() -> None:
     all_history = pd.concat(
         frames,
         ignore_index=True,
-    ).sort_values(
-        ["symbol", "date"]
-    )
+    ).sort_values(["symbol", "date"])
 
     # Keep Daedalus's existing YAML structure.
     scenario["days"] = len(SIMULATION_DATES)
@@ -350,10 +306,7 @@ def main() -> None:
     )
 
     # Add Allegro and Pepco if they are not already in the source YAML.
-    history_by_symbol = {
-        frame["symbol"].iloc[0]: frame
-        for frame in frames
-    }
+    history_by_symbol = {frame["symbol"].iloc[0]: frame for frame in frames}
 
     for symbol in ("ALE.WA", "PCO.WA", "TPE.WA"):
         key = symbol.lower()
@@ -364,9 +317,7 @@ def main() -> None:
             "symbol": symbol,
             "instrument_class": "stock",
             "market_type": "continuous",
-            "reference_price": float(
-                history_by_symbol[symbol]["close"].iloc[-1]
-            ),
+            "reference_price": float(history_by_symbol[symbol]["close"].iloc[-1]),
             "currency": "PLN",
         }
 
@@ -375,15 +326,9 @@ def main() -> None:
         symbol = market.get("symbol")
 
         if symbol in SYMBOLS:
-            hist = next(
-                f
-                for f in frames
-                if f["symbol"].iloc[0] == symbol
-            )
+            hist = next(f for f in frames if f["symbol"].iloc[0] == symbol)
 
-            market["reference_price"] = float(
-                hist["close"].iloc[-1]
-            )
+            market["reference_price"] = float(hist["close"].iloc[-1])
 
     # Preserve dynamic market-maker sizing.
     mm = scenario["agents"]["market_makers"]["config"]
@@ -392,22 +337,10 @@ def main() -> None:
 
     csv_path = input_dir / "market_data" / "gpw_25d_auto.ohlcv.csv"
 
-    yaml_path = (
-        input_dir
-        / args.output_yaml
-    )
+    yaml_path = input_dir / args.output_yaml
 
-    if (
-        not args.overwrite
-        and (
-            csv_path.exists()
-            or yaml_path.exists()
-        )
-    ):
-        parser.error(
-            "Output exists; pass --overwrite "
-            "to regenerate it"
-        )
+    if not args.overwrite and (csv_path.exists() or yaml_path.exists()):
+        parser.error("Output exists; pass --overwrite to regenerate it")
 
     # Write only after all four assets pass validation.
     all_history.to_csv(

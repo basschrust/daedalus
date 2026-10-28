@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from marketsim.agent.agent import Agent
-from marketsim.market.fourheap.order import Order
 from marketsim.market import FXRateProvider, Price
+from marketsim.market.fourheap.order import Order
 from marketsim.market.private_values.private_values import PrivateValues
 
 if TYPE_CHECKING:

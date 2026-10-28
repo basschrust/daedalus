@@ -820,7 +820,6 @@ class Agent(ABC):
     def get_market_knowledge(self, asset_id: int) -> MarketKnowledge:
         return self.market_knowledge.get(asset_id)
 
-
     def get_order_mean_volume(
         self,
         asset_id: int,
@@ -850,9 +849,7 @@ class Agent(ABC):
 
         volumes = pd.to_numeric(history["volume"], errors="coerce")
         volumes = volumes.dropna()
-        volumes = volumes[
-            (volumes >= 0) & volumes.map(math.isfinite)
-        ]
+        volumes = volumes[(volumes >= 0) & volumes.map(math.isfinite)]
 
         if volumes.empty:
             return float(fallback)
@@ -870,4 +867,3 @@ class Agent(ABC):
             1.0,
             daily_volume * fraction / expected_orders,
         )
-
