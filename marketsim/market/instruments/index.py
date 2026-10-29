@@ -26,6 +26,8 @@ class Index(Security):
         short_name: str | None = None,
         output_dir: Path | str = "tmp",
         base_index_level=None,
+        historical_ohlcv: pd.DataFrame | None = None,
+        simulation_dates=None,
     ) -> None:
         self.instrument_class = "index"
         self.components = components
@@ -39,8 +41,6 @@ class Index(Security):
                 raise ValueError("Invalid base_index_level")
 
         self.value = self.calculate_value()
-        historical_ohlcv = (None,)
-        simulation_dates = (None,)
 
         super().__init__(
             name=name,
@@ -52,6 +52,7 @@ class Index(Security):
             historical_ohlcv=historical_ohlcv,
             simulation_dates=simulation_dates,
         )
+
         self.is_tradable = False
 
     def validate_components(self):
@@ -133,8 +134,22 @@ class Index(Security):
         self.logger.info(f"EOD prices: {eod_prices}")
 
         if self.historical_ohlcv is not None and self.simulation_dates is not None:
+            history = self.historical_ohlcv
+
+            if isinstance(history, tuple):
+                if len(history) == 1 and isinstance(history[0], pd.DataFrame):
+                    history = history[0]
+                else:
+                    raise TypeError(
+                        f"Invalid historical_ohlcv for {self.name}: "
+                        f"tuple of {[type(item).__name__ for item in history]}"
+                    )
+
+            if not isinstance(history, pd.DataFrame):
+                raise TypeError(f"Expected DataFrame for {self.name}, got {type(history).__name__}")
+
             plot_combined_candles(
-                historical=self.historical_ohlcv,
+                historical=history,
                 simulated=eod_prices_df,
                 simulation_dates=self.simulation_dates,
                 output_file=(Path(self.output_dir) / f"candlestick_{self}.png"),

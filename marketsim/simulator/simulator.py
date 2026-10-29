@@ -178,19 +178,21 @@ class Simulator:
                         )
             elif instrument_class == "index":
                 components = {}
-
                 for comp in m_conf.get("components", []):
-                    security = self.markets[self.market_map[comp["security"]]]
-
-                    component = {
+                    components[self.markets[self.market_map[comp["security"]]].asset_id] = {
                         "weight": comp["weight"],
-                        "security": security,
+                        "security": self.markets[self.market_map[comp["security"]]],
                     }
 
-                    if "base_price" in comp:
-                        component["base_price"] = comp["base_price"]
+                symbol = m_conf.get("symbol") or m_conf.get("ticker")
+                historical_ohlcv = self.historical_ohlcv_by_symbol.get(symbol)
 
-                    components[security.asset_id] = component
+                if historical_ohlcv is None:
+                    raise ValueError(
+                        f"Missing historical OHLCV for index {m_key!r}, "
+                        f"symbol={symbol!r}. "
+                        f"Available symbols: {list(self.historical_ohlcv_by_symbol)}"
+                    )
 
                 market = Index(
                     name=m_conf.get("name"),
@@ -199,8 +201,9 @@ class Simulator:
                     output_dir=self.output_dir,
                     components=components,
                     base_index_level=m_conf.get("base_index_level"),
+                    historical_ohlcv=historical_ohlcv,
+                    simulation_dates=self.simulation_dates,
                 )
-
                 self.market_map[m_key] = market.asset_id
                 self.markets[market.asset_id] = market
                 self.asset_names_map[market.asset_id] = {

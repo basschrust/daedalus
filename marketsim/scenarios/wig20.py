@@ -268,6 +268,7 @@ def build_markets(
         )
 
     markets["wig20"] = dict(
+        symbol="WIG20",
         name="WIG20",
         short_name="WIG20",
         instrument_class="index",

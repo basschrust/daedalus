@@ -9,7 +9,7 @@ markets:
     symbol: ALE.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '58.74'
+    reference_price: '58.81'
     currency: PLN
   alr.wa:
     name: ALR.WA
@@ -17,7 +17,7 @@ markets:
     symbol: ALR.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '137.30'
+    reference_price: '137.50'
     currency: PLN
   bdx.wa:
     name: BDX.WA
@@ -25,7 +25,7 @@ markets:
     symbol: BDX.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '704.60'
+    reference_price: '704.80'
     currency: PLN
   cdr.wa:
     name: CDR.WA
@@ -33,7 +33,7 @@ markets:
     symbol: CDR.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '269.10'
+    reference_price: '268.90'
     currency: PLN
   dnp.wa:
     name: DNP.WA
@@ -41,7 +41,7 @@ markets:
     symbol: DNP.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '37.83'
+    reference_price: '37.85'
     currency: PLN
   ebp.wa:
     name: EBP.WA
@@ -49,7 +49,7 @@ markets:
     symbol: EBP.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '786.20'
+    reference_price: '789.40'
     currency: PLN
   kgh.wa:
     name: KGH.WA
@@ -57,7 +57,7 @@ markets:
     symbol: KGH.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '304.60'
+    reference_price: '306.35'
     currency: PLN
   kru.wa:
     name: KRU.WA
@@ -65,7 +65,7 @@ markets:
     symbol: KRU.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '341.00'
+    reference_price: '335.90'
     currency: PLN
   kty.wa:
     name: KTY.WA
@@ -81,7 +81,7 @@ markets:
     symbol: LPP.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '26640.00'
+    reference_price: '26620.00'
     currency: PLN
   mbk.wa:
     name: MBK.WA
@@ -89,7 +89,7 @@ markets:
     symbol: MBK.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '1575.00'
+    reference_price: '1587.50'
     currency: PLN
   mdv.wa:
     name: MDV.WA
@@ -97,7 +97,7 @@ markets:
     symbol: MDV.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '97.96'
+    reference_price: '98.06'
     currency: PLN
   pco.wa:
     name: PCO.WA
@@ -105,7 +105,7 @@ markets:
     symbol: PCO.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '48.50'
+    reference_price: '48.65'
     currency: PLN
   peo.wa:
     name: PEO.WA
@@ -113,7 +113,7 @@ markets:
     symbol: PEO.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '265.80'
+    reference_price: '266.50'
     currency: PLN
   pge.wa:
     name: PGE.WA
@@ -121,7 +121,7 @@ markets:
     symbol: PGE.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '16.16'
+    reference_price: '16.17'
     currency: PLN
   pkn.wa:
     name: PKN.WA
@@ -129,7 +129,7 @@ markets:
     symbol: PKN.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '150.80'
+    reference_price: '151.34'
     currency: PLN
   pko.wa:
     name: PKO.WA
@@ -137,7 +137,7 @@ markets:
     symbol: PKO.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '116.78'
+    reference_price: '117.00'
     currency: PLN
   pzu.wa:
     name: PZU.WA
@@ -145,7 +145,7 @@ markets:
     symbol: PZU.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '72.84'
+    reference_price: '72.92'
     currency: PLN
   tpe.wa:
     name: TPE.WA
@@ -153,7 +153,7 @@ markets:
     symbol: TPE.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '9.17'
+    reference_price: '9.21'
     currency: PLN
   zab.wa:
     name: ZAB.WA
@@ -164,67 +164,68 @@ markets:
     reference_price: '31.69'
     currency: PLN
   wig20:
+    symbol: WIG20
     name: WIG20
     short_name: WIG20
     instrument_class: index
     components:
     - security: ale.wa
       weight: 0.1066
-      base_price: '58.74'
+      base_price: '58.81'
     - security: alr.wa
       weight: 0.0206
-      base_price: '137.30'
+      base_price: '137.50'
     - security: bdx.wa
       weight: 0.0159
-      base_price: '704.60'
+      base_price: '704.80'
     - security: cdr.wa
       weight: 0.0336
-      base_price: '269.10'
+      base_price: '268.90'
     - security: dnp.wa
       weight: 0.0336
-      base_price: '37.83'
+      base_price: '37.85'
     - security: ebp.wa
       weight: 0.0568
-      base_price: '786.20'
+      base_price: '789.40'
     - security: kgh.wa
       weight: 0.0718
-      base_price: '304.60'
+      base_price: '306.35'
     - security: kru.wa
       weight: 0.0112
-      base_price: '341.00'
+      base_price: '335.90'
     - security: kty.wa
       weight: 0.0217
       base_price: '1265.00'
     - security: lpp.wa
       weight: 0.0618
-      base_price: '26640.00'
+      base_price: '26620.00'
     - security: mbk.wa
       weight: 0.033
-      base_price: '1575.00'
+      base_price: '1587.50'
     - security: mdv.wa
       weight: 0.0087
-      base_price: '97.96'
+      base_price: '98.06'
     - security: pco.wa
       weight: 0.0147
-      base_price: '48.50'
+      base_price: '48.65'
     - security: peo.wa
       weight: 0.0803
-      base_price: '265.80'
+      base_price: '266.50'
     - security: pge.wa
       weight: 0.0255
-      base_price: '16.16'
+      base_price: '16.17'
     - security: pkn.wa
       weight: 0.1423
-      base_price: '150.80'
+      base_price: '151.34'
     - security: pko.wa
       weight: 0.141
-      base_price: '116.78'
+      base_price: '117.00'
     - security: pzu.wa
       weight: 0.0734
-      base_price: '72.84'
+      base_price: '72.92'
     - security: tpe.wa
       weight: 0.0179
-      base_price: '9.17'
+      base_price: '9.21'
     - security: zab.wa
       weight: 0.0296
       base_price: '31.69'
@@ -235,6 +236,22 @@ markets:
     instrument_class: future
     underlying: wig20
     expiration: 35
+    multiplier: 20.0
+    margin_rate: 0.1
+  fw20h2720:
+    name: FW20H2720
+    short_name: FW20H2720
+    instrument_class: future
+    underlying: wig20
+    expiration: 50
+    multiplier: 20.0
+    margin_rate: 0.1
+  fw20m2720:
+    name: FW20M2720
+    short_name: FW20M2720
+    instrument_class: future
+    underlying: wig20
+    expiration: 50
     multiplier: 20.0
     margin_rate: 0.1
 agents:
