@@ -5,12 +5,31 @@ from __future__ import annotations
 import math
 import os
 from datetime import date, timedelta
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 import pandas as pd
 import yaml
 
 OHLCV = ("open", "high", "low", "close", "volume")
+
+PRICE_QUANTUM = Decimal("0.01")
+
+
+def to_price(value) -> Decimal:
+    """Convert source values to Daedalus price precision."""
+    if isinstance(value, Decimal):
+        result = value
+    else:
+        result = Decimal(str(value))
+
+    if not result.is_finite() or result <= 0:
+        raise ValueError(f"Invalid price: {value!r}")
+
+    return result.quantize(
+        PRICE_QUANTUM,
+        rounding=ROUND_HALF_UP,
+    )
 
 
 def connect():
@@ -112,11 +131,13 @@ def stock_history(
     if frame.date.duplicated().any() or frame.date.max().date() != cutoff:
         raise ValueError(f"{symbol}: duplicate sessions or missing cutoff date")
 
-    for col in OHLCV:
-        frame[col] = pd.to_numeric(frame[col], errors="raise")
+    for col in ("open", "high", "low", "close"):
+        frame[col] = frame[col].map(to_price)
 
-        if not frame[col].map(math.isfinite).all():
-            raise ValueError(f"{symbol}: invalid {col}")
+    frame["volume"] = pd.to_numeric(frame["volume"], errors="raise")
+
+    if not frame["volume"].map(math.isfinite).all() or (frame["volume"] < 0).any():
+        raise ValueError(f"{symbol}: invalid volume")
 
     if (frame[list(OHLCV[:4])] <= 0).any().any() or (frame.volume < 0).any():
         raise ValueError(f"{symbol}: nonpositive prices or negative volume")
@@ -151,7 +172,7 @@ def fetch_index_close(conn, cutoff: date) -> float:
             f"found {len(frame)}"
         )
 
-    value = float(frame.iloc[0]["index_close"])
+    value = to_price(frame.iloc[0]["index_close"])
 
     if not math.isfinite(value) or value <= 0:
         raise ValueError(f"WIG20: invalid EoD close {value!r} on {cutoff}")
@@ -195,7 +216,7 @@ def resolve(conn, sessions=250):
     )
 
 
-def build_markets(members, history, index_level: float):
+def build_markets(members, history, index_level: Decimal):
     """Create stocks first, followed by the WIG20 index."""
 
     if not math.isfinite(index_level) or index_level <= 0:
@@ -207,7 +228,7 @@ def build_markets(members, history, index_level: float):
     for row in members.itertuples(index=False):
         symbol = row.symbol
         key = symbol.lower()
-        close = float(history[symbol].close.iloc[-1])
+        close = to_price(history[symbol].close.iloc[-1])
 
         markets[key] = dict(
             name=symbol,
@@ -215,7 +236,7 @@ def build_markets(members, history, index_level: float):
             symbol=symbol,
             instrument_class="stock",
             market_type="continuous",
-            reference_price=close,
+            reference_price=str(close),
             currency="PLN",
         )
 
@@ -223,7 +244,7 @@ def build_markets(members, history, index_level: float):
             dict(
                 security=key,
                 weight=float(row.weight),
-                base_price=close,
+                base_price=str(close),
             )
         )
 
@@ -232,7 +253,7 @@ def build_markets(members, history, index_level: float):
         short_name="WIG20",
         instrument_class="index",
         components=components,
-        base_index_level=float(index_level),
+        base_index_level=str(to_price(index_level)),
     )
 
     return markets

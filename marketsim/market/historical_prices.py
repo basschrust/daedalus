@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
+from decimal import Decimal
 from pathlib import Path
 
 import pandas as pd
@@ -54,11 +55,13 @@ def load_historical_prices(
 
         frame = group.set_index("date")[OHLCV_COLUMNS]
 
-        for column in OHLCV_COLUMNS:
-            frame[column] = pd.to_numeric(
-                frame[column],
-                errors="raise",
-            )
+        for column in ("open", "high", "low", "close"):
+            frame[column] = frame[column].map(lambda value: Decimal(str(value)))
+
+        frame["volume"] = pd.to_numeric(
+            frame["volume"],
+            errors="raise",
+        )
 
         if frame.isna().any().any():
             raise ValueError(f"{symbol}: historical OHLCV contains null values")
