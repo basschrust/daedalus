@@ -27,9 +27,9 @@ def test_builds_twenty_stocks_then_index():
     assert len(markets) == 21
     assert list(markets)[-1] == "wig20"
 
-    assert markets["wig20"]["components"][0]["base_price"] == '100.00'
+    assert markets["wig20"]["components"][0]["base_price"] == "100.00"
 
-    assert markets["wig20"]["base_index_level"] == '3000.00'
+    assert markets["wig20"]["base_index_level"] == "3000.00"
 
 
 def test_invalid_index_level():

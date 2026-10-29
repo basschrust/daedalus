@@ -1,49 +1,46 @@
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
 
 import pandas as pd
 from typing_extensions import TYPE_CHECKING
-from decimal import Decimal
-
-from marketsim.market.price import Price
-
 
 from marketsim.market.instruments.security import Security
 from marketsim.market.price import Price
+from marketsim.plot.daedalus_plot_extensions import (
+    plot_combined_candles,
+)
 
 if TYPE_CHECKING:
-    from database.connectors.duckdb_storage import Repository
+    pass
 
 
 class Index(Security):
     def __init__(
-            self,
-            *,
-            repository,
-            components: dict,
-            name: str | None = None,
-            short_name: str | None = None,
-            output_dir: Path | str = "tmp",
-            base_index_level=None,
+        self,
+        *,
+        repository,
+        components: dict,
+        name: str | None = None,
+        short_name: str | None = None,
+        output_dir: Path | str = "tmp",
+        base_index_level=None,
     ) -> None:
         self.instrument_class = "index"
         self.components = components
 
         self.base_index_level = (
-            Decimal(str(base_index_level))
-            if base_index_level is not None
-            else None
+            Decimal(str(base_index_level)) if base_index_level is not None else None
         )
 
         if self.base_index_level is not None:
-            if (
-                    not self.base_index_level.is_finite()
-                    or self.base_index_level <= 0
-            ):
+            if not self.base_index_level.is_finite() or self.base_index_level <= 0:
                 raise ValueError("Invalid base_index_level")
 
         self.value = self.calculate_value()
+        historical_ohlcv = (None,)
+        simulation_dates = (None,)
 
         super().__init__(
             name=name,
@@ -52,6 +49,8 @@ class Index(Security):
             repository=repository,
             short_name=short_name,
             output_dir=output_dir,
+            historical_ohlcv=historical_ohlcv,
+            simulation_dates=simulation_dates,
         )
         self.is_tradable = False
 
@@ -72,18 +71,12 @@ class Index(Security):
             for component in self.components.values():
                 weight = Decimal(str(component["weight"]))
                 base_price = Decimal(str(component["base_price"]))
-                current_price = Decimal(
-                    str(component["security"].last_traded_price)
-                )
+                current_price = Decimal(str(component["security"].last_traded_price))
 
                 if weight <= 0 or base_price <= 0:
-                    raise ValueError(
-                        "Invalid index component weight/base_price"
-                    )
+                    raise ValueError("Invalid index component weight/base_price")
 
-                weighted_return += (
-                        weight * current_price / base_price
-                )
+                weighted_return += weight * current_price / base_price
 
             return Price(self.base_index_level * weighted_return)
 
@@ -92,9 +85,7 @@ class Index(Security):
 
         for component in self.components.values():
             weight = Decimal(str(component["weight"]))
-            current_price = Decimal(
-                str(component["security"].last_traded_price)
-            )
+            current_price = Decimal(str(component["security"].last_traded_price))
             value += weight * current_price
 
         return Price(value)
@@ -140,4 +131,14 @@ class Index(Security):
         self.logger.info(f"EoD prices DF: {eod_prices_df}")
         eod_prices = eod_prices_df.set_index("day").to_dict(orient="index")
         self.logger.info(f"EOD prices: {eod_prices}")
-        self.plot_history(traded_prices=eod_prices)
+
+        if self.historical_ohlcv is not None and self.simulation_dates is not None:
+            plot_combined_candles(
+                historical=self.historical_ohlcv,
+                simulated=eod_prices_df,
+                simulation_dates=self.simulation_dates,
+                output_file=(Path(self.output_dir) / f"candlestick_{self}.png"),
+                title=self.name,
+            )
+        else:
+            self.plot_history(traded_prices=eod_prices)

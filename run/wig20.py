@@ -6,8 +6,6 @@ from pathlib import Path
 import yaml
 from dotenv import load_dotenv
 
-from marketsim.scenarios.wig20 import connect, prepare
-from run.simulation_main import kwargs_for
 from marketsim.input.config import (
     create_run_directory,
     load_config,
@@ -16,7 +14,9 @@ from marketsim.market.historical_prices import (
     load_historical_prices,
     load_simulation_dates,
 )
+from marketsim.scenarios.wig20 import connect, prepare
 from marketsim.simulator import Simulator
+from run.simulation_main import kwargs_for
 
 
 def main():
@@ -51,9 +51,7 @@ def main():
 
     output_dir = create_run_directory()
 
-    with (output_dir / "market_structure.yaml").open(
-            "w", encoding="utf-8"
-    ) as stream:
+    with (output_dir / "market_structure.yaml").open("w", encoding="utf-8") as stream:
         yaml.safe_dump(config, stream, sort_keys=False)
 
     config["output_dir"] = output_dir

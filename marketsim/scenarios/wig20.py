@@ -216,7 +216,7 @@ def resolve(conn, sessions=250):
     )
 
 
-def build_markets(members, history, index_level: Decimal):
+def build_markets(members, history, index_level: Decimal, contracts):
     """Create stocks first, followed by the WIG20 index."""
 
     if not math.isfinite(index_level) or index_level <= 0:
@@ -255,6 +255,22 @@ def build_markets(members, history, index_level: Decimal):
         components=components,
         base_index_level=str(to_price(index_level)),
     )
+
+    for contract in contracts.itertuples(index=False):
+        key = contract.symbol.lower()
+
+        if key in markets:
+            raise ValueError(f"Duplicate market key: {key}")
+
+        markets[key] = {
+            "name": contract.symbol,
+            "short_name": contract.symbol,
+            "instrument_class": "future",
+            "underlying": "wig20",
+            "expiration": expiration_day,
+            "multiplier": contract.multiplier,
+            "margin_rate": margin_rate,
+        }
 
     return markets
 
@@ -313,3 +329,59 @@ def prepare(conn, settings: dict, root: Path):
         yaml.safe_dump(base, stream, sort_keys=False)
 
     return output / yaml_name, cutoff, index_level
+
+
+def index_history(conn, cutoff, sessions=250):
+    frame = query(
+        conn,
+        """
+        SELECT TO_DATE("DATE") AS DATE,
+               "OPEN", "HIGH", "LOW", "CLOSE"
+        FROM INDEX_PRICES
+        WHERE "INDEX_SYMBOL" = %s
+          AND TO_DATE("DATE") <= %s
+        ORDER BY TO_DATE("DATE") DESC
+        LIMIT %s
+    """,
+        ("WIG20", cutoff, sessions),
+    )
+
+    if len(frame) != sessions:
+        raise ValueError(f"WIG20: expected {sessions} historical observations, got {len(frame)}")
+
+    frame["date"] = pd.to_datetime(frame["date"])
+
+    for column in ("open", "high", "low", "close"):
+        frame[column] = frame[column].map(to_price)
+
+    frame["volume"] = 0
+
+    return frame.sort_values("date").set_index("date")
+
+
+def futures_contracts(conn, cutoff, count=3):
+    frame = query(
+        conn,
+        """
+        SELECT CONTRACT_ID, SYMBOL,
+               UNDERLYING_SYMBOL, EXPIRY_DATE,
+               MULTIPLIER
+        FROM DERIVATIVE_CONTRACTS
+        WHERE INSTRUMENT_TYPE = 'FUTURE'
+          AND UNDERLYING_SYMBOL = 'WIG20'
+          AND EXPIRY_DATE > %s
+        ORDER BY EXPIRY_DATE, CONTRACT_ID
+    """,
+        (cutoff,),
+    )
+
+    frame = frame.drop_duplicates(subset=["contract_id"]).head(count)
+
+    if len(frame) != count:
+        raise ValueError(
+            f"Expected {count} WIG20 futures contracts, "
+            f"found {len(frame)}. "
+            "Check Ikaros contract discovery."
+        )
+
+    return frame

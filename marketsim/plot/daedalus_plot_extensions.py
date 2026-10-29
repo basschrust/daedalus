@@ -384,6 +384,7 @@ def plot_agent_history_multicurrency(
             frame["time_step"],
             frame["cash"],
             linewidth=1.8,
+            color="green",
         )
 
         axes[i].set_ylabel(f"Cash ({currency})")

@@ -180,9 +180,7 @@ class Simulator:
                 components = {}
 
                 for comp in m_conf.get("components", []):
-                    security = self.markets[
-                        self.market_map[comp["security"]]
-                    ]
+                    security = self.markets[self.market_map[comp["security"]]]
 
                     component = {
                         "weight": comp["weight"],

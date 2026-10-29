@@ -142,6 +142,7 @@ def plot_agent_history_many_markets(
             label=currency,
             linewidth=1.8,
             marker=".",
+            color="green",
         )
 
     ax_cash.set_ylabel("Cash")
