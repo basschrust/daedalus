@@ -129,6 +129,10 @@ class Index(Security):
         # plot the security values history for all period - take data from DB:
         # TODO: for one day simulations plot the daily candlestick
         eod_prices_df = self.repository.get_eod_index_values(index_id=self.index_id)
+        # The index is non-tradable; its EoD values have no trading volume.
+        eod_prices_df = eod_prices_df.copy()
+        eod_prices_df["volume"] = 0
+
         self.logger.info(f"EoD prices DF: {eod_prices_df}")
         eod_prices = eod_prices_df.set_index("day").to_dict(orient="index")
         self.logger.info(f"EOD prices: {eod_prices}")
