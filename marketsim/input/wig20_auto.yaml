@@ -229,6 +229,14 @@ markets:
       weight: 0.0296
       base_price: '31.69'
     base_index_level: '4247.19'
+  fw20z2620:
+    name: FW20Z2620
+    short_name: FW20Z2620
+    instrument_class: future
+    underlying: wig20
+    expiration: 35
+    multiplier: 20.0
+    margin_rate: 0.1
 agents:
   noise_tight:
     agent_class: NoiseAgent

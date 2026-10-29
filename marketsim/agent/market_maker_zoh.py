@@ -5,6 +5,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import pandas as pd
+
 from marketsim.agent.agent import Agent
 from marketsim.market import FXRateProvider, Price
 from marketsim.market.fourheap.constants import BUY, SELL
@@ -85,8 +87,11 @@ class MMZOHAgent(Agent):
         for asset_id, market in self.markets.items():
             history = getattr(market, "historical_ohlcv", None)
 
-            if history is None or history.empty:
-                # Preserve existing fixed-volume behavior.
+            if (
+                not isinstance(history, pd.DataFrame)
+                or history.empty
+                or "volume" not in history.columns
+            ):
                 self.volume_by_asset[asset_id] = int(self.volume)
                 continue
 
@@ -101,13 +106,9 @@ class MMZOHAgent(Agent):
 
             daily_volume = float(volumes.mean())
 
-            if daily_volume <= 0:
-                raise ValueError(f"Invalid historical volume for {market.name}")
-
-            daily_volume = float(history["volume"].mean())
-
-            if not 0 < daily_volume < float("inf"):
-                raise ValueError(f"Invalid historical volume for {market.name}")
+            if not math.isfinite(daily_volume) or daily_volume <= 0:
+                self.volume_by_asset[asset_id] = int(self.volume)
+                continue
 
             rebalance_count = math.ceil(sim_time / self.rebalance_period)
 

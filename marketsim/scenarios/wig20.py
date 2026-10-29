@@ -55,6 +55,7 @@ def connect():
         database=os.getenv("SNOWFLAKE_DATABASE", "DAEDALUS"),
         schema=os.getenv("SNOWFLAKE_SCHEMA", "MARKET_DATA"),
         authenticator=os.getenv("SNOWFLAKE_AUTHENTICATOR", "snowflake"),
+        enable_server_session_keep_alive_auto_detection=False,
     )
 
     if kwargs["authenticator"] == "snowflake":
@@ -238,9 +239,7 @@ def build_markets(
     margin_rate=0.10,
 ):
     """Create stocks first, followed by the WIG20 index."""
-
-    if not math.isfinite(index_level) or index_level <= 0:
-        raise ValueError("index_level must be a positive finite value")
+    index_level = to_price(index_level)
 
     markets = {}
     components = []
@@ -337,15 +336,12 @@ def prepare(conn, settings: dict, root: Path):
     with (output / profile).open(encoding="utf-8") as stream:
         base = yaml.safe_load(stream)
 
-    contracts = futures_contracts(conn, cutoff, count=3)
-    simulation_dates = load_simulation_dates(base)
-    base["markets"] = build_markets(
-        members,
-        history,
-        index_level,
-        contracts,
-        simulation_dates=simulation_dates,
+    contracts = futures_contracts(
+        conn,
+        cutoff,
+        count=int(settings.get("futures_count", 1)),
     )
+
     base["days"] = int(settings.get("days", 50))
     base["sim_time"] = int(settings.get("sim_time", 60))
     base["seed"] = int(settings.get("seed", 67))
@@ -358,7 +354,14 @@ def prepare(conn, settings: dict, root: Path):
 
     base["start_date"] = (cutoff + timedelta(days=1)).isoformat()
 
-    base.pop("simulation_dates", None)
+    simulation_dates = load_simulation_dates(base)
+    base["markets"] = build_markets(
+        members,
+        history,
+        index_level,
+        contracts=contracts,
+        simulation_dates=simulation_dates,
+    )
 
     with (output / yaml_name).open("w", encoding="utf-8") as stream:
         yaml.safe_dump(base, stream, sort_keys=False)
