@@ -39,6 +39,7 @@ def load_historical_prices(
     df = df.loc[df["date"] <= cutoff].copy()
 
     expected_sessions = settings.get("lookback_sessions")
+    allow_short_history = set(settings.get("allow_short_history", []))
 
     result = {}
 
@@ -49,9 +50,11 @@ def load_historical_prices(
             group = group.tail(int(expected_sessions))
 
             if len(group) != int(expected_sessions):
-                raise ValueError(
-                    f"{symbol}: expected {expected_sessions} historical sessions, got {len(group)}"
-                )
+                if symbol not in allow_short_history or group.empty:
+                    raise ValueError(
+                        f"{symbol}: expected {expected_sessions} "
+                        f"historical sessions, got {len(group)}"
+                    )
 
         frame = group.set_index("date")[OHLCV_COLUMNS]
 

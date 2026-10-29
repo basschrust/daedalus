@@ -178,10 +178,14 @@ class Simulator:
                         )
             elif instrument_class == "index":
                 components = {}
+
                 for comp in m_conf.get("components", []):
-                    components[self.markets[self.market_map[comp["security"]]].asset_id] = {
+                    security = self.markets[self.market_map[comp["security"]]]
+
+                    components[security.asset_id] = {
                         "weight": comp["weight"],
-                        "security": self.markets[self.market_map[comp["security"]]],
+                        "security": security,
+                        "base_price": comp["base_price"],
                     }
 
                 symbol = m_conf.get("symbol") or m_conf.get("ticker")

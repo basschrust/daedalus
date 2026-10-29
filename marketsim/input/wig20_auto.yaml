@@ -9,7 +9,7 @@ markets:
     symbol: ALE.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '58.81'
+    reference_price: '58.53'
     currency: PLN
   alr.wa:
     name: ALR.WA
@@ -25,7 +25,7 @@ markets:
     symbol: BDX.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '702.60'
+    reference_price: '704.00'
     currency: PLN
   cdr.wa:
     name: CDR.WA
@@ -33,7 +33,7 @@ markets:
     symbol: CDR.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '269.20'
+    reference_price: '268.60'
     currency: PLN
   dnp.wa:
     name: DNP.WA
@@ -41,7 +41,7 @@ markets:
     symbol: DNP.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '37.93'
+    reference_price: '37.84'
     currency: PLN
   ebp.wa:
     name: EBP.WA
@@ -49,7 +49,7 @@ markets:
     symbol: EBP.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '789.40'
+    reference_price: '789.60'
     currency: PLN
   kgh.wa:
     name: KGH.WA
@@ -57,7 +57,7 @@ markets:
     symbol: KGH.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '306.35'
+    reference_price: '307.00'
     currency: PLN
   kru.wa:
     name: KRU.WA
@@ -65,7 +65,7 @@ markets:
     symbol: KRU.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '335.90'
+    reference_price: '334.50'
     currency: PLN
   kty.wa:
     name: KTY.WA
@@ -73,7 +73,7 @@ markets:
     symbol: KTY.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '1265.00'
+    reference_price: '1267.00'
     currency: PLN
   lpp.wa:
     name: LPP.WA
@@ -89,7 +89,7 @@ markets:
     symbol: MBK.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '1587.50'
+    reference_price: '1577.50'
     currency: PLN
   mdv.wa:
     name: MDV.WA
@@ -97,7 +97,7 @@ markets:
     symbol: MDV.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '98.06'
+    reference_price: '97.96'
     currency: PLN
   pco.wa:
     name: PCO.WA
@@ -105,7 +105,7 @@ markets:
     symbol: PCO.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '48.65'
+    reference_price: '48.77'
     currency: PLN
   peo.wa:
     name: PEO.WA
@@ -113,7 +113,7 @@ markets:
     symbol: PEO.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '266.50'
+    reference_price: '266.80'
     currency: PLN
   pge.wa:
     name: PGE.WA
@@ -121,7 +121,7 @@ markets:
     symbol: PGE.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '16.17'
+    reference_price: '16.20'
     currency: PLN
   pkn.wa:
     name: PKN.WA
@@ -129,7 +129,7 @@ markets:
     symbol: PKN.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '151.34'
+    reference_price: '151.10'
     currency: PLN
   pko.wa:
     name: PKO.WA
@@ -137,7 +137,7 @@ markets:
     symbol: PKO.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '117.00'
+    reference_price: '117.04'
     currency: PLN
   pzu.wa:
     name: PZU.WA
@@ -145,7 +145,7 @@ markets:
     symbol: PZU.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '72.92'
+    reference_price: '73.00'
     currency: PLN
   tpe.wa:
     name: TPE.WA
@@ -153,7 +153,7 @@ markets:
     symbol: TPE.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '9.21'
+    reference_price: '9.20'
     currency: PLN
   zab.wa:
     name: ZAB.WA
@@ -161,7 +161,7 @@ markets:
     symbol: ZAB.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '31.69'
+    reference_price: '31.70'
     currency: PLN
   wig20:
     symbol: WIG20
@@ -171,64 +171,64 @@ markets:
     components:
     - security: ale.wa
       weight: 0.1066
-      base_price: '58.81'
+      base_price: '58.53'
     - security: alr.wa
       weight: 0.0206
       base_price: '137.85'
     - security: bdx.wa
       weight: 0.0159
-      base_price: '702.60'
+      base_price: '704.00'
     - security: cdr.wa
       weight: 0.0336
-      base_price: '269.20'
+      base_price: '268.60'
     - security: dnp.wa
       weight: 0.0336
-      base_price: '37.93'
+      base_price: '37.84'
     - security: ebp.wa
       weight: 0.0568
-      base_price: '789.40'
+      base_price: '789.60'
     - security: kgh.wa
       weight: 0.0718
-      base_price: '306.35'
+      base_price: '307.00'
     - security: kru.wa
       weight: 0.0112
-      base_price: '335.90'
+      base_price: '334.50'
     - security: kty.wa
       weight: 0.0217
-      base_price: '1265.00'
+      base_price: '1267.00'
     - security: lpp.wa
       weight: 0.0618
       base_price: '26620.00'
     - security: mbk.wa
       weight: 0.033
-      base_price: '1587.50'
+      base_price: '1577.50'
     - security: mdv.wa
       weight: 0.0087
-      base_price: '98.06'
+      base_price: '97.96'
     - security: pco.wa
       weight: 0.0147
-      base_price: '48.65'
+      base_price: '48.77'
     - security: peo.wa
       weight: 0.0803
-      base_price: '266.50'
+      base_price: '266.80'
     - security: pge.wa
       weight: 0.0255
-      base_price: '16.17'
+      base_price: '16.20'
     - security: pkn.wa
       weight: 0.1423
-      base_price: '151.34'
+      base_price: '151.10'
     - security: pko.wa
       weight: 0.141
-      base_price: '117.00'
+      base_price: '117.04'
     - security: pzu.wa
       weight: 0.0734
-      base_price: '72.92'
+      base_price: '73.00'
     - security: tpe.wa
       weight: 0.0179
-      base_price: '9.21'
+      base_price: '9.20'
     - security: zab.wa
       weight: 0.0296
-      base_price: '31.69'
+      base_price: '31.70'
     base_index_level: '4247.19'
   fw20z2620:
     name: FW20Z2620
@@ -351,6 +351,8 @@ historical_prices:
   path: market_data/wig20_auto.ohlcv.csv
   lookback_sessions: 250
   cutoff_date: '2026-10-28'
+  allow_short_history:
+  - WIG20
 start_date: '2026-10-29'
 non_trading_dates:
 - '2026-11-11'

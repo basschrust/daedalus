@@ -86,6 +86,10 @@ class MMZOHAgent(Agent):
         self.volume_by_asset = {}
 
         for asset_id, market in self.markets.items():
+            # Indices are not tradable and do not need volume calibration.
+            if not getattr(market, "is_tradable", True):
+                continue
+
             history = getattr(market, "historical_ohlcv", None)
 
             # No usable historical DataFrame: fixed-volume fallback.
