@@ -90,7 +90,9 @@ class MMZOHAgent(Agent):
 
             # No usable historical DataFrame: fixed-volume fallback.
             if not isinstance(history, pd.DataFrame) or history.empty:
-                self.volume_by_asset[asset_id] = int(self.volume)
+                self.volume_by_asset[asset_id] = (
+                    1 if market.instrument_class == "future" else int(self.volume)
+                )
                 continue
 
             if "volume" not in history.columns:

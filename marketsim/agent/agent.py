@@ -260,10 +260,10 @@ class Agent(ABC):
         new_position = current_position + quantity
         self.futures_position[contract.asset_id] = new_position
         required_collateral = (
-            abs(new_position)
-            * contract.last_traded_price
-            * contract.multiplier
-            * contract.margin_rate
+            Decimal(abs(new_position))
+            * Decimal(str(contract.last_traded_price))
+            * Decimal(str(contract.multiplier))
+            * Decimal(str(contract.margin_rate))
         )
         old_collateral = self.futures_value[contract.asset_id]["collateral"]
         collateral_change = required_collateral - old_collateral
