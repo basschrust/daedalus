@@ -494,7 +494,17 @@ class Agent(ABC):
                 quote=self.base_currency,
             )
 
-        return Price(total)
+        if total < Decimal("-1000000"):
+            self.logger.warning(
+                "Large negative portfolio value: "
+                f"agent={self.agent_id}, "
+                f"day={day}, "
+                f"equity={total}, "
+                f"cash={self.cash}, "
+                f"futures_positions={self.futures_position}, "
+                f"futures_values={self.futures_value}"
+            )
+        return total.quantize(Decimal("0.01"))
 
     def settle(self, contract: Future) -> None:
         # final day settlement

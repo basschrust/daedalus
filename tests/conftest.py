@@ -1,8 +1,12 @@
+from datetime import date
 from pathlib import Path
+from unittest.mock import MagicMock
 
+import numpy as np
+import pandas as pd
 import pytest
 
-from marketsim.agent import Agent, HBLAgent, MMZOHAgent, NoiseAgent
+from marketsim.agent import Agent, HBLAgent, MMZOHAgent, MomentumAgent, NoiseAgent
 from marketsim.database.connectors.duckdb_storage import Repository
 from marketsim.market import FXRateProvider, Index, Option, Price, Security, Stock
 from marketsim.market.fourheap.order import Order
@@ -604,3 +608,41 @@ def index_genius(stock_tnt: Security, stock_mit: Security, repository: Repositor
         },
     )
     return index
+
+
+def make_agent(**config):
+    market = MagicMock()
+    market.asset_id = 101
+    market.instrument_class = "stock"
+    market.last_traded_price = 110.0
+    market.order_book.get_best_ask.return_value = 110.1
+    market.order_book.get_best_bid.return_value = 109.9
+
+    market.traded_prices = {
+        0: {"close": 100.0},
+        5: {"close": 105.0},
+    }
+
+    market.historical_ohlcv = pd.DataFrame(
+        {
+            "date": pd.date_range("2026-10-12", periods=10, freq="D"),
+            "close": np.arange(100.0, 110.0),
+        }
+    )
+    market.simulation_dates = [date(2026, 10, 26)]
+    market.completed_daily_closes = []
+
+    agent = MomentumAgent(
+        markets=[market],
+        repository=MagicMock(),
+        configuration={
+            "lam": 1.0,
+            "period": 5,
+            "threshold": 0.001,
+            "mean_volume": 100,
+            "q_max": 1000,
+            "aggression": 0.003,
+            **config,
+        },
+    )
+    return agent, market
