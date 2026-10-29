@@ -533,10 +533,13 @@ class Agent(ABC):
             previous_price = values["settlement_price"]
             current_price = contract.last_traded_price
 
-            vm = Price(position * contract.multiplier * (current_price - previous_price))
+            vm = (
+                Decimal(position)
+                * Decimal(str(contract.multiplier))
+                * (Decimal(str(current_price)) - Decimal(str(previous_price)))
+            )
 
             # Daily cash settlement
-            # self.cash += vm
             if vm > 0:
                 self.credit_cash(amount=vm, currency=contract.currency)
             else:
