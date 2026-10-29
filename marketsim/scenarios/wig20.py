@@ -11,9 +11,22 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
+from marketsim.market.historical_prices import load_simulation_dates
+
 OHLCV = ("open", "high", "low", "close", "volume")
 
 PRICE_QUANTUM = Decimal("0.01")
+
+
+def futures_expiration_day(expiry_date, simulation_dates):
+    expiry = pd.Timestamp(expiry_date).date()
+
+    for day, session_date in enumerate(simulation_dates):
+        if session_date >= expiry:
+            return day
+
+    # Contract expires after the simulation horizon.
+    return len(simulation_dates)
 
 
 def to_price(value) -> Decimal:
@@ -216,7 +229,14 @@ def resolve(conn, sessions=250):
     )
 
 
-def build_markets(members, history, index_level: Decimal, contracts):
+def build_markets(
+    members,
+    history,
+    index_level,
+    contracts=None,
+    simulation_dates=None,
+    margin_rate=0.10,
+):
     """Create stocks first, followed by the WIG20 index."""
 
     if not math.isfinite(index_level) or index_level <= 0:
@@ -256,21 +276,30 @@ def build_markets(members, history, index_level: Decimal, contracts):
         base_index_level=str(to_price(index_level)),
     )
 
-    for contract in contracts.itertuples(index=False):
-        key = contract.symbol.lower()
+    if contracts is not None and not contracts.empty:
+        if simulation_dates is None:
+            raise ValueError("simulation_dates required when futures are provided")
 
-        if key in markets:
-            raise ValueError(f"Duplicate market key: {key}")
+        for contract in contracts.itertuples(index=False):
+            expiration_day = futures_expiration_day(
+                contract.expiry_date,
+                simulation_dates,
+            )
 
-        markets[key] = {
-            "name": contract.symbol,
-            "short_name": contract.symbol,
-            "instrument_class": "future",
-            "underlying": "wig20",
-            "expiration": expiration_day,
-            "multiplier": contract.multiplier,
-            "margin_rate": margin_rate,
-        }
+            key = contract.symbol.lower()
+
+            if key in markets:
+                raise ValueError(f"Duplicate market: {key}")
+
+            markets[key] = {
+                "name": contract.symbol,
+                "short_name": contract.symbol,
+                "instrument_class": "future",
+                "underlying": "wig20",
+                "expiration": expiration_day,
+                "multiplier": float(contract.multiplier),
+                "margin_rate": margin_rate,
+            }
 
     return markets
 
@@ -308,12 +337,18 @@ def prepare(conn, settings: dict, root: Path):
     with (output / profile).open(encoding="utf-8") as stream:
         base = yaml.safe_load(stream)
 
-    base["markets"] = build_markets(members, history, index_level)
-
+    contracts = futures_contracts(conn, cutoff, count=3)
+    simulation_dates = load_simulation_dates(base)
+    base["markets"] = build_markets(
+        members,
+        history,
+        index_level,
+        contracts,
+        simulation_dates=simulation_dates,
+    )
     base["days"] = int(settings.get("days", 50))
     base["sim_time"] = int(settings.get("sim_time", 60))
     base["seed"] = int(settings.get("seed", 67))
-
     base["historical_prices"] = dict(
         enabled=True,
         path=f"market_data/{csv_name}",

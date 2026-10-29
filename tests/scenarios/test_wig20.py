@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 import pandas as pd
 import pytest
@@ -67,3 +67,44 @@ def test_index_close_missing_fails(monkeypatch):
         match="INDEX_PRICES",
     ):
         fetch_index_close(None, date(2026, 10, 28))
+
+
+def test_builds_stocks_index_and_future():
+    symbols = [f"S{i}.WA" for i in range(20)]
+
+    members = pd.DataFrame(
+        {
+            "symbol": symbols,
+            "weight": [0.05] * 20,
+        }
+    )
+
+    history = {symbol: pd.DataFrame({"close": ["100.00"]}) for symbol in symbols}
+
+    contracts = pd.DataFrame(
+        [
+            {
+                "symbol": "FW20Z2620",
+                "expiry_date": date(2026, 12, 18),
+                "multiplier": 20,
+            }
+        ]
+    )
+
+    simulation_dates = [date(2026, 10, 30) + timedelta(days=i) for i in range(60)]
+
+    markets = build_markets(
+        members,
+        history,
+        "3000.00",
+        contracts=contracts,
+        simulation_dates=simulation_dates,
+    )
+
+    assert len(markets) == 22
+    assert list(markets)[-2:] == [
+        "wig20",
+        "fw20z2620",
+    ]
+    assert markets["fw20z2620"]["underlying"] == "wig20"
+    assert markets["fw20z2620"]["multiplier"] == 20.0
