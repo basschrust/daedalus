@@ -46,3 +46,8 @@ wandb/
 
 # temporary files
 tmp/
+
+# local and credentials
+.env
+.env.*
+!.env.example

@@ -1,0 +1,16 @@
+scenario: wig20
+
+days: 50
+sim_time: 60
+seed: 67
+
+universe:
+  stocks: auto
+  futures: 3
+
+market_data:
+  source: snowflake
+  cutoff: latest_complete
+  lookback_sessions: 250
+
+agents_profile: gpw_standard
