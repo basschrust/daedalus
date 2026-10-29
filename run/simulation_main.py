@@ -18,7 +18,7 @@ from marketsim.simulator import Simulator
 if TYPE_CHECKING:
     pass
 
-from pathlib import Path
+
 from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[1]

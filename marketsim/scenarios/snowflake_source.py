@@ -1,13 +1,12 @@
-
 from __future__ import annotations
 
+import math
 import os
 from contextlib import closing
 from datetime import date
 
 import pandas as pd
 import snowflake.connector
-
 
 OHLCV = ("open", "high", "low", "close", "volume")
 
@@ -17,24 +16,14 @@ def connect():
     settings = {
         "account": os.environ["SNOWFLAKE_ACCOUNT"],
         "user": os.environ["SNOWFLAKE_USER"],
-        "warehouse": os.getenv(
-            "SNOWFLAKE_WAREHOUSE", "DAEDALUS_WH"
-        ),
-        "database": os.getenv(
-            "SNOWFLAKE_DATABASE", "DAEDALUS"
-        ),
-        "schema": os.getenv(
-            "SNOWFLAKE_SCHEMA", "MARKET_DATA"
-        ),
-        "authenticator": os.getenv(
-            "SNOWFLAKE_AUTHENTICATOR", "snowflake"
-        ),
+        "warehouse": os.getenv("SNOWFLAKE_WAREHOUSE", "DAEDALUS_WH"),
+        "database": os.getenv("SNOWFLAKE_DATABASE", "DAEDALUS"),
+        "schema": os.getenv("SNOWFLAKE_SCHEMA", "MARKET_DATA"),
+        "authenticator": os.getenv("SNOWFLAKE_AUTHENTICATOR", "snowflake"),
     }
 
     if settings["authenticator"] == "snowflake":
-        settings["password"] = os.environ[
-            "SNOWFLAKE_PASSWORD"
-        ]
+        settings["password"] = os.environ["SNOWFLAKE_PASSWORD"]
 
     return snowflake.connector.connect(**settings)
 
@@ -63,9 +52,7 @@ def latest_complete_cutoff(
     still be incomplete.
     """
     if len(symbols) != 20 or len(set(symbols)) != 20:
-        raise ValueError(
-            "Expected exactly 20 distinct WIG20 stocks"
-        )
+        raise ValueError("Expected exactly 20 distinct WIG20 stocks")
 
     if lookback_sessions <= 0:
         raise ValueError("lookback_sessions must be positive")
@@ -130,8 +117,7 @@ def latest_complete_cutoff(
 
     if frame.empty:
         raise ValueError(
-            "No common complete WIG20 session with "
-            f"{lookback_sessions} historical observations"
+            f"No common complete WIG20 session with {lookback_sessions} historical observations"
         )
 
     return frame.iloc[0]["session_date"]
@@ -165,10 +151,7 @@ def fetch_stock_history(
     )
 
     if len(frame) != lookback_sessions:
-        raise ValueError(
-            f"{symbol}: expected {lookback_sessions} "
-            f"sessions, got {len(frame)}"
-        )
+        raise ValueError(f"{symbol}: expected {lookback_sessions} sessions, got {len(frame)}")
 
     frame["date"] = pd.to_datetime(frame["date"])
 
@@ -176,16 +159,12 @@ def fetch_stock_history(
         raise ValueError(f"{symbol}: duplicate sessions")
 
     for column in OHLCV:
-        frame[column] = pd.to_numeric(
-            frame[column], errors="raise"
-        )
+        frame[column] = pd.to_numeric(frame[column], errors="raise")
 
     if frame[list(OHLCV)].isna().any().any():
         raise ValueError(f"{symbol}: missing OHLCV values")
 
-    if not (
-        frame[["open", "high", "low", "close"]] > 0
-    ).all().all():
+    if not (frame[["open", "high", "low", "close"]] > 0).all().all():
         raise ValueError(f"{symbol}: invalid prices")
 
     if not (frame["volume"] >= 0).all():
@@ -194,9 +173,7 @@ def fetch_stock_history(
     frame = frame.sort_values("date").set_index("date")
 
     if frame.index[-1].date() != cutoff:
-        raise ValueError(
-            f"{symbol}: history does not end at {cutoff}"
-        )
+        raise ValueError(f"{symbol}: history does not end at {cutoff}")
 
     return frame
 
@@ -230,31 +207,21 @@ def fetch_index_constituents(
     )
 
     if len(frame) != 20:
-        raise ValueError(
-            f"{index_symbol}: expected 20 constituents "
-            f"on {as_of}, found {len(frame)}"
-        )
+        raise ValueError(f"{index_symbol}: expected 20 constituents on {as_of}, found {len(frame)}")
 
     if frame["symbol"].isna().any():
         raise ValueError("Missing constituent symbol")
 
     if frame["symbol"].duplicated().any():
-        raise ValueError(
-            f"{index_symbol}: duplicate constituents"
-        )
+        raise ValueError(f"{index_symbol}: duplicate constituents")
 
-    frame["weight"] = pd.to_numeric(
-        frame["weight"], errors="raise"
-    )
+    frame["weight"] = pd.to_numeric(frame["weight"], errors="raise")
 
     if (
         frame["weight"].isna().any()
         or not frame["weight"].map(math.isfinite).all()
         or (frame["weight"] <= 0).any()
     ):
-        raise ValueError(
-            f"{index_symbol}: invalid constituent weights"
-        )
+        raise ValueError(f"{index_symbol}: invalid constituent weights")
 
     return frame
-
