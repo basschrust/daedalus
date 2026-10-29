@@ -4,6 +4,10 @@ from pathlib import Path
 
 import pandas as pd
 from typing_extensions import TYPE_CHECKING
+from decimal import Decimal
+
+from marketsim.market.price import Price
+
 
 from marketsim.market.instruments.security import Security
 from marketsim.market.price import Price
@@ -14,19 +18,31 @@ if TYPE_CHECKING:
 
 class Index(Security):
     def __init__(
-        self,
-        *,
-        repository: Repository,
-        components: dict,
-        name: str | None = None,
-        short_name: str | None = None,
-        output_dir: Path | str = "tmp",
+            self,
+            *,
+            repository,
+            components: dict,
+            name: str | None = None,
+            short_name: str | None = None,
+            output_dir: Path | str = "tmp",
+            base_index_level=None,
     ) -> None:
-
         self.instrument_class = "index"
-        # components & value calculation
-        # { asset_id: { weight: weight[float] , security: Security }}
         self.components = components
+
+        self.base_index_level = (
+            Decimal(str(base_index_level))
+            if base_index_level is not None
+            else None
+        )
+
+        if self.base_index_level is not None:
+            if (
+                    not self.base_index_level.is_finite()
+                    or self.base_index_level <= 0
+            ):
+                raise ValueError("Invalid base_index_level")
+
         self.value = self.calculate_value()
 
         super().__init__(
@@ -50,11 +66,38 @@ class Index(Security):
         # it doesn't need to be 100% in total
 
     def calculate_value(self):
-        value = 0
-        for asset_id, component in self.components.items():
-            value += component["weight"] * component["security"].last_traded_price
+        if self.base_index_level is not None:
+            weighted_return = Decimal("0")
 
-        return value
+            for component in self.components.values():
+                weight = Decimal(str(component["weight"]))
+                base_price = Decimal(str(component["base_price"]))
+                current_price = Decimal(
+                    str(component["security"].last_traded_price)
+                )
+
+                if weight <= 0 or base_price <= 0:
+                    raise ValueError(
+                        "Invalid index component weight/base_price"
+                    )
+
+                weighted_return += (
+                        weight * current_price / base_price
+                )
+
+            return Price(self.base_index_level * weighted_return)
+
+        # Legacy index behaviour for existing scenarios
+        value = Decimal("0")
+
+        for component in self.components.values():
+            weight = Decimal(str(component["weight"]))
+            current_price = Decimal(
+                str(component["security"].last_traded_price)
+            )
+            value += weight * current_price
+
+        return Price(value)
 
     def save(self):
         # save the index definition to DB

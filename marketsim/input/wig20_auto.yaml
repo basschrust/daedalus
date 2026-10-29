@@ -9,7 +9,7 @@ markets:
     symbol: ALE.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 58.7400016784668
+    reference_price: '58.74'
     currency: PLN
   alr.wa:
     name: ALR.WA
@@ -17,7 +17,7 @@ markets:
     symbol: ALR.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 137.3000030517578
+    reference_price: '137.30'
     currency: PLN
   bdx.wa:
     name: BDX.WA
@@ -25,7 +25,7 @@ markets:
     symbol: BDX.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 704.5999755859375
+    reference_price: '704.60'
     currency: PLN
   cdr.wa:
     name: CDR.WA
@@ -33,7 +33,7 @@ markets:
     symbol: CDR.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 269.1000061035156
+    reference_price: '269.10'
     currency: PLN
   dnp.wa:
     name: DNP.WA
@@ -41,7 +41,7 @@ markets:
     symbol: DNP.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 37.83000183105469
+    reference_price: '37.83'
     currency: PLN
   ebp.wa:
     name: EBP.WA
@@ -49,7 +49,7 @@ markets:
     symbol: EBP.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 786.2000122070312
+    reference_price: '786.20'
     currency: PLN
   kgh.wa:
     name: KGH.WA
@@ -57,7 +57,7 @@ markets:
     symbol: KGH.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 304.6000061035156
+    reference_price: '304.60'
     currency: PLN
   kru.wa:
     name: KRU.WA
@@ -65,7 +65,7 @@ markets:
     symbol: KRU.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 341.0
+    reference_price: '341.00'
     currency: PLN
   kty.wa:
     name: KTY.WA
@@ -73,7 +73,7 @@ markets:
     symbol: KTY.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 1265.0
+    reference_price: '1265.00'
     currency: PLN
   lpp.wa:
     name: LPP.WA
@@ -81,7 +81,7 @@ markets:
     symbol: LPP.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 26640.0
+    reference_price: '26640.00'
     currency: PLN
   mbk.wa:
     name: MBK.WA
@@ -89,7 +89,7 @@ markets:
     symbol: MBK.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 1575.0
+    reference_price: '1575.00'
     currency: PLN
   mdv.wa:
     name: MDV.WA
@@ -97,7 +97,7 @@ markets:
     symbol: MDV.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 97.95999908447266
+    reference_price: '97.96'
     currency: PLN
   pco.wa:
     name: PCO.WA
@@ -105,7 +105,7 @@ markets:
     symbol: PCO.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 48.5
+    reference_price: '48.50'
     currency: PLN
   peo.wa:
     name: PEO.WA
@@ -113,7 +113,7 @@ markets:
     symbol: PEO.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 265.79998779296875
+    reference_price: '265.80'
     currency: PLN
   pge.wa:
     name: PGE.WA
@@ -121,7 +121,7 @@ markets:
     symbol: PGE.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 16.15999984741211
+    reference_price: '16.16'
     currency: PLN
   pkn.wa:
     name: PKN.WA
@@ -129,7 +129,7 @@ markets:
     symbol: PKN.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 150.8000030517578
+    reference_price: '150.80'
     currency: PLN
   pko.wa:
     name: PKO.WA
@@ -137,7 +137,7 @@ markets:
     symbol: PKO.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 116.77999877929688
+    reference_price: '116.78'
     currency: PLN
   pzu.wa:
     name: PZU.WA
@@ -145,7 +145,7 @@ markets:
     symbol: PZU.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 72.83999633789062
+    reference_price: '72.84'
     currency: PLN
   tpe.wa:
     name: TPE.WA
@@ -153,7 +153,7 @@ markets:
     symbol: TPE.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 9.173999786376953
+    reference_price: '9.17'
     currency: PLN
   zab.wa:
     name: ZAB.WA
@@ -161,7 +161,7 @@ markets:
     symbol: ZAB.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: 31.690000534057617
+    reference_price: '31.69'
     currency: PLN
   wig20:
     name: WIG20
@@ -170,65 +170,65 @@ markets:
     components:
     - security: ale.wa
       weight: 0.1066
-      base_price: 58.7400016784668
+      base_price: '58.74'
     - security: alr.wa
       weight: 0.0206
-      base_price: 137.3000030517578
+      base_price: '137.30'
     - security: bdx.wa
       weight: 0.0159
-      base_price: 704.5999755859375
+      base_price: '704.60'
     - security: cdr.wa
       weight: 0.0336
-      base_price: 269.1000061035156
+      base_price: '269.10'
     - security: dnp.wa
       weight: 0.0336
-      base_price: 37.83000183105469
+      base_price: '37.83'
     - security: ebp.wa
       weight: 0.0568
-      base_price: 786.2000122070312
+      base_price: '786.20'
     - security: kgh.wa
       weight: 0.0718
-      base_price: 304.6000061035156
+      base_price: '304.60'
     - security: kru.wa
       weight: 0.0112
-      base_price: 341.0
+      base_price: '341.00'
     - security: kty.wa
       weight: 0.0217
-      base_price: 1265.0
+      base_price: '1265.00'
     - security: lpp.wa
       weight: 0.0618
-      base_price: 26640.0
+      base_price: '26640.00'
     - security: mbk.wa
       weight: 0.033
-      base_price: 1575.0
+      base_price: '1575.00'
     - security: mdv.wa
       weight: 0.0087
-      base_price: 97.95999908447266
+      base_price: '97.96'
     - security: pco.wa
       weight: 0.0147
-      base_price: 48.5
+      base_price: '48.50'
     - security: peo.wa
       weight: 0.0803
-      base_price: 265.79998779296875
+      base_price: '265.80'
     - security: pge.wa
       weight: 0.0255
-      base_price: 16.15999984741211
+      base_price: '16.16'
     - security: pkn.wa
       weight: 0.1423
-      base_price: 150.8000030517578
+      base_price: '150.80'
     - security: pko.wa
       weight: 0.141
-      base_price: 116.77999877929688
+      base_price: '116.78'
     - security: pzu.wa
       weight: 0.0734
-      base_price: 72.83999633789062
+      base_price: '72.84'
     - security: tpe.wa
       weight: 0.0179
-      base_price: 9.173999786376953
+      base_price: '9.17'
     - security: zab.wa
       weight: 0.0296
-      base_price: 31.690000534057617
-    base_index_level: 4247.19
+      base_price: '31.69'
+    base_index_level: '4247.19'
 agents:
   noise_tight:
     agent_class: NoiseAgent
