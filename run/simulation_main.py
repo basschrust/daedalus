@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 import yaml
 
 from marketsim.input.config import create_run_directory, load_config
-from marketsim.input.historical_prices import (
+from marketsim.market.historical_prices import (
     load_historical_prices,
     load_simulation_dates,
 )
@@ -17,6 +17,12 @@ from marketsim.simulator import Simulator
 
 if TYPE_CHECKING:
     pass
+
+
+from dotenv import load_dotenv
+
+ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(ROOT / ".env")
 
 
 def kwargs_for(func: Callable, config: dict) -> dict:

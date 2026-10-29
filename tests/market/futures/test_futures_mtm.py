@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 import pytest
 
 from marketsim.agent import Agent
@@ -228,3 +230,14 @@ def test_settlement_is_independent_between_contracts(
 
     assert buyer.futures_value[short_id]["settlement_price"] == future_short.last_traded_price
     assert buyer.futures_value[long_id]["settlement_price"] == future_long.last_traded_price
+
+
+def test_futures_variation_margin_decimal():
+    position = 3
+    multiplier = 20.0
+    previous_price = Decimal("3000.00")
+    current_price = Decimal("3012.50")
+
+    vm = Decimal(position) * Decimal(str(multiplier)) * (current_price - previous_price)
+
+    assert vm == Decimal("750.00")

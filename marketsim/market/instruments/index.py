@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
 
 import pandas as pd
@@ -7,26 +8,38 @@ from typing_extensions import TYPE_CHECKING
 
 from marketsim.market.instruments.security import Security
 from marketsim.market.price import Price
+from marketsim.plot.daedalus_plot_extensions import (
+    plot_combined_candles,
+)
 
 if TYPE_CHECKING:
-    from database.connectors.duckdb_storage import Repository
+    pass
 
 
 class Index(Security):
     def __init__(
         self,
         *,
-        repository: Repository,
+        repository,
         components: dict,
         name: str | None = None,
         short_name: str | None = None,
         output_dir: Path | str = "tmp",
+        base_index_level=None,
+        historical_ohlcv: pd.DataFrame | None = None,
+        simulation_dates=None,
     ) -> None:
-
         self.instrument_class = "index"
-        # components & value calculation
-        # { asset_id: { weight: weight[float] , security: Security }}
         self.components = components
+
+        self.base_index_level = (
+            Decimal(str(base_index_level)) if base_index_level is not None else None
+        )
+
+        if self.base_index_level is not None:
+            if not self.base_index_level.is_finite() or self.base_index_level <= 0:
+                raise ValueError("Invalid base_index_level")
+
         self.value = self.calculate_value()
 
         super().__init__(
@@ -36,7 +49,10 @@ class Index(Security):
             repository=repository,
             short_name=short_name,
             output_dir=output_dir,
+            historical_ohlcv=historical_ohlcv,
+            simulation_dates=simulation_dates,
         )
+
         self.is_tradable = False
 
     def validate_components(self):
@@ -50,11 +66,30 @@ class Index(Security):
         # it doesn't need to be 100% in total
 
     def calculate_value(self):
-        value = 0
-        for asset_id, component in self.components.items():
-            value += component["weight"] * component["security"].last_traded_price
+        if self.base_index_level is not None:
+            weighted_return = Decimal("0")
 
-        return value
+            for component in self.components.values():
+                weight = Decimal(str(component["weight"]))
+                base_price = Decimal(str(component["base_price"]))
+                current_price = Decimal(str(component["security"].last_traded_price))
+
+                if weight <= 0 or base_price <= 0:
+                    raise ValueError("Invalid index component weight/base_price")
+
+                weighted_return += weight * current_price / base_price
+
+            return Price(self.base_index_level * weighted_return)
+
+        # Legacy index behaviour for existing scenarios
+        value = Decimal("0")
+
+        for component in self.components.values():
+            weight = Decimal(str(component["weight"]))
+            current_price = Decimal(str(component["security"].last_traded_price))
+            value += weight * current_price
+
+        return Price(value)
 
     def save(self):
         # save the index definition to DB
@@ -94,7 +129,35 @@ class Index(Security):
         # plot the security values history for all period - take data from DB:
         # TODO: for one day simulations plot the daily candlestick
         eod_prices_df = self.repository.get_eod_index_values(index_id=self.index_id)
+        # The index is non-tradable; its EoD values have no trading volume.
+        eod_prices_df = eod_prices_df.copy()
+        eod_prices_df["volume"] = 0
+
         self.logger.info(f"EoD prices DF: {eod_prices_df}")
         eod_prices = eod_prices_df.set_index("day").to_dict(orient="index")
         self.logger.info(f"EOD prices: {eod_prices}")
-        self.plot_history(traded_prices=eod_prices)
+
+        if self.historical_ohlcv is not None and self.simulation_dates is not None:
+            history = self.historical_ohlcv
+
+            if isinstance(history, tuple):
+                if len(history) == 1 and isinstance(history[0], pd.DataFrame):
+                    history = history[0]
+                else:
+                    raise TypeError(
+                        f"Invalid historical_ohlcv for {self.name}: "
+                        f"tuple of {[type(item).__name__ for item in history]}"
+                    )
+
+            if not isinstance(history, pd.DataFrame):
+                raise TypeError(f"Expected DataFrame for {self.name}, got {type(history).__name__}")
+
+            plot_combined_candles(
+                historical=history,
+                simulated=eod_prices_df,
+                simulation_dates=self.simulation_dates,
+                output_file=(Path(self.output_dir) / f"candlestick_{self}.png"),
+                title=self.name,
+            )
+        else:
+            self.plot_history(traded_prices=eod_prices)

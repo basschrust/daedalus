@@ -178,17 +178,35 @@ class Simulator:
                         )
             elif instrument_class == "index":
                 components = {}
+
                 for comp in m_conf.get("components", []):
-                    components[self.markets[self.market_map[comp["security"]]].asset_id] = {
+                    security = self.markets[self.market_map[comp["security"]]]
+
+                    components[security.asset_id] = {
                         "weight": comp["weight"],
-                        "security": self.markets[self.market_map[comp["security"]]],
+                        "security": security,
+                        "base_price": comp["base_price"],
                     }
+
+                symbol = m_conf.get("symbol") or m_conf.get("ticker")
+                historical_ohlcv = self.historical_ohlcv_by_symbol.get(symbol)
+
+                if historical_ohlcv is None:
+                    raise ValueError(
+                        f"Missing historical OHLCV for index {m_key!r}, "
+                        f"symbol={symbol!r}. "
+                        f"Available symbols: {list(self.historical_ohlcv_by_symbol)}"
+                    )
+
                 market = Index(
                     name=m_conf.get("name"),
                     short_name=m_conf.get("short_name"),
                     repository=self.repository,
                     output_dir=self.output_dir,
                     components=components,
+                    base_index_level=m_conf.get("base_index_level"),
+                    historical_ohlcv=historical_ohlcv,
+                    simulation_dates=self.simulation_dates,
                 )
                 self.market_map[m_key] = market.asset_id
                 self.markets[market.asset_id] = market
@@ -463,7 +481,7 @@ class Simulator:
 
             # plot the LOB
             if self.current_time > 0 and self.current_time % self.lob_plot_interval == 0:
-                if market.instrument_class != "index":
+                if market.is_tradable:
                     # plot the LOB only for tradable intruments
                     market.plot_lob(self.current_time)
 

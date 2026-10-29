@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
+from decimal import Decimal
 from pathlib import Path
 
 import pandas as pd
@@ -38,6 +39,7 @@ def load_historical_prices(
     df = df.loc[df["date"] <= cutoff].copy()
 
     expected_sessions = settings.get("lookback_sessions")
+    allow_short_history = set(settings.get("allow_short_history", []))
 
     result = {}
 
@@ -48,17 +50,21 @@ def load_historical_prices(
             group = group.tail(int(expected_sessions))
 
             if len(group) != int(expected_sessions):
-                raise ValueError(
-                    f"{symbol}: expected {expected_sessions} historical sessions, got {len(group)}"
-                )
+                if symbol not in allow_short_history or group.empty:
+                    raise ValueError(
+                        f"{symbol}: expected {expected_sessions} "
+                        f"historical sessions, got {len(group)}"
+                    )
 
         frame = group.set_index("date")[OHLCV_COLUMNS]
 
-        for column in OHLCV_COLUMNS:
-            frame[column] = pd.to_numeric(
-                frame[column],
-                errors="raise",
-            )
+        for column in ("open", "high", "low", "close"):
+            frame[column] = frame[column].map(lambda value: Decimal(str(value)))
+
+        frame["volume"] = pd.to_numeric(
+            frame["volume"],
+            errors="raise",
+        )
 
         if frame.isna().any().any():
             raise ValueError(f"{symbol}: historical OHLCV contains null values")

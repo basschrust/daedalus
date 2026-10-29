@@ -90,8 +90,8 @@ agents:
     number: 1
     config:
       rebalance_by: time
-      rebalance_period: 3
-      volume_fraction: 0.98
+      rebalance_period: 4
+      volume_fraction: 1
       K: 4
       xi: 0.1
       omega: 0.1

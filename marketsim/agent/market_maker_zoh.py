@@ -5,6 +5,9 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import numpy as np
+import pandas as pd
+
 from marketsim.agent.agent import Agent
 from marketsim.market import FXRateProvider, Price
 from marketsim.market.fourheap.constants import BUY, SELL
@@ -13,7 +16,7 @@ from marketsim.market.fourheap.order import Order
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
 
-    from marketsim.market.security import Security
+    from marketsim.market.instruments.security import Security
 
 
 class MMZOHAgent(Agent):
@@ -83,30 +86,36 @@ class MMZOHAgent(Agent):
         self.volume_by_asset = {}
 
         for asset_id, market in self.markets.items():
-            history = getattr(market, "historical_ohlcv", None)
-
-            if history is None or history.empty:
-                # Preserve existing fixed-volume behavior.
-                self.volume_by_asset[asset_id] = int(self.volume)
+            # Indices are not tradable and do not need volume calibration.
+            if not getattr(market, "is_tradable", True):
                 continue
 
-            volumes = history["volume"]
+            history = getattr(market, "historical_ohlcv", None)
+
+            # No usable historical DataFrame: fixed-volume fallback.
+            if not isinstance(history, pd.DataFrame) or history.empty:
+                self.volume_by_asset[asset_id] = (
+                    1 if market.instrument_class == "future" else int(self.volume)
+                )
+                continue
+
+            if "volume" not in history.columns:
+                raise ValueError(
+                    f"Invalid historical volume for {market.name}: missing volume column"
+                )
+
+            volumes = pd.to_numeric(history["volume"], errors="coerce")
 
             if (
                 volumes.isna().any()
                 or not (volumes >= 0).all()
-                or not (volumes < float("inf")).all()
+                or not np.isfinite(volumes.to_numpy(dtype=float)).all()
             ):
                 raise ValueError(f"Invalid historical volume for {market.name}")
 
             daily_volume = float(volumes.mean())
 
-            if daily_volume <= 0:
-                raise ValueError(f"Invalid historical volume for {market.name}")
-
-            daily_volume = float(history["volume"].mean())
-
-            if not 0 < daily_volume < float("inf"):
+            if not math.isfinite(daily_volume) or daily_volume <= 0:
                 raise ValueError(f"Invalid historical volume for {market.name}")
 
             rebalance_count = math.ceil(sim_time / self.rebalance_period)
@@ -157,7 +166,7 @@ class MMZOHAgent(Agent):
     def take_action(self, current_time: int):
         # TODO: the current_time argument should be replaced to take the self.current_time
         for asset_id, market in self.markets.items():
-            if market.instrument_class == "index":
+            if not getattr(market, "is_tradable", True):
                 continue
             orders = []
             # add orders only in rebalance periods:

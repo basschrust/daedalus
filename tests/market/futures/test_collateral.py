@@ -1,5 +1,51 @@
-from marketsim.agent import Agent
-from marketsim.market import Future, Price
+from datetime import date
+from decimal import Decimal
+from unittest.mock import MagicMock
+
+import numpy as np
+import pandas as pd
+
+from marketsim.agent import Agent, MomentumAgent
+from marketsim.market import Future, FXRateProvider
+from marketsim.market.price import Price
+
+
+def make_agent(**config):
+    market = MagicMock()
+    market.asset_id = 101
+    market.instrument_class = "stock"
+    market.last_traded_price = 110.0
+    market.order_book.get_best_ask.return_value = 110.1
+    market.order_book.get_best_bid.return_value = 109.9
+
+    market.traded_prices = {
+        0: {"close": 100.0},
+        5: {"close": 105.0},
+    }
+
+    market.historical_ohlcv = pd.DataFrame(
+        {
+            "date": pd.date_range("2026-10-12", periods=10, freq="D"),
+            "close": np.arange(100.0, 110.0),
+        }
+    )
+    market.simulation_dates = [date(2026, 10, 26)]
+    market.completed_daily_closes = []
+
+    agent = MomentumAgent(
+        markets=[market],
+        repository=MagicMock(),
+        configuration={
+            "lam": 1.0,
+            "period": 5,
+            "threshold": 0.001,
+            "mean_volume": 100,
+            "q_max": 1000,
+            "aggression": 0.003,
+            **config,
+        },
+    )
+    return agent, market
 
 
 def test_collateral_transfer_preserves_equity(
@@ -23,3 +69,58 @@ def test_collateral_transfer_preserves_equity(
     )
 
     assert equity_after == equity_before
+
+
+def test_futures_collateral_uses_decimal():
+    position = 2000
+    price = Price("3000.00")
+    multiplier = 20
+    margin_rate = Decimal("0.10")
+
+    collateral = Decimal(position) * Decimal(str(price)) * Decimal(multiplier) * margin_rate
+
+    assert collateral == Decimal("12000000.00")
+    assert isinstance(collateral, Decimal)
+
+
+def test_large_portfolio_value_is_not_limited_by_price():
+    agent, contract = make_agent()
+
+    agent.fx_rate_provider = FXRateProvider()
+    agent.base_currency = "PLN"
+
+    # Isolate the test from existing positions.
+    agent.position = {asset_id: 0 for asset_id in agent.position}
+    agent.futures_position = {asset_id: 0 for asset_id in agent.futures_position}
+    agent.futures_value = {}
+
+    agent.cash = {"PLN": Decimal("-101230431.15")}
+
+    value = agent.calculate_portfolio_value(day=0)
+
+    assert value == Decimal("-101230431.15")
+    assert isinstance(value, Decimal)
+
+
+def test_large_cash_credit():
+    agent, _ = make_agent()
+    agent.cash["PLN"] = Decimal("0")
+
+    agent.credit_cash(
+        currency="PLN",
+        amount=Decimal("252063605.28"),
+    )
+
+    assert agent.get_cash_balance(currency="PLN") == Decimal("252063605.28")
+
+
+def test_large_cash_debit():
+    agent, _ = make_agent()
+    agent.cash["PLN"] = Decimal("300000000.00")
+
+    agent.debit_cash(
+        currency="PLN",
+        amount=Decimal("252063605.28"),
+    )
+
+    assert agent.get_cash_balance(currency="PLN") == Decimal("47936394.72")

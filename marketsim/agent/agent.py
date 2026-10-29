@@ -4,7 +4,7 @@ import copy
 import math
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -22,8 +22,17 @@ from marketsim.utils.id_generator import id_generator
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
 
-    from marketsim.fourheap import MatchedOrder
     from marketsim.market import Future, Security
+    from marketsim.market.fourheap import MatchedOrder
+
+
+def to_money(value) -> Decimal:
+    amount = Decimal(str(value))
+
+    if not amount.is_finite():
+        raise ValueError("Cash amount must be finite")
+
+    return amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 def validate_update(quantity: int, cash: Price) -> None:
@@ -160,20 +169,12 @@ class Agent(ABC):
     ##              cash manipulation methods
     ##################################################################################
 
-    def get_cash_balance(
-        self,
-        *,
-        currency: str | None = None,
-    ) -> Price:
+    def get_cash_balance(self, *, currency: str | None = None) -> Decimal:
         currency = currency or self.base_currency
-        return self.cash.get(currency, Price(0))
+        return Decimal(str(self.cash.get(currency, 0)))
 
-    def get_cash_balance_all_currencies(self) -> dict:
-        return self.cash
-
-    def credit_cash(self, *, amount: Price, currency: str = "PLN") -> None:
-        """Credit cash in the specified currency."""
-        amount = Price(amount)
+    def credit_cash(self, *, amount: Decimal, currency: str = "PLN") -> None:
+        amount = to_money(amount)
 
         if amount < 0:
             raise ValueError("Credit amount cannot be negative")
@@ -183,12 +184,11 @@ class Agent(ABC):
     def debit_cash(
         self,
         *,
-        amount: Price,
+        amount: Decimal,
         currency: str = "PLN",
         allow_negative: bool = True,
     ) -> None:
-        """Debit cash in the specified currency."""
-        amount = Price(amount)
+        amount = to_money(amount)
 
         if amount < 0:
             raise ValueError("Debit amount cannot be negative")
@@ -202,6 +202,9 @@ class Agent(ABC):
 
         self.cash[currency] = balance - amount
 
+    def get_cash_balance_all_currencies(self) -> dict:
+        return self.cash
+
     def transfer_cash(
         self,
         *,
@@ -211,7 +214,7 @@ class Agent(ABC):
         allow_negative: bool = True,
     ) -> None:
         """Transfer cash between two agents."""
-        amount = Price(amount)
+        amount = to_money(amount)
 
         if amount < 0:
             raise ValueError("Transfer amount cannot be negative")
@@ -260,10 +263,10 @@ class Agent(ABC):
         new_position = current_position + quantity
         self.futures_position[contract.asset_id] = new_position
         required_collateral = (
-            abs(new_position)
-            * contract.last_traded_price
-            * contract.multiplier
-            * contract.margin_rate
+            Decimal(abs(new_position))
+            * Decimal(str(contract.last_traded_price))
+            * Decimal(str(contract.multiplier))
+            * Decimal(str(contract.margin_rate))
         )
         old_collateral = self.futures_value[contract.asset_id]["collateral"]
         collateral_change = required_collateral - old_collateral
@@ -431,7 +434,7 @@ class Agent(ABC):
 
     ######### accounting and eod/sod valuations
 
-    def calculate_portfolio_value(self, *, day: int | None = None) -> Price:
+    def calculate_portfolio_value(self, *, day: int | None = None) -> Decimal:
         # returns valuation of current portfolio as of given day.
         # but currently works reliably for the current day
         if day is None:
@@ -494,7 +497,17 @@ class Agent(ABC):
                 quote=self.base_currency,
             )
 
-        return Price(total)
+        if total < Decimal("-1000000"):
+            self.logger.warning(
+                "Large negative portfolio value: "
+                f"agent={self.agent_id}, "
+                f"day={day}, "
+                f"equity={total}, "
+                f"cash={self.cash}, "
+                f"futures_positions={self.futures_position}, "
+                f"futures_values={self.futures_value}"
+            )
+        return total.quantize(Decimal("0.01"))
 
     def settle(self, contract: Future) -> None:
         # final day settlement
@@ -533,10 +546,13 @@ class Agent(ABC):
             previous_price = values["settlement_price"]
             current_price = contract.last_traded_price
 
-            vm = Price(position * contract.multiplier * (current_price - previous_price))
+            vm = (
+                Decimal(position)
+                * Decimal(str(contract.multiplier))
+                * (Decimal(str(current_price)) - Decimal(str(previous_price)))
+            )
 
             # Daily cash settlement
-            # self.cash += vm
             if vm > 0:
                 self.credit_cash(amount=vm, currency=contract.currency)
             else:
