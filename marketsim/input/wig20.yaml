@@ -8,4 +8,4 @@ lookback_sessions: 250
 
 agents_profile: gpw_50d.yaml
 
-futures_count: 1
+futures_count: 3

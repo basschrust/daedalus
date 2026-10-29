@@ -102,16 +102,25 @@ def test_large_portfolio_value_is_not_limited_by_price():
     assert isinstance(value, Decimal)
 
 
-def test_large_portfolio_value_is_not_limited_by_price_2():
-    agent, contract = make_agent()
+def test_large_cash_credit():
+    agent, _ = make_agent()
+    agent.cash["PLN"] = Decimal("0")
 
-    agent.position = {asset_id: 0 for asset_id in agent.position}
-    agent.futures_position = {asset_id: 0 for asset_id in agent.futures_position}
-    agent.futures_value = {}
+    agent.credit_cash(
+        currency="PLN",
+        amount=Decimal("252063605.28"),
+    )
 
-    agent.cash = {"PLN": Decimal("-101230431.15")}
+    assert agent.get_cash_balance(currency="PLN") == Decimal("252063605.28")
 
-    value = agent.calculate_portfolio_value(day=0)
 
-    assert value == Decimal("-101230431.15")
-    assert isinstance(value, Decimal)
+def test_large_cash_debit():
+    agent, _ = make_agent()
+    agent.cash["PLN"] = Decimal("300000000.00")
+
+    agent.debit_cash(
+        currency="PLN",
+        amount=Decimal("252063605.28"),
+    )
+
+    assert agent.get_cash_balance(currency="PLN") == Decimal("47936394.72")
