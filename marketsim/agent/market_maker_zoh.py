@@ -5,6 +5,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import numpy as np
 import pandas as pd
 
 from marketsim.agent.agent import Agent
@@ -15,7 +16,7 @@ from marketsim.market.fourheap.order import Order
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
 
-    from marketsim.market.security import Security
+    from marketsim.market.instruments.security import Security
 
 
 class MMZOHAgent(Agent):
@@ -87,28 +88,29 @@ class MMZOHAgent(Agent):
         for asset_id, market in self.markets.items():
             history = getattr(market, "historical_ohlcv", None)
 
-            if (
-                not isinstance(history, pd.DataFrame)
-                or history.empty
-                or "volume" not in history.columns
-            ):
+            # No usable historical DataFrame: fixed-volume fallback.
+            if not isinstance(history, pd.DataFrame) or history.empty:
                 self.volume_by_asset[asset_id] = int(self.volume)
                 continue
 
-            volumes = history["volume"]
+            if "volume" not in history.columns:
+                raise ValueError(
+                    f"Invalid historical volume for {market.name}: missing volume column"
+                )
+
+            volumes = pd.to_numeric(history["volume"], errors="coerce")
 
             if (
                 volumes.isna().any()
                 or not (volumes >= 0).all()
-                or not (volumes < float("inf")).all()
+                or not np.isfinite(volumes.to_numpy(dtype=float)).all()
             ):
                 raise ValueError(f"Invalid historical volume for {market.name}")
 
             daily_volume = float(volumes.mean())
 
             if not math.isfinite(daily_volume) or daily_volume <= 0:
-                self.volume_by_asset[asset_id] = int(self.volume)
-                continue
+                raise ValueError(f"Invalid historical volume for {market.name}")
 
             rebalance_count = math.ceil(sim_time / self.rebalance_period)
 

@@ -16,7 +16,7 @@ from marketsim.market.fourheap.order import Order
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
 
-    from marketsim.market.security import Security
+    from marketsim.market.instruments.security import Security
 
 
 class MomentumAgent(Agent):
