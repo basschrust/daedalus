@@ -17,7 +17,7 @@ markets:
     symbol: ALR.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '137.50'
+    reference_price: '137.85'
     currency: PLN
   bdx.wa:
     name: BDX.WA
@@ -25,7 +25,7 @@ markets:
     symbol: BDX.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '704.80'
+    reference_price: '702.60'
     currency: PLN
   cdr.wa:
     name: CDR.WA
@@ -33,7 +33,7 @@ markets:
     symbol: CDR.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '268.90'
+    reference_price: '269.20'
     currency: PLN
   dnp.wa:
     name: DNP.WA
@@ -41,7 +41,7 @@ markets:
     symbol: DNP.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '37.85'
+    reference_price: '37.93'
     currency: PLN
   ebp.wa:
     name: EBP.WA
@@ -174,16 +174,16 @@ markets:
       base_price: '58.81'
     - security: alr.wa
       weight: 0.0206
-      base_price: '137.50'
+      base_price: '137.85'
     - security: bdx.wa
       weight: 0.0159
-      base_price: '704.80'
+      base_price: '702.60'
     - security: cdr.wa
       weight: 0.0336
-      base_price: '268.90'
+      base_price: '269.20'
     - security: dnp.wa
       weight: 0.0336
-      base_price: '37.85'
+      base_price: '37.93'
     - security: ebp.wa
       weight: 0.0568
       base_price: '789.40'

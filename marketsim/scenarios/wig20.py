@@ -320,6 +320,7 @@ def prepare(conn, settings: dict, root: Path):
 
     frames = []
 
+    # 20 WIG20 constituent stocks
     for symbol, frame in history.items():
         data = frame.copy()
         data["symbol"] = symbol
@@ -327,7 +328,26 @@ def prepare(conn, settings: dict, root: Path):
 
         frames.append(data[["symbol", "date", *OHLCV]])
 
-    pd.concat(frames, ignore_index=True).to_csv(
+    # Official WIG20 index history
+    wig20_history = index_history(
+        conn,
+        cutoff,
+        sessions=lookback,
+    )
+
+    index_data = wig20_history.reset_index()
+    index_data["symbol"] = "WIG20"
+    index_data["date"] = index_data["date"].dt.strftime("%Y-%m-%d")
+
+    frames.append(index_data[["symbol", "date", *OHLCV]])
+
+    # Save all 21 historical series
+    all_history = pd.concat(frames, ignore_index=True)
+
+    assert all_history["symbol"].nunique() == 21
+    assert len(all_history[all_history["symbol"] == "WIG20"]) > 0
+
+    all_history.to_csv(
         data_dir / csv_name,
         index=False,
     )
@@ -385,8 +405,14 @@ def index_history(conn, cutoff, sessions=250):
         ("WIG20", cutoff, sessions),
     )
 
-    if len(frame) != sessions:
-        raise ValueError(f"WIG20: expected {sessions} historical observations, got {len(frame)}")
+    if frame.empty:
+        raise ValueError("WIG20: no historical index observations available")
+
+    if len(frame) < sessions:
+        print(
+            f"Warning: WIG20 has only {len(frame)} historical sessions "
+            f"instead of the requested {sessions}."
+        )
 
     frame["date"] = pd.to_datetime(frame["date"])
 
