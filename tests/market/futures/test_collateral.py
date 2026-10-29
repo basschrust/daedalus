@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from marketsim.agent import Agent, MomentumAgent
-from marketsim.market import Future
+from marketsim.market import Future, FXRateProvider
 from marketsim.market.price import Price
 
 
@@ -84,10 +84,32 @@ def test_futures_collateral_uses_decimal():
 
 
 def test_large_portfolio_value_is_not_limited_by_price():
-    # Use an existing agent fixture with a PLN cash balance.
-    agent = make_agent()  # Adapt to your existing fixture.
+    agent, contract = make_agent()
 
-    agent.cash["PLN"] = Decimal("-101230431.15")
+    agent.fx_rate_provider = FXRateProvider()
+    agent.base_currency = "PLN"
+
+    # Isolate the test from existing positions.
+    agent.position = {asset_id: 0 for asset_id in agent.position}
+    agent.futures_position = {asset_id: 0 for asset_id in agent.futures_position}
+    agent.futures_value = {}
+
+    agent.cash = {"PLN": Decimal("-101230431.15")}
+
+    value = agent.calculate_portfolio_value(day=0)
+
+    assert value == Decimal("-101230431.15")
+    assert isinstance(value, Decimal)
+
+
+def test_large_portfolio_value_is_not_limited_by_price_2():
+    agent, contract = make_agent()
+
+    agent.position = {asset_id: 0 for asset_id in agent.position}
+    agent.futures_position = {asset_id: 0 for asset_id in agent.futures_position}
+    agent.futures_value = {}
+
+    agent.cash = {"PLN": Decimal("-101230431.15")}
 
     value = agent.calculate_portfolio_value(day=0)
 

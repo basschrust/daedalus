@@ -431,7 +431,7 @@ class Agent(ABC):
 
     ######### accounting and eod/sod valuations
 
-    def calculate_portfolio_value(self, *, day: int | None = None) -> Price:
+    def calculate_portfolio_value(self, *, day: int | None = None) -> Decimal:
         # returns valuation of current portfolio as of given day.
         # but currently works reliably for the current day
         if day is None:
