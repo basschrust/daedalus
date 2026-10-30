@@ -555,12 +555,12 @@ class Simulator:
         terminal.write("Calculating group flows...\n")
         self.repository.calculate_group_flows()
 
+        labels_map = {asset_id: market.short_name for asset_id, market in self.markets.items()}
+
         # Plotting is optional because it can be expensive.
         if self.plot_group_flows_enabled:
             terminal.write("Plotting group flows...\n")
             self.logger.info("Plotting group-level asset and cash flows...")
-
-            labels_map = {asset_id: market.short_name for asset_id, market in self.markets.items()}
 
             plot_group_flows(
                 self.repository.get_all_group_flows(),
@@ -639,6 +639,16 @@ class Simulator:
 
         for market_key, market in self.markets.items():
             market.eod()
+            knowledge = self.market_knowledge_by_asset.get(market_key)
+
+            if knowledge is None:
+                continue
+
+            knowledge.update_eod(
+                close=market.last_traded_price,
+                volume=market.trade_stats.get("volume_buy", 0)
+                + market.trade_stats.get("volume_sell", 0),
+            )
 
         # markets first, then agents - so that the derivatives are already settled and cleared and exercised
         for agent_id, agent in self.agents.items():

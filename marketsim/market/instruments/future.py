@@ -161,3 +161,42 @@ class Future(Security):
                 agent.settle(self)
         else:
             return 0
+
+    def get_theoretical_history(self) -> pd.Series:
+        parts = []
+
+        # Historical phase: official WIG20 index closes.
+        historical = self.underlying.historical_ohlcv
+
+        if historical is not None and not historical.empty:
+            series = historical["close"].copy()
+            series.index = pd.to_datetime(series.index).normalize()
+            parts.append(series.astype(float))
+
+        # Simulated phase: theoretical values already persisted for futures.
+        if self.simulation_dates is not None:
+            eod = self.repository.get_eod_prices(asset_id=self.asset_id)
+
+            if not eod.empty:
+                if "theoretical" not in eod.columns:
+                    raise ValueError(f"Missing theoretical EoD prices for {self.name}")
+
+                dates = pd.DatetimeIndex(pd.to_datetime(self.simulation_dates)).normalize()
+
+                day_numbers = eod["day"].astype(int).to_numpy()
+
+                if (day_numbers < 0).any() or (day_numbers >= len(dates)).any():
+                    raise ValueError("Invalid futures EoD day numbers")
+
+                series = pd.Series(
+                    eod["theoretical"].astype(float).to_numpy(),
+                    index=dates.take(day_numbers),
+                    name="theoretical",
+                )
+
+                parts.append(series)
+
+        if not parts:
+            return pd.Series(dtype=float)
+
+        return pd.concat(parts).sort_index()

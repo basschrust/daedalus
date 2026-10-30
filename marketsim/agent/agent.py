@@ -8,6 +8,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import numpy as np
 import pandas as pd
 
 from marketsim.loggers.basic import setup_agent_logger
@@ -870,7 +871,15 @@ class Agent(ABC):
         if volumes.empty:
             return float(fallback)
 
-        daily_volume = float(volumes.mean())
+        knowledge = self.get_market_knowledge(asset_id)
+
+        if knowledge is None:
+            return float(fallback)
+
+        daily_volume = float(knowledge.expected_volume())
+
+        if not math.isfinite(daily_volume) or daily_volume <= 0:
+            return float(fallback)
         sim_time = int(self.sim_time)
         activity = float(cfg.get("lam", 1.0))
 
@@ -883,3 +892,53 @@ class Agent(ABC):
             1.0,
             daily_volume * fraction / expected_orders,
         )
+
+    def get_order_price_std(
+        self,
+        asset_id: int,
+        fallback: float,
+    ) -> float:
+        """Absolute price dispersion derived from daily volatility."""
+        knowledge = self.get_market_knowledge(asset_id)
+
+        if knowledge is None:
+            return float(fallback)
+
+        volatility = float(knowledge.expected_volatility())
+        last_price = float(self.markets[asset_id].last_traded_price)
+
+        scale = float(self.configuration.get("historical_volatility_scale", 0.1))
+
+        if (
+            not math.isfinite(volatility)
+            or not math.isfinite(last_price)
+            or not math.isfinite(scale)
+            or volatility <= 0
+            or last_price <= 0
+            or scale <= 0
+        ):
+            return float(fallback)
+
+        return last_price * volatility * scale
+
+    def get_order_quantity(
+        self,
+        asset_id: int,
+        fallback: float,
+        max_quantity: int | None = None,
+    ) -> int:
+        """Sample order quantity using the market's expected volume."""
+        mean = self.get_order_mean_volume(
+            asset_id,
+            fallback=fallback,
+        )
+
+        if not math.isfinite(mean) or mean <= 0:
+            mean = float(fallback)
+
+        quantity = max(1, int(np.random.poisson(mean)))
+
+        if max_quantity is not None:
+            quantity = min(quantity, max_quantity)
+
+        return quantity
