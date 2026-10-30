@@ -54,11 +54,12 @@ class Repository:
         # TODO: watch out, this may change through time!
         self.connection.execute("""
             CREATE TABLE IF NOT EXISTS index_components (
-                    index_id INTEGER,
-                    asset_id INTEGER,
-                    weight DOUBLE,
-                )
-            """)
+                index_id INTEGER,
+                asset_id INTEGER,
+                weight DOUBLE,
+                valuation_coefficient DOUBLE
+            )
+        """)
 
         # future contracts on indices / underlying_type stock/index
         self.connection.execute("""
@@ -396,14 +397,23 @@ class Repository:
 
     def save_index_components(self, components_df: pd.DataFrame) -> None:
         self.connection.register("components_df", components_df)
-        self.connection.execute("""
-            INSERT INTO index_components (
-                index_id, asset_id, weight
-            ) 
-            SELECT index_id, asset_id, weight
-            FROM components_df
-        """)
-        self.connection.unregister("components_df")
+        try:
+            self.connection.execute("""
+                INSERT INTO index_components (
+                    index_id,
+                    asset_id,
+                    weight,
+                    valuation_coefficient
+                )
+                SELECT
+                    index_id,
+                    asset_id,
+                    weight,
+                    valuation_coefficient
+                FROM components_df
+            """)
+        finally:
+            self.connection.unregister("components_df")
 
     def save_future(self, future: Future) -> None:
         self.connection.execute(
@@ -771,10 +781,10 @@ class Repository:
                 INSERT INTO
                     index_values (day, time_tick, index_id, open, high, low, close)
                 SELECT tp.day, tp.time_tick, ic.index_id,
-                        sum(ic.weight * tp."open" ),
-                        sum(ic.weight * tp."close" ),
-                        sum(ic.weight * tp."close" ),
-                        sum(ic.weight * tp."close" ),
+                        sum(ic.VALUATION_COEFFICIENT * tp."open" ),
+                        sum(ic.VALUATION_COEFFICIENT * tp."close" ),
+                        sum(ic.VALUATION_COEFFICIENT * tp."close" ),
+                        sum(ic.VALUATION_COEFFICIENT * tp."close" ),
                 FROM index_components ic
                 LEFT JOIN traded_prices tp
                     ON ic.asset_id = tp.asset_id

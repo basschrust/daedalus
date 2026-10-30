@@ -38,7 +38,12 @@ TABLES: dict[str, dict[str, str]] = {
         currency="VARCHAR",
     ),
     "indices": dict(index_id="NUMBER(38,0)", name="VARCHAR", short_name="VARCHAR"),
-    "index_components": dict(index_id="NUMBER(38,0)", asset_id="NUMBER(38,0)", weight="FLOAT"),
+    "index_components": dict(
+        index_id="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
+        weight="FLOAT",
+        valuation_coefficient="FLOAT",
+    ),
     "futures": dict(
         contract_id="NUMBER(38,0)",
         underlying_type="VARCHAR",
@@ -583,10 +588,10 @@ class SnowflakeRepository:
             """
             INSERT INTO INDEX_VALUES (DAY, TIME_TICK, INDEX_ID, OPEN, HIGH, LOW, CLOSE)
             SELECT TP.DAY, TP.TIME_TICK, IC.INDEX_ID,
-                   SUM(IC.WEIGHT * TP.OPEN),
-                   SUM(IC.WEIGHT * TP.CLOSE),
-                   SUM(IC.WEIGHT * TP.CLOSE),
-                   SUM(IC.WEIGHT * TP.CLOSE)
+                   SUM(IC.VALUATION_COEFFICIENT * TP.OPEN),
+                   SUM(IC.VALUATION_COEFFICIENT * TP.CLOSE),
+                   SUM(IC.VALUATION_COEFFICIENT * TP.CLOSE),
+                   SUM(IC.VALUATION_COEFFICIENT * TP.CLOSE)
             FROM INDEX_COMPONENTS IC
             JOIN TRADED_PRICES TP ON IC.ASSET_ID = TP.ASSET_ID
             WHERE TP.DAY = %s
