@@ -127,6 +127,7 @@ def plot_combined_candles(
     simulation_dates: Sequence[str | pd.Timestamp],
     output_file: str | Path,
     title: str = "Historical and simulated prices",
+    theoretical: pd.Series | None = None,
 ) -> None:
     """Plot historical and simulated OHLCV on one calendar-date axis.
 
@@ -231,6 +232,24 @@ def plot_combined_candles(
             zorder=3,
         )
 
+    if theoretical is not None and not theoretical.empty:
+        line = theoretical.copy()
+        line.index = pd.to_datetime(line.index)
+        line = pd.to_numeric(line, errors="raise")
+        line = line.sort_index()
+
+        ax_price.plot(
+            line.index,
+            line.to_numpy(dtype=float),
+            color="black",
+            linewidth=1.5,
+            linestyle="-",
+            label="Theoretical value",
+            zorder=5,
+        )
+
+        ax_price.legend(loc="best")
+
     # Explicitly set limits: patches don't always autoscale.
     ax_price.set_xlim(
         left_edge,
@@ -239,6 +258,10 @@ def plot_combined_candles(
 
     price_min = float(combined["low"].min())
     price_max = float(combined["high"].max())
+
+    if theoretical is not None and not theoretical.empty:
+        price_min = min(price_min, float(line.min()))
+        price_max = max(price_max, float(line.max()))
 
     price_padding = max(
         (price_max - price_min) * 0.05,

@@ -502,6 +502,7 @@ class Security(ABC):
                 simulation_dates=self.simulation_dates,
                 output_file=str(candlestick_filename),
                 title=self.name,
+                theoretical=self.get_theoretical_history(),
             )
         else:
             # Preserve existing behavior
@@ -779,3 +780,6 @@ class Security(ABC):
             plus_one=True,
             market_id=self.asset_id,
         )
+
+    def get_theoretical_history(self) -> pd.Series | None:
+        return None

@@ -116,14 +116,12 @@ def test_invalid_calendar_rejected(historical, simulated, bad_dates):
     "bad_days",
     [
         list(range(1, 11)),  # Day 10 outside calendar
-        [0] * 10,           # Duplicate days
-        [-1, 0, 1],        # Negative day
+        [0] * 10,  # Duplicate days
+        [-1, 0, 1],  # Negative day
     ],
 )
-def test_invalid_day_mapping_rejected(
-    historical, simulated, dates, bad_days
-):
-    frame = simulated.iloc[:len(bad_days)].copy()
+def test_invalid_day_mapping_rejected(historical, simulated, dates, bad_days):
+    frame = simulated.iloc[: len(bad_days)].copy()
     frame["day"] = bad_days
 
     with pytest.raises(ValueError):
@@ -279,15 +277,12 @@ def test_calendar_loader_generates_trading_days():
         date(2026, 11, 16),
     ]
 
-def test_partial_simulation_calendar_accepted(
-    historical, simulated, dates
-):
+
+def test_partial_simulation_calendar_accepted(historical, simulated, dates):
     # A future expires after simulated day 8.
     frame = simulated.iloc[:9].copy()
 
-    combined, first = combine_candles(
-        historical, frame, dates
-    )
+    combined, first = combine_candles(historical, frame, dates)
 
     assert first == pd.Timestamp("2026-10-26")
     assert len(combined) == 259

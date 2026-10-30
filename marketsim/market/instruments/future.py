@@ -161,3 +161,33 @@ class Future(Security):
                 agent.settle(self)
         else:
             return 0
+
+    def get_theoretical_history(self) -> pd.Series:
+        parts = []
+
+        if self.underlying.historical_ohlcv is not None:
+            historical = self.underlying.historical_ohlcv["close"].copy()
+            historical.index = pd.to_datetime(historical.index)
+            parts.append(historical)
+
+        if self.simulation_dates is not None:
+            index_eod = self.repository.get_eod_prices(asset_id=self.underlying.asset_id)
+
+            # Restrict the line to this future's active simulated days.
+            future_eod = self.repository.get_eod_prices(asset_id=self.asset_id)
+
+            active_days = set(future_eod["day"].astype(int))
+            index_eod = index_eod.loc[index_eod["day"].astype(int).isin(active_days)].copy()
+
+            if not index_eod.empty:
+                dates = pd.DatetimeIndex(pd.to_datetime(self.simulation_dates))
+
+                index_eod.index = dates.take(index_eod["day"].astype(int).to_numpy())
+
+                parts.append(index_eod["close"])
+
+        if not parts:
+            return pd.Series(dtype=float)
+
+        result = pd.concat(parts).sort_index()
+        return result.astype(float)

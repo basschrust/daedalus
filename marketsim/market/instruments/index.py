@@ -70,17 +70,13 @@ class Index(Security):
             # Legacy indices: preserve existing behaviour.
             return Price(
                 sum(
-                    Decimal(str(c["weight"]))
-                    * Decimal(str(c["security"].last_traded_price))
+                    Decimal(str(c["weight"])) * Decimal(str(c["security"].last_traded_price))
                     for c in self.components.values()
                 )
             )
 
         # Normalized indices, including WIG20.
-        weight_sum = sum(
-            Decimal(str(c["weight"]))
-            for c in self.components.values()
-        )
+        weight_sum = sum(Decimal(str(c["weight"])) for c in self.components.values())
 
         if weight_sum <= 0:
             raise ValueError("Index weights must be positive")
@@ -90,18 +86,14 @@ class Index(Security):
         for component in self.components.values():
             weight = Decimal(str(component["weight"]))
             base_price = Decimal(str(component["base_price"]))
-            current_price = Decimal(
-                str(component["security"].last_traded_price)
-            )
+            current_price = Decimal(str(component["security"].last_traded_price))
 
             if weight <= 0 or base_price <= 0:
                 raise ValueError("Invalid index weight or base price")
 
             weighted_return += weight * current_price / base_price
 
-        return Price(
-            self.base_index_level * weighted_return / weight_sum
-        )
+        return Price(self.base_index_level * weighted_return / weight_sum)
 
     def save(self):
         # save the index definition to DB
