@@ -220,6 +220,9 @@ class Simulator:
                     "name": market.name,
                 }
             elif instrument_class == "future":
+                symbol = m_conf.get("symbol") or m_conf.get("ticker")
+                historical_ohlcv = self.historical_ohlcv_by_symbol.get(symbol)
+
                 market = Future(
                     name=m_conf.get("name"),
                     short_name=m_conf.get("short_name"),
@@ -229,6 +232,8 @@ class Simulator:
                     expiration=m_conf.get("expiration"),
                     multiplier=m_conf.get("multiplier"),
                     margin_rate=m_conf.get("margin_rate"),
+                    historical_ohlcv=historical_ohlcv,
+                    simulation_dates=self.simulation_dates,
                 )
                 self.market_map[m_key] = market.asset_id
                 self.markets[market.asset_id] = market

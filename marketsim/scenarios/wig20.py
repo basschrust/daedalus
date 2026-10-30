@@ -18,6 +18,34 @@ OHLCV = ("open", "high", "low", "close", "volume")
 PRICE_QUANTUM = Decimal("0.01")
 
 
+def futures_history(conn, contract_id, cutoff, sessions=250):
+    frame = query(
+        conn,
+        """
+        SELECT TO_DATE("DATE") AS DATE,
+               "OPEN", "HIGH", "LOW", "CLOSE", "VOLUME"
+        FROM DERIVATIVE_PRICES
+        WHERE CONTRACT_ID = %s
+          AND TO_DATE("DATE") <= %s
+        ORDER BY TO_DATE("DATE") DESC
+        LIMIT %s
+        """,
+        (contract_id, cutoff, sessions),
+    )
+
+    if frame.empty:
+        raise ValueError(f"No historical prices for futures contract {contract_id}")
+
+    frame["date"] = pd.to_datetime(frame["date"])
+
+    for column in ("open", "high", "low", "close"):
+        frame[column] = frame[column].map(to_price)
+
+    frame["volume"] = pd.to_numeric(frame["volume"], errors="raise")
+
+    return frame.sort_values("date").reset_index(drop=True)
+
+
 def futures_expiration_day(expiry_date, simulation_dates):
     expiry = pd.Timestamp(expiry_date).date()
 
@@ -342,10 +370,29 @@ def prepare(conn, settings: dict, root: Path):
 
     frames.append(index_data[["symbol", "date", *OHLCV]])
 
+    contracts = futures_contracts(
+        conn,
+        cutoff,
+        count=int(settings.get("futures_count", 1)),
+    )
+
+    for contract in contracts.itertuples(index=False):
+        frame = futures_history(
+            conn,
+            contract.contract_id,
+            cutoff,
+            sessions=lookback,
+        )
+
+        frame["symbol"] = contract.symbol
+        frame["date"] = frame["date"].dt.strftime("%Y-%m-%d")
+
+        frames.append(frame[["symbol", "date", *OHLCV]])
+
     # Save all 21 historical series
     all_history = pd.concat(frames, ignore_index=True)
 
-    assert all_history["symbol"].nunique() == 21
+    assert all_history["symbol"].nunique() == 21 + len(contracts)
     assert len(all_history[all_history["symbol"] == "WIG20"]) > 0
 
     all_history.to_csv(
@@ -372,7 +419,6 @@ def prepare(conn, settings: dict, root: Path):
         path=f"market_data/{csv_name}",
         lookback_sessions=lookback,
         cutoff_date=cutoff.isoformat(),
-        # allow_short_history=["WIG20"],
         allow_short_history=[
             "WIG20",
             *contracts["symbol"].tolist(),
