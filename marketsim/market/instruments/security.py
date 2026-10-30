@@ -392,7 +392,11 @@ class Security(ABC):
         bids = self.aggregate_order_queue(order_queue=self.order_book.buy_unmatched.heap)
         asks = self.aggregate_order_queue(order_queue=self.order_book.sell_unmatched.heap)
 
-        self.logger.info(f"Bids: {bids}")  # TODO: it sums IDs here, not volumes!
+        if not bids and not asks:
+            self.logger.debug(f"Skipping empty LOB plot for {self.name}")
+            return
+
+        self.logger.info(f"Bids: {bids}")
         self.logger.info(f"Asks: {asks}")
 
         plot_order_book(

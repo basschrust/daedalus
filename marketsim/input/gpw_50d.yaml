@@ -151,7 +151,7 @@ agents:
         PLN: 10000000
 historical_prices:
   enabled: true
-  path: market_data/gpw_25d_auto.ohlcv.csv
+  path: market_data/wig20_auto.ohlcv.csv
   lookback_sessions: 250
   cutoff_date: '2026-10-27'
 

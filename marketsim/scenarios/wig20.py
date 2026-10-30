@@ -372,7 +372,11 @@ def prepare(conn, settings: dict, root: Path):
         path=f"market_data/{csv_name}",
         lookback_sessions=lookback,
         cutoff_date=cutoff.isoformat(),
-        allow_short_history=["WIG20"],
+        # allow_short_history=["WIG20"],
+        allow_short_history=[
+            "WIG20",
+            *contracts["symbol"].tolist(),
+        ],
     )
 
     base["start_date"] = (cutoff + timedelta(days=1)).isoformat()
