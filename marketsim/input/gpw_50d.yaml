@@ -77,7 +77,9 @@ agents:
       mean_volume: 200
       mean_spread: 1.5
       validity_period: 10
-      volume_fraction: 0.006
+      volume_fraction: 0.02
+      historical_volatility_scale: 0.1
+      max_price_deviation: 0.02
       initial_cash:
         PLN: 1000000
   noise_wide:
@@ -99,6 +101,8 @@ agents:
       rebalance_by: time
       rebalance_period: 4
       volume_fraction: 1
+      historical_volatility_scale: 0.1
+      max_price_deviation: 0.02
       K: 4
       xi: 0.1
       omega: 0.1
@@ -116,6 +120,8 @@ agents:
       q_max: 10000
       aggression: 0.0005
       volume_fraction: 0.005
+      historical_volatility_scale: 0.1
+      max_price_deviation: 0.02
       initial_cash:
         PLN: 10000000
   momentum_slow:
@@ -131,6 +137,8 @@ agents:
       q_max: 5000
       aggression: 0.0005
       volume_fraction: 0.005
+      historical_volatility_scale: 0.1
+      max_price_deviation: 0.02
       initial_cash:
         PLN: 10000000
   hbl:
@@ -151,6 +159,8 @@ agents:
       validity_period: 3
       max_position: 20000
       volume_fraction: 0.01
+      historical_volatility_scale: 0.1
+      max_price_deviation: 0.02
       initial_cash:
         PLN: 10000000
 historical_prices:

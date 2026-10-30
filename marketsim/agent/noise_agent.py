@@ -90,14 +90,10 @@ class NoiseAgent(Agent):
             # --------------------------------------------------
             # 1. ORDER QUANTITY - HISTORICAL VOLUME
             # --------------------------------------------------
-            mean_volume = self.get_order_mean_volume(
+            quantity = self.get_order_quantity(
                 asset_id,
                 fallback=self.mean_volume,
-            )
-
-            quantity = max(
-                1,
-                int(np.random.poisson(lam=max(0.0, mean_volume))),
+                max_quantity=self.q_max,
             )
 
             # --------------------------------------------------
@@ -129,25 +125,10 @@ class NoiseAgent(Agent):
             # --------------------------------------------------
             # 3. PRICE DISPERSION - HISTORICAL VOLATILITY
             # --------------------------------------------------
-            knowledge = self.get_market_knowledge(asset_id)
-
-            # Fallback: configured absolute price dispersion.
-            offset_std = float(self.mean_spread)
-
-            if knowledge is not None and self.configuration.get("use_historical_volatility", False):
-                historical_std = (
-                    last_price
-                    * knowledge.expected_volatility()
-                    * float(
-                        self.configuration.get(
-                            "historical_volatility_scale",
-                            0.1,
-                        )
-                    )
-                )
-
-                if math.isfinite(historical_std) and historical_std > 0:
-                    offset_std = historical_std
+            offset_std = self.get_order_price_std(
+                asset_id,
+                fallback=float(self.mean_spread),
+            )
 
             # Draw a random price offset around the reference.
             raw_offset = float(
