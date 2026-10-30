@@ -1,7 +1,7 @@
 # WIG20 scenario preparation
 
-days: 5
-sim_time: 6
+days: 50
+sim_time: 60
 seed: 67
 
 lookback_sessions: 250
