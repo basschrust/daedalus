@@ -29,6 +29,8 @@ class Future(Security):
         name: str | None = None,
         short_name: str | None = None,
         output_dir: Path | str = "tmp",
+        historical_ohlcv: pd.DataFrame | None = None,
+        simulation_dates=None,
     ):
         self.instrument_class = "future"
         self.underlying = underlying
@@ -44,6 +46,8 @@ class Future(Security):
             short_name=short_name,
             output_dir=output_dir,
             reference_price=underlying.last_traded_price,
+            historical_ohlcv=historical_ohlcv,
+            simulation_dates=simulation_dates,
         )
 
     def save(self):

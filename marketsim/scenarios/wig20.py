@@ -292,6 +292,7 @@ def build_markets(
                 raise ValueError(f"Duplicate market: {key}")
 
             markets[key] = {
+                "symbol": contract.symbol,
                 "name": contract.symbol,
                 "short_name": contract.symbol,
                 "instrument_class": "future",

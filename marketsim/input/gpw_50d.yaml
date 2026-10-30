@@ -54,6 +54,7 @@ markets:
 agents:
   noise_tight:
     agent_class: NoiseAgent
+    instrument_classes: [stock, future]
     number: 7
     config:
       lam: 0.4
@@ -65,6 +66,7 @@ agents:
         PLN: 1000000
   noise_medium:
     agent_class: NoiseAgent
+    instrument_classes: [stock, future]
     number: 10
     config:
       lam: 0.3
@@ -87,6 +89,7 @@ agents:
         PLN: 1000000
   market_makers:
     agent_class: MMZOHAgent
+    instrument_classes: [stock, future]
     number: 1
     config:
       rebalance_by: time
@@ -98,6 +101,7 @@ agents:
       q_max: 1000000
   momentum_fast:
     agent_class: MomentumAgent
+    instrument_classes: [stock]
     number: 2
     config:
       momentum_mode: intraday
@@ -112,6 +116,7 @@ agents:
         PLN: 10000000
   momentum_slow:
     agent_class: MomentumAgent
+    instrument_classes: [stock]
     number: 2
     config:
       momentum_mode: daily
@@ -129,6 +134,7 @@ agents:
     number: 6
   regime_traders:
     agent_class: RegimeTraderAgent
+    instrument_classes: [stock]
     number: 2
     config:
       lam: 0.55

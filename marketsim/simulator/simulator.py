@@ -182,16 +182,22 @@ class Simulator:
                 for comp in m_conf.get("components", []):
                     security = self.markets[self.market_map[comp["security"]]]
 
-                    components[security.asset_id] = {
+                    component = {
                         "weight": comp["weight"],
                         "security": security,
-                        "base_price": comp["base_price"],
                     }
+
+                    if "base_price" in comp:
+                        component["base_price"] = comp["base_price"]
+
+                    components[security.asset_id] = component
 
                 symbol = m_conf.get("symbol") or m_conf.get("ticker")
                 historical_ohlcv = self.historical_ohlcv_by_symbol.get(symbol)
 
-                if historical_ohlcv is None:
+                # Historical prices are optional for legacy simulations.
+                # When historical data is supplied, require a matching index series.
+                if self.historical_ohlcv_by_symbol and historical_ohlcv is None:
                     raise ValueError(
                         f"Missing historical OHLCV for index {m_key!r}, "
                         f"symbol={symbol!r}. "
@@ -427,13 +433,26 @@ class Simulator:
                 self.add_agents([agent])
 
     def create_agents(self, *, agent_group: dict, group_name: str) -> None:
-        # processing the agents defined at the end of yaml
         if agent_group.get("markets", "ALL") == "ALL":
             markets = list(self.markets.values())
         else:
             markets = [self.markets[self.market_map[k]] for k in agent_group["markets"]]
 
-        self.add_agent_group(agent_group=agent_group, markets=markets, group_name=group_name)
+        allowed_classes = agent_group.get("instrument_classes")
+
+        if allowed_classes is not None:
+            markets = [market for market in markets if market.instrument_class in allowed_classes]
+
+        markets = [market for market in markets if market.is_tradable]
+
+        if not markets:
+            return
+
+        self.add_agent_group(
+            agent_group=agent_group,
+            markets=markets,
+            group_name=group_name,
+        )
 
     def add_agents(self, agents: list[Agent]) -> None:
         for agent in agents:
