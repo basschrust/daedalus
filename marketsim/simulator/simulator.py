@@ -46,6 +46,7 @@ class Simulator:
         historical_data: dict | None = None,
         historical_ohlcv_by_symbol: dict[str, pd.DataFrame] | None = None,
         simulation_dates: list[date] | None = None,
+        plot_group_flows_enabled: bool = False,
     ):
         self.logger = logger.bind()
         self.logger.info("Initializing simulation with parameters in market_structure.yaml ...")
@@ -73,6 +74,7 @@ class Simulator:
         self.mean = mean
         self.r = r
         self.shock_var = shock_var  # change probability of fundamental (market consensus) value
+        self.plot_group_flows_enabled = plot_group_flows_enabled
 
         self.current_time = 0  # TODO: needed in Market, here probably not?
         self.markets = {}  # [] # each market serves single security, keys are asset_ids
@@ -182,16 +184,22 @@ class Simulator:
                 for comp in m_conf.get("components", []):
                     security = self.markets[self.market_map[comp["security"]]]
 
-                    components[security.asset_id] = {
+                    component = {
                         "weight": comp["weight"],
                         "security": security,
-                        "base_price": comp["base_price"],
                     }
+
+                    if "base_price" in comp:
+                        component["base_price"] = comp["base_price"]
+
+                    components[security.asset_id] = component
 
                 symbol = m_conf.get("symbol") or m_conf.get("ticker")
                 historical_ohlcv = self.historical_ohlcv_by_symbol.get(symbol)
 
-                if historical_ohlcv is None:
+                # Historical prices are optional for legacy simulations.
+                # When historical data is supplied, require a matching index series.
+                if self.historical_ohlcv_by_symbol and historical_ohlcv is None:
                     raise ValueError(
                         f"Missing historical OHLCV for index {m_key!r}, "
                         f"symbol={symbol!r}. "
@@ -214,6 +222,9 @@ class Simulator:
                     "name": market.name,
                 }
             elif instrument_class == "future":
+                symbol = m_conf.get("symbol") or m_conf.get("ticker")
+                historical_ohlcv = self.historical_ohlcv_by_symbol.get(symbol)
+
                 market = Future(
                     name=m_conf.get("name"),
                     short_name=m_conf.get("short_name"),
@@ -223,6 +234,8 @@ class Simulator:
                     expiration=m_conf.get("expiration"),
                     multiplier=m_conf.get("multiplier"),
                     margin_rate=m_conf.get("margin_rate"),
+                    historical_ohlcv=historical_ohlcv,
+                    simulation_dates=self.simulation_dates,
                 )
                 self.market_map[m_key] = market.asset_id
                 self.markets[market.asset_id] = market
@@ -427,13 +440,26 @@ class Simulator:
                 self.add_agents([agent])
 
     def create_agents(self, *, agent_group: dict, group_name: str) -> None:
-        # processing the agents defined at the end of yaml
         if agent_group.get("markets", "ALL") == "ALL":
             markets = list(self.markets.values())
         else:
             markets = [self.markets[self.market_map[k]] for k in agent_group["markets"]]
 
-        self.add_agent_group(agent_group=agent_group, markets=markets, group_name=group_name)
+        allowed_classes = agent_group.get("instrument_classes")
+
+        if allowed_classes is not None:
+            markets = [market for market in markets if market.instrument_class in allowed_classes]
+
+        markets = [market for market in markets if market.is_tradable]
+
+        if not markets:
+            return
+
+        self.add_agent_group(
+            agent_group=agent_group,
+            markets=markets,
+            group_name=group_name,
+        )
 
     def add_agents(self, agents: list[Agent]) -> None:
         for agent in agents:
@@ -524,19 +550,23 @@ class Simulator:
         """End the simulation and print summary"""
         self.logger.info(f"\n\nSimulation ended. time: {self.current_time}")
 
-        # L1: Calculate derived data from raw simulation records
+        # Always calculate and persist group flows in L1 table
         self.logger.info("Calculating group flows...")
         terminal.write("Calculating group flows...\n")
         self.repository.calculate_group_flows()
 
-        terminal.write("Plotting group flows...\n")
-        self.logger.info("Plotting group-level asset and cash flows...")
-        labels_map = {asset_id: market.short_name for asset_id, market in self.markets.items()}
-        plot_group_flows(
-            self.repository.get_all_group_flows(),
-            output_dir=Path(self.output_dir) / "group_flows",
-            labels_map=labels_map,
-        )
+        # Plotting is optional because it can be expensive.
+        if self.plot_group_flows_enabled:
+            terminal.write("Plotting group flows...\n")
+            self.logger.info("Plotting group-level asset and cash flows...")
+
+            labels_map = {asset_id: market.short_name for asset_id, market in self.markets.items()}
+
+            plot_group_flows(
+                self.repository.get_all_group_flows(),
+                output_dir=Path(self.output_dir) / "group_flows",
+                labels_map=labels_map,
+            )
 
         terminal.write("Plotting execution volumes...\n")
         self.logger.info("Plotting execution volumes...")

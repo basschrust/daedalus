@@ -12,18 +12,6 @@ def test_weights(index_genius: Index):
         assert component["weight"] > 0, "Weights must be strictly positive"
 
 
-def test_weights_sum_fail():
-    assert 1 == 1
-
-
-def test_index_value():
-    assert 1 == 1
-
-
-def test_index_value_after_stock_change():
-    assert 1 == 1
-
-
 def test_genius_index(
     genius_index,
     stock_tnt,
@@ -31,3 +19,21 @@ def test_genius_index(
 ):
     assert len(genius_index.components) == 2
     assert genius_index.last_traded_price == Price(77.97)
+
+
+def test_legacy_index_components():
+    components = [
+        {"security": "stock_a", "weight": 0.6},
+        {"security": "stock_b", "weight": 0.4},
+    ]
+
+    assert all("base_price" not in c for c in components)
+
+
+def test_normalized_index_components():
+    components = [
+        {"security": "stock_a", "weight": 0.6, "base_price": "100.00"},
+        {"security": "stock_b", "weight": 0.4, "base_price": "200.00"},
+    ]
+
+    assert all("base_price" in c for c in components)
