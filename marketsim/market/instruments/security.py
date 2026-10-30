@@ -85,6 +85,8 @@ class Security(ABC):
         self.simulation_dates = simulation_dates
 
         self.completed_daily_closes = []
+        self.trade_stats = {}
+        self.trade_stats_df = pd.DataFrame()
 
         self.save()
 

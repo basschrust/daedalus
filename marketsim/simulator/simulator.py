@@ -639,6 +639,16 @@ class Simulator:
 
         for market_key, market in self.markets.items():
             market.eod()
+            knowledge = self.market_knowledge_by_asset.get(market_key)
+
+            if knowledge is None:
+                continue
+
+            knowledge.update_eod(
+                close=market.last_traded_price,
+                volume=market.trade_stats.get("volume_buy", 0)
+                + market.trade_stats.get("volume_sell", 0),
+            )
 
         # markets first, then agents - so that the derivatives are already settled and cleared and exercised
         for agent_id, agent in self.agents.items():
