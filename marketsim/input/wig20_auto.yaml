@@ -1,6 +1,6 @@
 seed: 67
-days: 50
-sim_time: 60
+days: 60
+sim_time: 50
 lob_plot_interval: 10000
 markets:
   ale.wa:
@@ -245,7 +245,7 @@ markets:
     short_name: FW20H2720
     instrument_class: future
     underlying: wig20
-    expiration: 50
+    expiration: 60
     multiplier: 20.0
     margin_rate: 0.1
   fw20m2720:
@@ -254,7 +254,7 @@ markets:
     short_name: FW20M2720
     instrument_class: future
     underlying: wig20
-    expiration: 50
+    expiration: 60
     multiplier: 20.0
     margin_rate: 0.1
 agents:
@@ -270,6 +270,10 @@ agents:
       mean_spread: 0.3
       validity_period: 3
       volume_fraction: 0.009
+      use_historical_volatility: true
+      historical_volatility_scale: 0.1
+      volume_lookback: 20
+      volatility_lookback: 20
       initial_cash:
         PLN: 1000000
   noise_medium:

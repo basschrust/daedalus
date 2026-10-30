@@ -39,8 +39,10 @@ class NoiseAgent(Agent):
             "mean_spread": Price(0.8),
             "withdraw_old": False,
             "validity_period": 3,
-            "use_historical_volatility": False,
+            "use_historical_volatility": True,
             "historical_volatility_scale": 0.1,
+            "max_price_deviation": 0.02,
+            "volume_lookback": 20,
         }
         self.configuration = default_configuration | (
             configuration if configuration is not None else {}
