@@ -72,13 +72,35 @@ def combine_candles(
     if dates[0] <= h.index.max():
         raise ValueError("Simulation must begin after the historical cutoff")
 
-    expected_days = set(range(len(dates)))
-    actual_days = set(s["day"].astype(int))
+    # Instruments may be active for only part of the simulation.
+    # For example, a futures contract can expire before the final day.
+    day_numbers = pd.to_numeric(s["day"], errors="raise")
 
-    if actual_days != expected_days:
-        raise ValueError("Simulated days must be 0..N-1 and match the calendar")
+    if s.empty:
+        raise ValueError("No simulated candles available")
 
-    s.index = dates.take(s["day"].astype(int).to_numpy())
+    if day_numbers.isna().any() or (day_numbers % 1 != 0).any():
+        raise ValueError("Simulated days must be integers")
+
+    day_numbers = day_numbers.astype(int)
+
+    if (day_numbers < 0).any() or (day_numbers >= len(dates)).any():
+        raise ValueError(
+            "Simulated day outside the simulation calendar: "
+            f"days={sorted(day_numbers.tolist())}, "
+            f"calendar_length={len(dates)}"
+        )
+
+    # Map only the days for which the instrument has EoD records.
+    s.index = dates.take(day_numbers.to_numpy())
+
+    # expected_days = set(range(len(dates)))
+    # actual_days = set(s["day"].astype(int))
+    #
+    # if actual_days != expected_days:
+    #     raise ValueError("Simulated days must be 0..N-1 and match the calendar")
+    #
+    # s.index = dates.take(s["day"].astype(int).to_numpy())
 
     for name, frame in (
         ("historical", h),

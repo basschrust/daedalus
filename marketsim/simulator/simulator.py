@@ -46,6 +46,7 @@ class Simulator:
         historical_data: dict | None = None,
         historical_ohlcv_by_symbol: dict[str, pd.DataFrame] | None = None,
         simulation_dates: list[date] | None = None,
+        plot_group_flows_enabled: bool = False,
     ):
         self.logger = logger.bind()
         self.logger.info("Initializing simulation with parameters in market_structure.yaml ...")
@@ -73,6 +74,7 @@ class Simulator:
         self.mean = mean
         self.r = r
         self.shock_var = shock_var  # change probability of fundamental (market consensus) value
+        self.plot_group_flows_enabled = plot_group_flows_enabled
 
         self.current_time = 0  # TODO: needed in Market, here probably not?
         self.markets = {}  # [] # each market serves single security, keys are asset_ids
@@ -548,19 +550,23 @@ class Simulator:
         """End the simulation and print summary"""
         self.logger.info(f"\n\nSimulation ended. time: {self.current_time}")
 
-        # L1: Calculate derived data from raw simulation records
+        # Always calculate and persist group flows in L1 table
         self.logger.info("Calculating group flows...")
         terminal.write("Calculating group flows...\n")
         self.repository.calculate_group_flows()
 
-        terminal.write("Plotting group flows...\n")
-        self.logger.info("Plotting group-level asset and cash flows...")
-        labels_map = {asset_id: market.short_name for asset_id, market in self.markets.items()}
-        plot_group_flows(
-            self.repository.get_all_group_flows(),
-            output_dir=Path(self.output_dir) / "group_flows",
-            labels_map=labels_map,
-        )
+        # Plotting is optional because it can be expensive.
+        if self.plot_group_flows_enabled:
+            terminal.write("Plotting group flows...\n")
+            self.logger.info("Plotting group-level asset and cash flows...")
+
+            labels_map = {asset_id: market.short_name for asset_id, market in self.markets.items()}
+
+            plot_group_flows(
+                self.repository.get_all_group_flows(),
+                output_dir=Path(self.output_dir) / "group_flows",
+                labels_map=labels_map,
+            )
 
         terminal.write("Plotting execution volumes...\n")
         self.logger.info("Plotting execution volumes...")
