@@ -870,7 +870,8 @@ class Agent(ABC):
         if volumes.empty:
             return float(fallback)
 
-        daily_volume = float(volumes.mean())
+        window = int(cfg.get("volume_lookback", 20))
+        daily_volume = float(volumes.tail(window).median())
         sim_time = int(self.sim_time)
         activity = float(cfg.get("lam", 1.0))
 

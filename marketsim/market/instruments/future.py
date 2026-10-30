@@ -165,29 +165,38 @@ class Future(Security):
     def get_theoretical_history(self) -> pd.Series:
         parts = []
 
-        if self.underlying.historical_ohlcv is not None:
-            historical = self.underlying.historical_ohlcv["close"].copy()
-            historical.index = pd.to_datetime(historical.index)
-            parts.append(historical)
+        # Historical phase: official WIG20 index closes.
+        historical = self.underlying.historical_ohlcv
 
+        if historical is not None and not historical.empty:
+            series = historical["close"].copy()
+            series.index = pd.to_datetime(series.index).normalize()
+            parts.append(series.astype(float))
+
+        # Simulated phase: theoretical values already persisted for futures.
         if self.simulation_dates is not None:
-            index_eod = self.repository.get_eod_prices(asset_id=self.underlying.asset_id)
+            eod = self.repository.get_eod_prices(asset_id=self.asset_id)
 
-            # Restrict the line to this future's active simulated days.
-            future_eod = self.repository.get_eod_prices(asset_id=self.asset_id)
+            if not eod.empty:
+                if "theoretical" not in eod.columns:
+                    raise ValueError(f"Missing theoretical EoD prices for {self.name}")
 
-            active_days = set(future_eod["day"].astype(int))
-            index_eod = index_eod.loc[index_eod["day"].astype(int).isin(active_days)].copy()
+                dates = pd.DatetimeIndex(pd.to_datetime(self.simulation_dates)).normalize()
 
-            if not index_eod.empty:
-                dates = pd.DatetimeIndex(pd.to_datetime(self.simulation_dates))
+                day_numbers = eod["day"].astype(int).to_numpy()
 
-                index_eod.index = dates.take(index_eod["day"].astype(int).to_numpy())
+                if (day_numbers < 0).any() or (day_numbers >= len(dates)).any():
+                    raise ValueError("Invalid futures EoD day numbers")
 
-                parts.append(index_eod["close"])
+                series = pd.Series(
+                    eod["theoretical"].astype(float).to_numpy(),
+                    index=dates.take(day_numbers),
+                    name="theoretical",
+                )
+
+                parts.append(series)
 
         if not parts:
             return pd.Series(dtype=float)
 
-        result = pd.concat(parts).sort_index()
-        return result.astype(float)
+        return pd.concat(parts).sort_index()

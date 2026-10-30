@@ -62,6 +62,10 @@ agents:
       mean_spread: 0.3
       validity_period: 3
       volume_fraction: 0.009
+      use_historical_volatility: true
+      historical_volatility_scale: 0.1
+      volume_lookback: 20
+      volatility_lookback: 20
       initial_cash:
         PLN: 1000000
   noise_medium:

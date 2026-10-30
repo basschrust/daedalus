@@ -123,16 +123,13 @@ class NoiseAgent(Agent):
                 else:
                     reference = best_bid if best_bid is not None else last_price
 
-                # Preserve random positive/negative deviations,
-                # but impose a hard bound.
-                raw_offset = spread_side * np.random.poisson(lam=max(0.0, mean_spread))
-
-                max_offset = reference * max_deviation
-
-                offset = max(
-                    -max_offset,
-                    min(max_offset, raw_offset),
+                # calclulate the offset using knowledge
+                sigma = knowledge.expected_volatility()
+                offset_std = (
+                    last_price * sigma * float(self.configuration["historical_volatility_scale"])
                 )
+
+                offset = float(np.random.normal(0.0, offset_std))
 
                 price = reference + offset
 
