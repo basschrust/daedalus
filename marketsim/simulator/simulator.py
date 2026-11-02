@@ -574,7 +574,7 @@ class Simulator:
             self.logger.info("Plotting group-level asset and cash flows...")
 
             plot_group_flows(
-                self.repository.get_all_group_flows(),
+                self.repository.get_all_eod_group_flows(),
                 output_dir=Path(self.output_dir) / "group_flows",
                 labels_map=labels_map,
             )

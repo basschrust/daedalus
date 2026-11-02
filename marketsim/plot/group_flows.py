@@ -8,7 +8,6 @@ import pandas as pd
 
 REQUIRED = {
     "day",
-    "time_tick",
     "asset_id",
     "agent_group",
     "cp_group",
@@ -60,11 +59,7 @@ def plot_group_flows(
 
     # Key optimization:
     # Aggregate all intraday ticks before creating bars.
-    daily = df.groupby(
-        ["agent_group", "cp_group", "asset_id", "day"],
-        as_index=False,
-        sort=False,
-    )[FLOW_COLUMNS].sum()
+    daily = df
 
     labels_map = labels_map or {}
     out = Path(output_dir)
