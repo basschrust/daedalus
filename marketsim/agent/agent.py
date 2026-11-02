@@ -922,12 +922,14 @@ class Agent(ABC):
         return last_price * volatility * scale
 
     def get_order_quantity(
-        self,
-        asset_id: int,
-        fallback: float,
-        max_quantity: int | None = None,
+            self,
+            asset_id: int,
+            fallback: float,
+            max_quantity: int | None = None,
     ) -> int:
-        """Sample order quantity using the market's expected volume."""
+        """Sample an order quantity in instrument-native units."""
+        market = self.markets[asset_id]
+
         mean = self.get_order_mean_volume(
             asset_id,
             fallback=fallback,
@@ -936,9 +938,25 @@ class Agent(ABC):
         if not math.isfinite(mean) or mean <= 0:
             mean = float(fallback)
 
-        quantity = max(1, int(np.random.poisson(mean)))
+        # Convert stock-equivalent units to futures contracts
+        # only when the quantity is not already in contracts.
+        if (
+                market.instrument_class == "future"
+                and self.configuration.get("volume_basis", "historical") == "notional"
+        ):
+            multiplier = float(market.multiplier)
+
+            if not math.isfinite(multiplier) or multiplier <= 0:
+                raise ValueError("Invalid futures contract multiplier")
+
+            mean /= multiplier
+
+        if mean <= 0:
+            return 0
+
+        quantity = int(np.random.poisson(mean))
 
         if max_quantity is not None:
-            quantity = min(quantity, max_quantity)
+            quantity = min(quantity, int(max_quantity))
 
-        return quantity
+        return max(0, quantity)
