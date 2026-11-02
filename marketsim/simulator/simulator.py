@@ -9,6 +9,7 @@ from loguru import logger
 from marketsim.agent import (
     Agent,
     HBLAgent,
+    IndexFuturesArbitrageAgent,
     MMZOHAgent,
     MomentumAgent,
     NoiseAgent,
@@ -418,6 +419,15 @@ class Simulator:
 
             if agent_group["agent_class"] == "RegimeTraderAgent":
                 agent = RegimeTraderAgent(
+                    markets=markets,
+                    configuration=configuration,
+                    repository=self.repository,
+                    group=group_name,
+                    output_dir=self.output_dir,
+                )
+                self.add_agents([agent])
+            if agent_group["agent_class"] == "IndexFuturesArbitrageAgent":
+                agent = IndexFuturesArbitrageAgent(
                     markets=markets,
                     configuration=configuration,
                     repository=self.repository,

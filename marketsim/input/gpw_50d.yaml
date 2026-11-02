@@ -53,6 +53,20 @@ markets:
     currency: PLN
 
 agents:
+  arbitrageurs:
+    agent_class: IndexFuturesArbitrageAgent
+    instrument_classes: [future]
+    number: 3
+    config:
+      entry_threshold: 0.003
+      exit_threshold: 0.0005
+      transaction_cost: 0.0002
+      order_quantity: 2
+      max_position: 20
+      validity_period: 1
+      min_time_between_orders: 1
+      initial_cash:
+        PLN: 10000000
   noise_tight:
     agent_class: NoiseAgent
     instrument_classes: [stock, future]
