@@ -55,6 +55,13 @@ class IndexFuturesArbitrageAgent(Agent):
         self.max_position = int(cfg["max_position"])
         self.validity_period = int(cfg["validity_period"])
         self.min_time_between_orders = int(cfg["min_time_between_orders"])
+        self.max_order_quantity = int(cfg.get("max_order_quantity", self.order_quantity))
+        self.volume_aggression = float(cfg.get("volume_aggression", 0.0))
+
+        if self.max_order_quantity < self.order_quantity:
+            raise ValueError("max_order_quantity must be >= order_quantity")
+        if not math.isfinite(self.volume_aggression) or self.volume_aggression < 0:
+            raise ValueError("volume_aggression must be finite and non-negative")
 
         if not (
             0 <= self.exit_threshold < self.entry_threshold
@@ -155,6 +162,28 @@ class IndexFuturesArbitrageAgent(Agent):
                     limit_price = ask
 
             if side is None or quantity <= 0:
+                continue
+
+            basis = sell_basis if side == SELL else buy_basis
+
+            excess_basis = max(
+                0.0,
+                abs(basis) - (self.entry_threshold + self.transaction_cost),
+            )
+
+            scale = 1.0 + self.volume_aggression * (excess_basis / max(self.entry_threshold, 1e-9))
+
+            desired_quantity = min(
+                self.max_order_quantity,
+                max(self.order_quantity, int(self.order_quantity * scale)),
+            )
+
+            # Respect the position limit in both directions.
+            capacity = self.max_position - position if side == BUY else self.max_position + position
+
+            quantity = min(desired_quantity, max(0, capacity))
+
+            if quantity <= 0:
                 continue
 
             # Remove outstanding orders before replacing them.
