@@ -21,6 +21,13 @@ def make_agent(tmp_path):
         stock = SimpleNamespace(
             asset_id=11,
             instrument_class="stock",
+            status="active",
+            order_book=SimpleNamespace(
+                get_best_bid=MagicMock(return_value=Price(99)),
+                get_best_ask=MagicMock(return_value=Price(100)),
+            ),
+            withdraw_all=MagicMock(),
+            add_orders=MagicMock(),
         )
 
         index = SimpleNamespace(
@@ -359,3 +366,16 @@ def test_flat_futures_unwinds_remaining_stock_hedge(make_agent):
 
     assert order.order_type == SELL
     assert order.quantity == 800
+
+
+def test_flat_portfolio_does_not_trade_stocks(make_agent):
+    agent, future, stock = make_agent(
+        position=0,
+        bid=3000,
+        ask=3001,
+    )
+
+    agent.take_action(current_time=1)
+
+    stock.add_orders.assert_not_called()
+    future.add_orders.assert_not_called()

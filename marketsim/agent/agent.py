@@ -347,8 +347,10 @@ class Agent(ABC):
     def record_trade(self, matched_order: MatchedOrder) -> None:
         self.current_time = matched_order.time
         quantity = matched_order.order.order_type * matched_order.order.quantity
-        cash = -Price(
-            matched_order.price * matched_order.order.quantity * matched_order.order.order_type
+        cash = -Decimal(
+            Decimal(matched_order.price)
+            * matched_order.order.quantity
+            * matched_order.order.order_type
         )
 
         # self.update_position(quantity=quantity, cash=cash, asset_id=matched_order.order.asset_id)

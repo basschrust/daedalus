@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import heapq
 import math
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from marketsim.market.fourheap.order import MatchedOrder
@@ -152,7 +153,7 @@ class OrderQueue:
                         price if price is not None else order.executed_price
                     )  # somehow it didn't work properly before?
                     volume = order.quantity
-                    cash = volume * price * order.order_type
+                    cash = int(volume) * Decimal(price) * order.order_type
                     matched_orders.append(
                         MatchedOrder(
                             price=order.executed_price,

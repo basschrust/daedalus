@@ -103,3 +103,13 @@ def test_price_must_not_be_unreasonably_large():
 
     with pytest.raises(ValueError, match="Unreasonable price"):
         Price("-100000000.01")
+
+
+def test_large_trade_cash_calculation():
+    volume = 1_000_000
+    price = Price("100.75")
+    order_type = 1
+
+    cash = Decimal(volume) * Decimal(price) * Decimal(order_type)
+
+    assert cash == Decimal("100750000.00")

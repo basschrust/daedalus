@@ -4,6 +4,7 @@ import math
 from abc import ABC
 from collections import defaultdict
 from datetime import date
+from decimal import Decimal
 from itertools import accumulate
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -316,8 +317,8 @@ class Security(ABC):
             else:
                 self.trade_stats[key]["count_buy"] += 1
                 self.trade_stats[key]["volume_buy"] += matched_order.order.quantity
-                self.trade_stats[key]["cash_buy"] += (
-                    matched_order.order.quantity * matched_order.price
+                self.trade_stats[key]["cash_buy"] += matched_order.order.quantity * Decimal(
+                    matched_order.price
                 )
 
         elif matched_order.order.order_type == -1:
