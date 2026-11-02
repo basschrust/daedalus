@@ -83,6 +83,10 @@ class IndexFuturesArbitrageAgent(Agent):
         return 0.0
 
     def take_action(self, current_time: int) -> None:
+        # Reconcile the stock portfolio against actual futures fills.
+        self._rebalance_all_stock_hedges(
+            current_time=current_time,
+        )
         for asset_id, future in self.markets.items():
             if future.instrument_class != "future":
                 continue
@@ -127,6 +131,7 @@ class IndexFuturesArbitrageAgent(Agent):
             side = None
             quantity = 0
             limit_price = None
+            is_closing = False
 
             # Close an existing long position when basis converges.
             if position > 0 and bid is not None:
@@ -182,7 +187,16 @@ class IndexFuturesArbitrageAgent(Agent):
             # Respect the position limit in both directions.
             capacity = self.max_position - position if side == BUY else self.max_position + position
 
-            quantity = min(desired_quantity, max(0, capacity))
+            if is_closing:
+                quantity = min(
+                    self.order_quantity,
+                    abs(position),
+                )
+            else:
+                quantity = min(
+                    desired_quantity,
+                    max(0, capacity),
+                )
 
             if quantity <= 0:
                 continue
@@ -224,3 +238,80 @@ class IndexFuturesArbitrageAgent(Agent):
             asset_id: target - self.position.get(asset_id, 0)
             for asset_id, target in targets.items()
         }
+
+    def _submit_stock_hedge(
+        self,
+        *,
+        future,
+        current_time: int,
+    ) -> None:
+        """Rebalance stock holdings against executed futures positions.
+
+        Stock orders are submitted to the ordinary order books.
+        Actual positions are updated by the existing matching engine.
+        """
+        deltas = self.get_stock_hedge_deltas(future)
+
+        max_stock_order = int(self.configuration.get("max_stock_order_quantity", 5000))
+
+        for asset_id, delta in deltas.items():
+            stock = self.markets.get(asset_id)
+
+            if stock is None or stock.status != "active":
+                continue
+
+            # Cancel outstanding hedge orders before calculating
+            # a replacement against the latest filled positions.
+            stock.withdraw_all(agent_id=self.agent_id)
+
+            if delta == 0:
+                continue
+
+            side = BUY if delta > 0 else SELL
+
+            book = stock.order_book
+
+            quote = book.get_best_ask() if side == BUY else book.get_best_bid()
+
+            if quote is None:
+                continue
+
+            price = float(quote)
+
+            if not math.isfinite(price) or price <= 0:
+                continue
+
+            quantity = min(
+                abs(int(delta)),
+                max_stock_order,
+            )
+
+            if quantity <= 0:
+                continue
+
+            order = Order(
+                price=Price(price),
+                quantity=quantity,
+                agent_id=self.agent_id,
+                time=current_time,
+                order_type=side,
+                asset_id=asset_id,
+                valid_until=current_time + self.validity_period,
+            )
+
+            stock.add_orders([order])
+
+    def _rebalance_all_stock_hedges(
+        self,
+        *,
+        current_time: int,
+    ) -> None:
+        """Rebalance all stock hedges once per simulation tick."""
+        for future in self.markets.values():
+            if future.instrument_class != "future":
+                continue
+
+            self._submit_stock_hedge(
+                future=future,
+                current_time=current_time,
+            )

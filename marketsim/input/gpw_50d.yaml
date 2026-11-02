@@ -64,6 +64,7 @@ agents:
       max_position: 500
       max_gross_exposure_pln: 100000000
       volume_aggression: 8.0
+      max_stock_order_quantity: 10000
       validity_period: 1
       initial_cash:
         PLN: 100000000
