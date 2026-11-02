@@ -355,8 +355,8 @@ class Security(ABC):
             else:
                 self.trade_stats[key]["count_sell"] += 1
                 self.trade_stats[key]["volume_sell"] += matched_order.order.quantity
-                self.trade_stats[key]["cash_sell"] += (
-                    matched_order.order.quantity * matched_order.price
+                self.trade_stats[key]["cash_sell"] += matched_order.order.quantity * Decimal(
+                    matched_order.price
                 )
         else:
             raise ValueError(f"Unknown order type {matched_order.order.order_type}")
