@@ -68,6 +68,7 @@ agents:
       volume_lookback: 20
       volatility_lookback: 20
       max_price_deviation: 0.02
+      volume_basis: notional
       initial_cash:
         PLN: 1000000
   noise_medium:
@@ -82,6 +83,7 @@ agents:
       volume_fraction: 0.03
       historical_volatility_scale: 0.2
       max_price_deviation: 0.02
+      volume_basis: notional
       initial_cash:
         PLN: 1000000
   noise_wide:
@@ -95,6 +97,7 @@ agents:
       volume_fraction: 0.003
       historical_volatility_scale: 0.15
       max_price_deviation: 0.02
+      volume_basis: notional
       initial_cash:
         PLN: 1000000
   market_makers:
