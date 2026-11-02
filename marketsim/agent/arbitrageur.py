@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from marketsim.agent.agent import Agent
+from marketsim.agent.helpers.index_arbitrage_portfolio import index_hedge_quantities
 from marketsim.market import Price
 from marketsim.market.fourheap.constants import BUY, SELL
 from marketsim.market.fourheap.order import Order
@@ -209,3 +210,17 @@ class IndexFuturesArbitrageAgent(Agent):
 
     def __str__(self) -> str:
         return f"IndexFuturesArbitrage_{self.agent_id}"
+
+    def get_stock_hedge_deltas(self, future):
+
+        contracts = self.futures_position.get(future.asset_id, 0)
+
+        targets = index_hedge_quantities(
+            future,
+            contracts,
+        )
+
+        return {
+            asset_id: target - self.position.get(asset_id, 0)
+            for asset_id, target in targets.items()
+        }

@@ -24,6 +24,7 @@ from marketsim.database.repositories.factory import create_repository
 from marketsim.loggers.basic import terminal
 from marketsim.market import Future, FXRateProvider, Index, Option, Price, Security, Stock
 from marketsim.market.knowledge import HistoricalMarketData, MarketKnowledge
+from marketsim.market.volume_regime import VolumeRegime
 from marketsim.plot.execution_volumes import plot_execution_volumes_by_asset
 from marketsim.plot.group_flows import plot_group_flows
 
@@ -102,6 +103,11 @@ class Simulator:
         }
 
         self.market_knowledge_by_asset = {}
+        self.volume_regime = VolumeRegime(
+            seed=67,
+            market_sigma=0.55,
+            stock_sigma=0.30,
+        )
 
         self.fx_rate_provider = FXRateProvider()
         for day, rates in (fx_rates or {}).items():
@@ -450,7 +456,24 @@ class Simulator:
                 self.add_agents([agent])
 
     def create_agents(self, *, agent_group: dict, group_name: str) -> None:
-        if agent_group.get("markets", "ALL") == "ALL":
+        if agent_group["agent_class"] == "IndexFuturesArbitrageAgent":
+            futures = [
+                market
+                for market in self.markets.values()
+                if market.instrument_class == "future" and market.is_tradable
+            ]
+
+            selected = {future.asset_id: future for future in futures}
+
+            for future in futures:
+                for component in future.underlying.components.values():
+                    stock = component["security"]
+
+                    if stock.is_tradable:
+                        selected[stock.asset_id] = stock
+
+            markets = list(selected.values())
+        elif agent_group.get("markets", "ALL") == "ALL":
             markets = list(self.markets.values())
         else:
             markets = [self.markets[self.market_map[k]] for k in agent_group["markets"]]
@@ -476,6 +499,7 @@ class Simulator:
             self.logger.info(f"Adding agent {str(agent)} to the simulation")
             agent.fx_rate_provider = self.fx_rate_provider
             agent.sim_time = self.sim_time
+            agent.volume_regime = self.volume_regime
 
             for asset_id in agent.markets:
                 historical = self.market_knowledge_by_asset.get(asset_id)

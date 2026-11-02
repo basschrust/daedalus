@@ -888,10 +888,17 @@ class Agent(ABC):
 
         expected_orders = sim_time * activity
 
-        return max(
-            1.0,
-            daily_volume * fraction / expected_orders,
-        )
+        mean_volume = daily_volume * fraction / expected_orders
+
+        regime = getattr(self, "volume_regime", None)
+
+        if regime is not None and market.instrument_class == "stock":
+            mean_volume *= regime.factor(
+                day=self.current_day,
+                asset_id=asset_id,
+            )
+
+        return max(0.0, mean_volume)
 
     def get_order_price_std(
         self,
