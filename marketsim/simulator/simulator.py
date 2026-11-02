@@ -554,6 +554,7 @@ class Simulator:
         self.logger.info("Calculating group flows...")
         terminal.write("Calculating group flows...\n")
         self.repository.calculate_group_flows()
+        self.repository.calculate_eod_group_flows()
 
         labels_map = {asset_id: market.short_name for asset_id, market in self.markets.items()}
 

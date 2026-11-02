@@ -922,10 +922,10 @@ class Agent(ABC):
         return last_price * volatility * scale
 
     def get_order_quantity(
-            self,
-            asset_id: int,
-            fallback: float,
-            max_quantity: int | None = None,
+        self,
+        asset_id: int,
+        fallback: float,
+        max_quantity: int | None = None,
     ) -> int:
         """Sample an order quantity in instrument-native units."""
         market = self.markets[asset_id]
@@ -941,8 +941,8 @@ class Agent(ABC):
         # Convert stock-equivalent units to futures contracts
         # only when the quantity is not already in contracts.
         if (
-                market.instrument_class == "future"
-                and self.configuration.get("volume_basis", "historical") == "notional"
+            market.instrument_class == "future"
+            and self.configuration.get("volume_basis", "historical") == "notional"
         ):
             multiplier = float(market.multiplier)
 

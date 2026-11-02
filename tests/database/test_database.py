@@ -31,6 +31,7 @@ EXPECTED_TABLES = {
     "trades",
     "option_expiration",
     "l1_group_flows",
+    "l1_eod_group_flows",
 }
 
 

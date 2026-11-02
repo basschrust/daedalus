@@ -17,7 +17,7 @@ import pandas as pd
 import snowflake.connector
 from snowflake.connector.pandas_tools import write_pandas
 
-from marketsim.database.queries.group_flows import GROUP_FLOW_INSERT_SQL
+from marketsim.database.queries.group_flows import EOD_GROUP_FLOW_INSERT_SQL, GROUP_FLOW_INSERT_SQL
 from marketsim.plot.execution_volumes import EXECUTION_VOLUME_SQL
 
 if TYPE_CHECKING:
@@ -228,6 +228,16 @@ TABLES: dict[str, dict[str, str]] = {
         time_tick="NUMBER(38,0)",
         asset_id="NUMBER(38,0)",
         agent_id="NUMBER(38,0)",
+        agent_group="VARCHAR",
+        cp_group="VARCHAR",
+        volume_buy="FLOAT",
+        volume_sell="FLOAT",
+        cash_buy="FLOAT",
+        cash_sell="FLOAT",
+    ),
+    "l1_eod_group_flows": dict(
+        day="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
         agent_group="VARCHAR",
         cp_group="VARCHAR",
         volume_buy="FLOAT",
@@ -577,6 +587,27 @@ class SnowflakeRepository:
             ],
         )
 
+    def get_all_eod_group_flows(self) -> pd.DataFrame:
+        columns = [
+            "day",
+            "asset_id",
+            "agent_group",
+            "cp_group",
+            "volume_buy",
+            "volume_sell",
+            "cash_buy",
+            "cash_sell",
+        ]
+
+        return self._read(
+            "SELECT DAY, ASSET_ID, AGENT_GROUP, CP_GROUP, "
+            "VOLUME_BUY, VOLUME_SELL, CASH_BUY, CASH_SELL "
+            "FROM L1_EOD_GROUP_FLOWS "
+            "ORDER BY DAY, ASSET_ID, AGENT_GROUP, CP_GROUP",
+            (),
+            columns,
+        )
+
     def get_execution_volumes_by_group(self) -> pd.DataFrame:
         columns = ["asset_id", "agent_group", "order_side", "executed_mode", "volume"]
         return self._read(EXECUTION_VOLUME_SQL, (), columns)
@@ -624,6 +655,18 @@ class SnowflakeRepository:
         try:
             self._execute("DELETE FROM L1_GROUP_FLOWS")
             self._execute(GROUP_FLOW_INSERT_SQL)
+            self._execute("COMMIT")
+        except Exception:
+            self._execute("ROLLBACK")
+            raise
+
+    def calculate_eod_group_flows(self) -> None:
+        """Rebuild daily group flows atomically."""
+        self._execute("BEGIN TRANSACTION")
+
+        try:
+            self._execute("DELETE FROM L1_EOD_GROUP_FLOWS")
+            self._execute(EOD_GROUP_FLOW_INSERT_SQL)
             self._execute("COMMIT")
         except Exception:
             self._execute("ROLLBACK")

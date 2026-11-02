@@ -6,7 +6,10 @@ from typing import TYPE_CHECKING
 import duckdb
 import pandas as pd
 
-from marketsim.database.queries.group_flows import GROUP_FLOW_INSERT_SQL
+from marketsim.database.queries.group_flows import (
+    EOD_GROUP_FLOW_INSERT_SQL,
+    GROUP_FLOW_INSERT_SQL,
+)
 from marketsim.plot.execution_volumes import EXECUTION_VOLUME_SQL
 
 if TYPE_CHECKING:
@@ -355,6 +358,19 @@ class Repository:
                     cash_buy        DOUBLE,
                     cash_sell       DOUBLE
                 )""")
+
+        self.connection.execute("""
+            CREATE TABLE IF NOT EXISTS l1_eod_group_flows (
+                day          INTEGER,
+                asset_id     INTEGER,
+                agent_group  VARCHAR,
+                cp_group     VARCHAR,
+                volume_buy   DOUBLE,
+                volume_sell  DOUBLE,
+                cash_buy     DOUBLE,
+                cash_sell    DOUBLE
+            )
+        """)
 
     ############# methods for making data persistent ###############################
 
@@ -767,6 +783,13 @@ class Repository:
             ORDER BY agent_group, day, time_tick, asset_id, cp_group
         """).fetchdf()
 
+    def get_all_eod_group_flows(self) -> pd.DataFrame:
+        return self.connection.execute("""
+            SELECT *
+            FROM l1_eod_group_flows
+            ORDER BY day, asset_id, agent_group, cp_group
+        """).fetchdf()
+
     def get_execution_volumes_by_group(self) -> pd.DataFrame:
         return self.connection.execute(EXECUTION_VOLUME_SQL).fetchdf()
 
@@ -818,6 +841,18 @@ class Repository:
         try:
             self.connection.execute("DELETE FROM l1_group_flows")
             self.connection.execute(GROUP_FLOW_INSERT_SQL)
+            self.connection.execute("COMMIT")
+        except Exception:
+            self.connection.execute("ROLLBACK")
+            raise
+
+    def calculate_eod_group_flows(self) -> None:
+        """Rebuild daily group flows from intraday L1 data."""
+        self.connection.execute("BEGIN TRANSACTION")
+
+        try:
+            self.connection.execute("DELETE FROM l1_eod_group_flows")
+            self.connection.execute(EOD_GROUP_FLOW_INSERT_SQL)
             self.connection.execute("COMMIT")
         except Exception:
             self.connection.execute("ROLLBACK")
