@@ -26,3 +26,31 @@ JOIN agents cp ON cp.agent_id = t_cp.agent_id
 GROUP BY t.day, t.executed_time, t.asset_id, t.agent_id,
          a.group_name, cp.group_name
 """
+
+EOD_GROUP_FLOW_INSERT_SQL = """
+INSERT INTO l1_eod_group_flows (
+    day,
+    asset_id,
+    agent_group,
+    cp_group,
+    volume_buy,
+    volume_sell,
+    cash_buy,
+    cash_sell
+)
+SELECT
+    day,
+    asset_id,
+    agent_group,
+    cp_group,
+    SUM(volume_buy),
+    SUM(volume_sell),
+    SUM(cash_buy),
+    SUM(cash_sell)
+FROM l1_group_flows
+GROUP BY
+    day,
+    asset_id,
+    agent_group,
+    cp_group
+"""

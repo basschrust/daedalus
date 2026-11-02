@@ -39,8 +39,10 @@ class NoiseAgent(Agent):
             "mean_spread": Price(0.8),
             "withdraw_old": False,
             "validity_period": 3,
-            "use_historical_volatility": False,
+            "use_historical_volatility": True,
             "historical_volatility_scale": 0.1,
+            "max_price_deviation": 0.02,
+            "volume_lookback": 20,
         }
         self.configuration = default_configuration | (
             configuration if configuration is not None else {}
@@ -70,88 +72,106 @@ class NoiseAgent(Agent):
 
     def take_action(self, current_time: int) -> None:
         for asset_id, market in self.markets.items():
+            # Indices are not directly tradable.
             if market.instrument_class == "index":
                 continue
+
             orders = []
-            if random.random() < self.lam:
-                if self.withdraw_old:
-                    market.withdraw_all(
-                        agent_id=self.agent_id
-                    )  # TODO: check the impact on resistance/support
-                side = random.choice([BUY, SELL])
-                # side chosen randomly and stick to that, but later this agent may place many orders on chosen side
-                # quantity = np.random.poisson(lam=self.mean_volume)  # AK why not volume?
-                mean_volume = self.get_order_mean_volume(
-                    asset_id,
-                    fallback=self.mean_volume,
+
+            # Decide whether the agent acts at this time step.
+            if random.random() >= self.lam:
+                continue
+
+            if self.withdraw_old:
+                market.withdraw_all(agent_id=self.agent_id)
+
+            side = random.choice([BUY, SELL])
+
+            # --------------------------------------------------
+            # 1. ORDER QUANTITY - HISTORICAL VOLUME
+            # --------------------------------------------------
+            quantity = self.get_order_quantity(
+                asset_id,
+                fallback=self.mean_volume,
+                max_quantity=self.q_max,
+            )
+
+            # --------------------------------------------------
+            # 2. REFERENCE PRICE - CURRENT ORDER BOOK
+            # --------------------------------------------------
+            best_bid = market.order_book.get_best_bid()
+            best_ask = market.order_book.get_best_ask()
+
+            best_bid = (
+                float(best_bid) if best_bid is not None and math.isfinite(float(best_bid)) else None
+            )
+            best_ask = (
+                float(best_ask) if best_ask is not None and math.isfinite(float(best_ask)) else None
+            )
+
+            last_price = float(market.last_traded_price)
+
+            if not math.isfinite(last_price) or last_price <= 0:
+                continue
+
+            if side == BUY:
+                reference = best_ask if best_ask is not None else last_price
+            else:
+                reference = best_bid if best_bid is not None else last_price
+
+            if not math.isfinite(reference) or reference <= 0:
+                continue
+
+            # --------------------------------------------------
+            # 3. PRICE DISPERSION - HISTORICAL VOLATILITY
+            # --------------------------------------------------
+            offset_std = self.get_order_price_std(
+                asset_id,
+                fallback=float(self.mean_spread),
+            )
+
+            # Draw a random price offset around the reference.
+            raw_offset = float(
+                np.random.normal(
+                    loc=0.0,
+                    scale=max(0.0, offset_std),
                 )
-                quantity = max(1, int(np.random.poisson(mean_volume)))
+            )
 
-                spread_side = random.choice([-1, 1])
-                mean_spread = float(self.mean_spread)
+            # --------------------------------------------------
+            # 4. LIMIT EXTREME PRICE DEVIATIONS
+            # --------------------------------------------------
+            max_deviation = float(self.configuration.get("max_price_deviation", 0.02))
 
-                knowledge = self.get_market_knowledge(asset_id)
+            if not math.isfinite(max_deviation) or max_deviation < 0:
+                raise ValueError("max_price_deviation must be finite and non-negative")
 
-                if knowledge is not None and self.configuration["use_historical_volatility"]:
-                    mean_spread = (
-                        float(market.last_traded_price)
-                        * knowledge.expected_volatility()
-                        * float(self.configuration["historical_volatility_scale"])
-                    )
+            max_offset = reference * max_deviation
 
-                best_bid = market.order_book.get_best_bid()
-                best_ask = market.order_book.get_best_ask()
+            offset = max(
+                -max_offset,
+                min(max_offset, raw_offset),
+            )
 
-                best_bid = (
-                    float(best_bid)
-                    if best_bid is not None and math.isfinite(float(best_bid))
-                    else None
-                )
-                best_ask = (
-                    float(best_ask)
-                    if best_ask is not None and math.isfinite(float(best_ask))
-                    else None
-                )
+            price = reference + offset
 
-                last_price = float(market.last_traded_price)
+            if not math.isfinite(price) or price <= 0:
+                continue
 
-                # Maximum price deviation for noise orders.
-                max_deviation = float(self.configuration.get("max_price_deviation", 0.02))
+            # --------------------------------------------------
+            # 5. CREATE AND SUBMIT ORDER
+            # --------------------------------------------------
+            order = Order(
+                price=Price(price),
+                quantity=quantity,
+                agent_id=self.agent_id,
+                time=current_time,
+                order_type=side,
+                asset_id=market.asset_id,
+                valid_until=current_time + self.validity_period,
+            )
 
-                if side == BUY:
-                    reference = best_ask if best_ask is not None else last_price
-                else:
-                    reference = best_bid if best_bid is not None else last_price
-
-                # Preserve random positive/negative deviations,
-                # but impose a hard bound.
-                raw_offset = spread_side * np.random.poisson(lam=max(0.0, mean_spread))
-
-                max_offset = reference * max_deviation
-
-                offset = max(
-                    -max_offset,
-                    min(max_offset, raw_offset),
-                )
-
-                price = reference + offset
-
-                if price > 0:
-                    order = Order(
-                        price=Price(price),
-                        quantity=quantity,
-                        agent_id=self.agent_id,
-                        time=current_time,
-                        order_type=side,
-                        asset_id=market.asset_id,
-                        valid_until=current_time + self.validity_period,
-                    )
-                    orders.append(order)
-                else:
-                    print(
-                        f"Order not placed as calculated price was negative: {price}, q: {quantity}"
-                    )
-
+            orders.append(order)
             market.add_orders(orders)
 
     def __str__(self) -> str:

@@ -6,7 +6,10 @@ from typing import TYPE_CHECKING
 import duckdb
 import pandas as pd
 
-from marketsim.database.queries.group_flows import GROUP_FLOW_INSERT_SQL
+from marketsim.database.queries.group_flows import (
+    EOD_GROUP_FLOW_INSERT_SQL,
+    GROUP_FLOW_INSERT_SQL,
+)
 from marketsim.plot.execution_volumes import EXECUTION_VOLUME_SQL
 
 if TYPE_CHECKING:
@@ -54,11 +57,12 @@ class Repository:
         # TODO: watch out, this may change through time!
         self.connection.execute("""
             CREATE TABLE IF NOT EXISTS index_components (
-                    index_id INTEGER,
-                    asset_id INTEGER,
-                    weight DOUBLE,
-                )
-            """)
+                index_id INTEGER,
+                asset_id INTEGER,
+                weight DOUBLE,
+                valuation_coefficient DOUBLE
+            )
+        """)
 
         # future contracts on indices / underlying_type stock/index
         self.connection.execute("""
@@ -355,6 +359,19 @@ class Repository:
                     cash_sell       DOUBLE
                 )""")
 
+        self.connection.execute("""
+            CREATE TABLE IF NOT EXISTS l1_eod_group_flows (
+                day          INTEGER,
+                asset_id     INTEGER,
+                agent_group  VARCHAR,
+                cp_group     VARCHAR,
+                volume_buy   DOUBLE,
+                volume_sell  DOUBLE,
+                cash_buy     DOUBLE,
+                cash_sell    DOUBLE
+            )
+        """)
+
     ############# methods for making data persistent ###############################
 
     def save_security(self, security: Security) -> None:
@@ -396,14 +413,23 @@ class Repository:
 
     def save_index_components(self, components_df: pd.DataFrame) -> None:
         self.connection.register("components_df", components_df)
-        self.connection.execute("""
-            INSERT INTO index_components (
-                index_id, asset_id, weight
-            ) 
-            SELECT index_id, asset_id, weight
-            FROM components_df
-        """)
-        self.connection.unregister("components_df")
+        try:
+            self.connection.execute("""
+                INSERT INTO index_components (
+                    index_id,
+                    asset_id,
+                    weight,
+                    valuation_coefficient
+                )
+                SELECT
+                    index_id,
+                    asset_id,
+                    weight,
+                    valuation_coefficient
+                FROM components_df
+            """)
+        finally:
+            self.connection.unregister("components_df")
 
     def save_future(self, future: Future) -> None:
         self.connection.execute(
@@ -757,6 +783,13 @@ class Repository:
             ORDER BY agent_group, day, time_tick, asset_id, cp_group
         """).fetchdf()
 
+    def get_all_eod_group_flows(self) -> pd.DataFrame:
+        return self.connection.execute("""
+            SELECT *
+            FROM l1_eod_group_flows
+            ORDER BY day, asset_id, agent_group, cp_group
+        """).fetchdf()
+
     def get_execution_volumes_by_group(self) -> pd.DataFrame:
         return self.connection.execute(EXECUTION_VOLUME_SQL).fetchdf()
 
@@ -771,10 +804,10 @@ class Repository:
                 INSERT INTO
                     index_values (day, time_tick, index_id, open, high, low, close)
                 SELECT tp.day, tp.time_tick, ic.index_id,
-                        sum(ic.weight * tp."open" ),
-                        sum(ic.weight * tp."close" ),
-                        sum(ic.weight * tp."close" ),
-                        sum(ic.weight * tp."close" ),
+                        sum(ic.VALUATION_COEFFICIENT * tp."open" ),
+                        sum(ic.VALUATION_COEFFICIENT * tp."close" ),
+                        sum(ic.VALUATION_COEFFICIENT * tp."close" ),
+                        sum(ic.VALUATION_COEFFICIENT * tp."close" ),
                 FROM index_components ic
                 LEFT JOIN traded_prices tp
                     ON ic.asset_id = tp.asset_id
@@ -808,6 +841,18 @@ class Repository:
         try:
             self.connection.execute("DELETE FROM l1_group_flows")
             self.connection.execute(GROUP_FLOW_INSERT_SQL)
+            self.connection.execute("COMMIT")
+        except Exception:
+            self.connection.execute("ROLLBACK")
+            raise
+
+    def calculate_eod_group_flows(self) -> None:
+        """Rebuild daily group flows from intraday L1 data."""
+        self.connection.execute("BEGIN TRANSACTION")
+
+        try:
+            self.connection.execute("DELETE FROM l1_eod_group_flows")
+            self.connection.execute(EOD_GROUP_FLOW_INSERT_SQL)
             self.connection.execute("COMMIT")
         except Exception:
             self.connection.execute("ROLLBACK")

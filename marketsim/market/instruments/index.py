@@ -66,30 +66,34 @@ class Index(Security):
         # it doesn't need to be 100% in total
 
     def calculate_value(self):
-        if self.base_index_level is not None:
-            weighted_return = Decimal("0")
+        if self.base_index_level is None:
+            # Legacy indices: preserve existing behaviour.
+            return Price(
+                sum(
+                    Decimal(str(c["weight"])) * Decimal(str(c["security"].last_traded_price))
+                    for c in self.components.values()
+                )
+            )
 
-            for component in self.components.values():
-                weight = Decimal(str(component["weight"]))
-                base_price = Decimal(str(component["base_price"]))
-                current_price = Decimal(str(component["security"].last_traded_price))
+        # Normalized indices, including WIG20.
+        weight_sum = sum(Decimal(str(c["weight"])) for c in self.components.values())
 
-                if weight <= 0 or base_price <= 0:
-                    raise ValueError("Invalid index component weight/base_price")
+        if weight_sum <= 0:
+            raise ValueError("Index weights must be positive")
 
-                weighted_return += weight * current_price / base_price
-
-            return Price(self.base_index_level * weighted_return)
-
-        # Legacy index behaviour for existing scenarios
-        value = Decimal("0")
+        weighted_return = Decimal("0")
 
         for component in self.components.values():
             weight = Decimal(str(component["weight"]))
+            base_price = Decimal(str(component["base_price"]))
             current_price = Decimal(str(component["security"].last_traded_price))
-            value += weight * current_price
 
-        return Price(value)
+            if weight <= 0 or base_price <= 0:
+                raise ValueError("Invalid index weight or base price")
+
+            weighted_return += weight * current_price / base_price
+
+        return Price(self.base_index_level * weighted_return / weight_sum)
 
     def save(self):
         # save the index definition to DB
@@ -99,12 +103,28 @@ class Index(Security):
 
         # components
         components_table = []
+
+        weight_sum = sum(
+            Decimal(str(component["weight"])) for component in self.components.values()
+        )
+
         for asset_id, component in self.components.items():
+            weight = Decimal(str(component["weight"]))
+
+            if self.base_index_level is not None:
+                base_price = Decimal(str(component["base_price"]))
+
+                valuation_coefficient = self.base_index_level * weight / (base_price * weight_sum)
+            else:
+                # Preserve legacy index valuation
+                valuation_coefficient = weight
+
             components_table.append(
                 {
                     "index_id": self.index_id,
                     "asset_id": component["security"].asset_id,
-                    "weight": component["weight"],
+                    "weight": float(weight),
+                    "valuation_coefficient": float(valuation_coefficient),
                 }
             )
 
