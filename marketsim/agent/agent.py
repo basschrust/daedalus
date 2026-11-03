@@ -136,7 +136,7 @@ class Agent(ABC):
 
         self.market_knowledge = market_knowledge or {}
 
-        self.logger = setup_agent_logger(agent_id=self.agent_id, output_dir=self.output_dir)
+        self.logger = setup_agent_logger(agent=self, output_dir=self.output_dir)
 
         self.repository.save_agent(self)
 

@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
 
     from marketsim.agent import Agent
-    from marketsim.fourheap import MatchedOrder, Order
+    from marketsim.market.fourheap import MatchedOrder, Order
     from marketsim.market import Index
 
 
@@ -71,7 +71,7 @@ class Security(ABC):
         self.agents = {}
         self.name = name
 
-        self.logger = setup_market_logger(asset_id=self.asset_id, output_dir=output_dir)
+        self.logger = setup_market_logger(market=self, output_dir=output_dir)
 
         self.current_day = 0
         self.eod_status = "closed"  # open/closed  to make eod procedure idempotent
