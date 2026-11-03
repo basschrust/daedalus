@@ -28,8 +28,8 @@ if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
 
     from marketsim.agent import Agent
-    from marketsim.market.fourheap import MatchedOrder, Order
     from marketsim.market import Index
+    from marketsim.market.fourheap import MatchedOrder, Order
 
 
 class Security(ABC):
@@ -158,7 +158,9 @@ class Security(ABC):
     def step(self, current_time: int) -> list[MatchedOrder]:
         # step is operations happening during single time_tick
         # TODO Need to figure out how to handle ties for price and time - AK: maybe fractal time?
-        self.logger.info(f"Starting step for time tick: {str(current_time)} (day: {str(self.current_day)})")
+        self.logger.info(
+            f"Starting step for time tick: {str(current_time)} (day: {str(self.current_day)})"
+        )
         if self.status != "active":
             self.logger.info(f"Security {self.name} is inactive!")
             return []

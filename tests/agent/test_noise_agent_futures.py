@@ -13,17 +13,33 @@ def make_agent(tmp_path):
     """Create a NoiseAgent with mocked market infrastructure."""
 
     def factory(instrument_class="future", config=None):
-        market = SimpleNamespace(
-            asset_id=101,
-            instrument_class=instrument_class,
-            last_traded_price=Price(3000),
-            order_book=SimpleNamespace(
-                get_best_bid=MagicMock(return_value=Price(2999)),
-                get_best_ask=MagicMock(return_value=Price(3001)),
-            ),
-            add_orders=MagicMock(),
-            withdraw_all=MagicMock(),
-        )
+        if instrument_class=="future":
+            market = SimpleNamespace(
+                asset_id=101,
+                instrument_class=instrument_class,
+                underlying=SimpleNamespace(
+                    calculate_value=MagicMock(return_value=Price(3100)),
+                ),
+                last_traded_price=Price(3000),
+                order_book=SimpleNamespace(
+                    get_best_bid=MagicMock(return_value=Price(2999)),
+                    get_best_ask=MagicMock(return_value=Price(3001)),
+                ),
+                add_orders=MagicMock(),
+                withdraw_all=MagicMock(),
+            )
+        else:
+            market = SimpleNamespace(
+                asset_id=101,
+                instrument_class=instrument_class,
+                last_traded_price=Price(3000),
+                order_book=SimpleNamespace(
+                    get_best_bid=MagicMock(return_value=Price(2999)),
+                    get_best_ask=MagicMock(return_value=Price(3001)),
+                ),
+                add_orders=MagicMock(),
+                withdraw_all=MagicMock(),
+            )
 
         with patch(
             "marketsim.agent.agent.setup_agent_logger",

@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from loguru import logger
 
 if TYPE_CHECKING:
-    from marketsim.market.instruments.security import Security
     from marketsim.agent.agent import Agent
+    from marketsim.market.instruments.security import Security
 
 # Keep reference to the real console
 terminal = sys.stdout

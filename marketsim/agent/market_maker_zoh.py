@@ -189,8 +189,26 @@ class MMZOHAgent(Agent):
                 estimate = market.last_traded_price
                 self.logger.info(f"Last traded price: {estimate}")
                 HALF = Decimal("0.5")
-                st = max(estimate + HALF * self.omega, best_bid)
-                bt = min(estimate - HALF * self.omega, best_ask)
+                if market.instrument_class == "future":
+                    # Recalculate the theoretical futures price
+                    # from the current underlying index.
+                    estimate = Price(
+                        market.underlying.calculate_value()
+                    )
+                    # Do not let stale order-book quotations
+                    # override the theoretical anchor.
+                    st = estimate + HALF * self.omega
+                    bt = estimate - HALF * self.omega
+                else:
+                    estimate = market.last_traded_price
+                    st = max(
+                        estimate + HALF * self.omega,
+                        best_bid,
+                    )
+                    bt = min(
+                        estimate - HALF * self.omega,
+                        best_ask,
+                    )
                 self.logger.info(f"Setting basic spread to: {bt}, {st}")
                 # volumes for this market:
                 buy_volume = self.volume_by_asset[asset_id]
