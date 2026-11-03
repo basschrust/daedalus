@@ -47,6 +47,7 @@ class NoiseAgent(Agent):
             "future_mean_contracts": 1.5,
             "future_max_order_contracts": 5,
             "future_max_position_contracts": 20,
+            "future_max_daily_contracts": 10,
         }
         self.configuration = default_configuration | (
             configuration if configuration is not None else {}
@@ -67,6 +68,7 @@ class NoiseAgent(Agent):
         # withdrawing old oders when placing new one:
         self.withdraw_old = self.configuration["withdraw_old"]
         self.validity_period = self.configuration["validity_period"]  # validity period for orders
+        self.future_daily_volume: dict[int, int] = {}
 
     def get_id(self) -> int:
         return self.agent_id
@@ -117,6 +119,12 @@ class NoiseAgent(Agent):
                         quantity,
                         max(0, max_position + position),
                     )
+                daily_limit = int(
+                    self.configuration["future_max_daily_contracts"]
+                )
+                used = self.future_daily_volume.get(asset_id, 0)
+                remaining = max(0, daily_limit - used)
+                quantity = min(quantity, remaining)
             else:
                 # all but futures instruments: TODO: check options :)
                 quantity = self.get_order_quantity(
@@ -206,6 +214,11 @@ class NoiseAgent(Agent):
             orders.append(order)
             market.add_orders(orders)
 
+            if market.instrument_class == "future":
+                self.future_daily_volume[asset_id] = (
+                        self.future_daily_volume.get(asset_id, 0) + quantity
+                )
+
     def __str__(self) -> str:
         return f"Noise_{self.agent_id}"
 
@@ -216,3 +229,8 @@ class NoiseAgent(Agent):
                 for asset_id, market in self.markets.items()
             ]
         )
+
+    def sod(self):
+        super().sod()
+        self.future_daily_volume.clear()
+

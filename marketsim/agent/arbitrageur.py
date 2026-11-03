@@ -38,6 +38,7 @@ class IndexFuturesArbitrageAgent(Agent):
             "max_position": 20,
             "validity_period": 1,
             "min_time_between_orders": 1,
+            "future_max_daily_contracts": 10,
         }
         cfg = defaults | (configuration or {})
 
@@ -139,6 +140,7 @@ class IndexFuturesArbitrageAgent(Agent):
                     side = SELL
                     quantity = min(self.order_quantity, position)
                     limit_price = bid
+                    is_closing = True
 
             # Close an existing short position when basis converges.
             elif position < 0 and ask is not None:
@@ -146,6 +148,7 @@ class IndexFuturesArbitrageAgent(Agent):
                     side = BUY
                     quantity = min(self.order_quantity, -position)
                     limit_price = ask
+                    is_closing = True
 
             # Open or extend a short position.
             if side is None and sell_basis is not None:

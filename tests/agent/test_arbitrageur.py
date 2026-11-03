@@ -203,10 +203,6 @@ def test_order_cooldown(make_agent):
     assert future.add_orders.call_count == 2
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Adaptive sizing can overshoot a closing position",
-)
 def test_closing_long_never_reverses_position(make_agent):
     agent, future, _ = make_agent(
         bid=3000,
@@ -227,10 +223,6 @@ def test_closing_long_never_reverses_position(make_agent):
     assert order.quantity == 1
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Adaptive sizing can overshoot a closing position",
-)
 def test_closing_short_never_reverses_position(make_agent):
     agent, future, _ = make_agent(
         bid=2999,

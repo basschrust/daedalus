@@ -1,6 +1,6 @@
 # WIG20 scenario preparation
 
-days: 45
+days: 5
 sim_time: 50
 seed: 67
 
