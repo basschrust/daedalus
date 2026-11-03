@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from collections import defaultdict
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -228,34 +229,49 @@ class IndexFuturesArbitrageAgent(Agent):
     def __str__(self) -> str:
         return f"IndexFuturesArbitrage_{self.agent_id}"
 
-    def get_stock_hedge_deltas(self, future):
+    def get_combined_stock_hedge_deltas(self) -> dict[int, int]:
+        """Calculate net stock requirements across all futures."""
 
-        contracts = self.futures_position.get(future.asset_id, 0)
+        targets = defaultdict(int)
 
-        targets = index_hedge_quantities(
-            future,
-            contracts,
+        for future in self.markets.values():
+            if future.instrument_class != "future":
+                continue
+
+            contracts = int(self.futures_position.get(future.asset_id, 0))
+
+            hedge = index_hedge_quantities(future, contracts)
+
+            for asset_id, quantity in hedge.items():
+                targets[asset_id] += quantity
+
+        # Include existing stock holdings so residual hedges
+        # can be unwound when futures positions become zero.
+        stock_ids = set(targets)
+        stock_ids.update(
+            asset_id
+            for asset_id, market in self.markets.items()
+            if market.instrument_class == "stock" and self.position.get(asset_id, 0) != 0
         )
 
         return {
-            asset_id: target - self.position.get(asset_id, 0)
-            for asset_id, target in targets.items()
+            asset_id: targets[asset_id] - int(self.position.get(asset_id, 0))
+            for asset_id in stock_ids
         }
 
-    def _submit_stock_hedge(
+    def _rebalance_all_stock_hedges(
         self,
         *,
-        future,
         current_time: int,
     ) -> None:
-        """Rebalance stock holdings against executed futures positions.
+        """Submit one net hedge order per stock per tick."""
 
-        Stock orders are submitted to the ordinary order books.
-        Actual positions are updated by the existing matching engine.
-        """
-        deltas = self.get_stock_hedge_deltas(future)
+        deltas = self.get_combined_stock_hedge_deltas()
 
         max_stock_order = int(self.configuration.get("max_stock_order_quantity", 5000))
+
+        if max_stock_order <= 0:
+            raise ValueError("max_stock_order_quantity must be positive")
 
         for asset_id, delta in deltas.items():
             stock = self.markets.get(asset_id)
@@ -263,15 +279,14 @@ class IndexFuturesArbitrageAgent(Agent):
             if stock is None or stock.status != "active":
                 continue
 
-            # Cancel outstanding hedge orders before calculating
-            # a replacement against the latest filled positions.
+            # Cancel old hedge orders once per stock,
+            # not once per futures contract.
             stock.withdraw_all(agent_id=self.agent_id)
 
             if delta == 0:
                 continue
 
             side = BUY if delta > 0 else SELL
-
             book = stock.order_book
 
             quote = book.get_best_ask() if side == BUY else book.get_best_bid()
@@ -284,10 +299,7 @@ class IndexFuturesArbitrageAgent(Agent):
             if not math.isfinite(price) or price <= 0:
                 continue
 
-            quantity = min(
-                abs(int(delta)),
-                max_stock_order,
-            )
+            quantity = min(abs(int(delta)), max_stock_order)
 
             if quantity <= 0:
                 continue
@@ -303,18 +315,3 @@ class IndexFuturesArbitrageAgent(Agent):
             )
 
             stock.add_orders([order])
-
-    def _rebalance_all_stock_hedges(
-        self,
-        *,
-        current_time: int,
-    ) -> None:
-        """Rebalance all stock hedges once per simulation tick."""
-        for future in self.markets.values():
-            if future.instrument_class != "future":
-                continue
-
-            self._submit_stock_hedge(
-                future=future,
-                current_time=current_time,
-            )

@@ -252,7 +252,7 @@ def test_stock_hedge_deltas_use_filled_positions(make_agent):
     # target = 1200 shares
     agent.position[stock.asset_id] = 400
 
-    deltas = agent.get_stock_hedge_deltas(future)
+    deltas = agent.get_combined_stock_hedge_deltas()
 
     assert deltas[stock.asset_id] == 800
 
@@ -260,7 +260,7 @@ def test_stock_hedge_deltas_use_filled_positions(make_agent):
 def test_stock_hedge_deltas_reverse_for_long_future(make_agent):
     agent, future, stock = make_agent(position=1)
 
-    deltas = agent.get_stock_hedge_deltas(future)
+    deltas = agent.get_combined_stock_hedge_deltas()
 
     assert deltas[stock.asset_id] == -600
 
@@ -276,9 +276,8 @@ def test_short_futures_generates_stock_buy_orders(make_agent):
     stock.withdraw_all = MagicMock()
     stock.add_orders = MagicMock()
 
-    agent._submit_stock_hedge(
-        future=future,
-        current_time=1,
+    agent._rebalance_all_stock_hedges(
+        current_time=2,
     )
 
     order = stock.add_orders.call_args.args[0][0]
@@ -299,9 +298,8 @@ def test_long_futures_generates_stock_sell_orders(make_agent):
     stock.withdraw_all = MagicMock()
     stock.add_orders = MagicMock()
 
-    agent._submit_stock_hedge(
-        future=future,
-        current_time=1,
+    agent._rebalance_all_stock_hedges(
+        current_time=2,
     )
 
     order = stock.add_orders.call_args.args[0][0]
@@ -325,8 +323,7 @@ def test_partial_hedge_fill_generates_remaining_order(make_agent):
     # 1200 shares required, 500 already executed.
     agent.position[stock.asset_id] = 500
 
-    agent._submit_stock_hedge(
-        future=future,
+    agent._rebalance_all_stock_hedges(
         current_time=2,
     )
 
@@ -349,9 +346,8 @@ def test_flat_futures_unwinds_remaining_stock_hedge(make_agent):
 
     agent.position[stock.asset_id] = 800
 
-    agent._submit_stock_hedge(
-        future=future,
-        current_time=3,
+    agent._rebalance_all_stock_hedges(
+        current_time=2,
     )
 
     order = stock.add_orders.call_args.args[0][0]
@@ -371,3 +367,94 @@ def test_flat_portfolio_does_not_trade_stocks(make_agent):
 
     stock.add_orders.assert_not_called()
     future.add_orders.assert_not_called()
+
+
+def test_combined_hedge_nets_overlapping_futures(
+    make_agent,
+):
+    agent, future, stock = make_agent(position=-2)
+
+    # The fixture uses one constituent stock.
+    # Add another future with identical index exposure.
+    from types import SimpleNamespace
+
+    second_future = SimpleNamespace(
+        asset_id=102,
+        instrument_class="future",
+        underlying=future.underlying,
+        multiplier=future.multiplier,
+    )
+
+    agent.markets[102] = second_future
+    agent.futures_position[102] = 2
+
+    deltas = agent.get_combined_stock_hedge_deltas()
+
+    assert deltas[stock.asset_id] == 0
+
+
+def test_combined_hedge_submits_one_stock_order(
+    make_agent,
+):
+    agent, future, stock = make_agent(position=-2)
+
+    from types import SimpleNamespace
+
+    second_future = SimpleNamespace(
+        asset_id=102,
+        instrument_class="future",
+        underlying=future.underlying,
+        multiplier=future.multiplier,
+    )
+
+    agent.markets[102] = second_future
+    agent.futures_position[102] = -1
+
+    agent._rebalance_all_stock_hedges(
+        current_time=10,
+    )
+
+    # Both futures contribute to one net stock target.
+    expected = agent.get_combined_stock_hedge_deltas()[stock.asset_id]
+
+    stock.withdraw_all.assert_called_once_with(
+        agent_id=agent.agent_id,
+    )
+    stock.add_orders.assert_called_once()
+
+    order = stock.add_orders.call_args.args[0][0]
+
+    assert order.order_type == BUY
+    assert order.quantity == min(
+        expected,
+        agent.configuration.get("max_stock_order_quantity", 5000),
+    )
+
+
+def test_combined_hedge_unwinds_residual_stock(
+    make_agent,
+):
+    agent, future, stock = make_agent(position=0)
+
+    agent.position[stock.asset_id] = 100
+
+    agent._rebalance_all_stock_hedges(
+        current_time=10,
+    )
+
+    order = stock.add_orders.call_args.args[0][0]
+
+    assert order.order_type == SELL
+    assert order.quantity == 100
+
+
+def test_combined_hedge_no_order_when_balanced(
+    make_agent,
+):
+    agent, future, stock = make_agent(position=0)
+
+    agent._rebalance_all_stock_hedges(
+        current_time=10,
+    )
+
+    stock.add_orders.assert_not_called()

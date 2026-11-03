@@ -119,9 +119,7 @@ class NoiseAgent(Agent):
                         quantity,
                         max(0, max_position + position),
                     )
-                daily_limit = int(
-                    self.configuration["future_max_daily_contracts"]
-                )
+                daily_limit = int(self.configuration["future_max_daily_contracts"])
                 used = self.future_daily_volume.get(asset_id, 0)
                 remaining = max(0, daily_limit - used)
                 quantity = min(quantity, remaining)
@@ -216,7 +214,7 @@ class NoiseAgent(Agent):
 
             if market.instrument_class == "future":
                 self.future_daily_volume[asset_id] = (
-                        self.future_daily_volume.get(asset_id, 0) + quantity
+                    self.future_daily_volume.get(asset_id, 0) + quantity
                 )
 
     def __str__(self) -> str:
@@ -233,4 +231,3 @@ class NoiseAgent(Agent):
     def sod(self):
         super().sod()
         self.future_daily_volume.clear()
-
