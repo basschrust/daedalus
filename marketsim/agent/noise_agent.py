@@ -157,6 +157,18 @@ class NoiseAgent(Agent):
             else:
                 reference = best_bid if best_bid is not None else last_price
 
+            if market.instrument_class == "future":
+                # Current underlying index value, recalculated each tick.
+                # TODO: incorporate financing and dividends.
+                reference = float(market.underlying.calculate_value())
+            else:
+                last_price = float(market.last_traded_price)
+
+                if side == BUY:
+                    reference = best_ask if best_ask is not None else last_price
+                else:
+                    reference = best_bid if best_bid is not None else last_price
+
             if not math.isfinite(reference) or reference <= 0:
                 continue
 

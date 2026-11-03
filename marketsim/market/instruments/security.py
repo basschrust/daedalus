@@ -158,7 +158,7 @@ class Security(ABC):
     def step(self, current_time: int) -> list[MatchedOrder]:
         # step is operations happening during single time_tick
         # TODO Need to figure out how to handle ties for price and time - AK: maybe fractal time?
-        self.logger.info(f"Starting step for time tick: {str(current_time)}")
+        self.logger.info(f"Starting step for time tick: {str(current_time)} (day: {str(self.current_day)})")
         if self.status != "active":
             self.logger.info(f"Security {self.name} is inactive!")
             return []
@@ -541,7 +541,7 @@ class Security(ABC):
 
         if self.status == "active":
             self.logger.info(
-                f"Starting Start-of-Day procedure for {self.name}, day: {self.current_day}"
+                f"\n\n\nStarting Start-of-Day procedure for {self.name}, day: {self.current_day}"
             )
             self.eod_status = "open"
 
@@ -750,7 +750,7 @@ class Security(ABC):
             if self.status != "active" and self.instrument_class == "stock":
                 # other instruments cleaned up in their subclasses.
                 self.cleanup()
-            self.logger.info(f"EoD procedure of day: {self.current_day - 1} completed.")
+            self.logger.info(f"EoD procedure of day: {self.current_day - 1} completed.\n\n")
         else:
             raise ValueError(f"Unknown eod status: {self.eod_status}")
 
