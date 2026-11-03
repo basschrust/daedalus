@@ -190,6 +190,7 @@ class MomentumAgent(Agent):
                         price=order_price,
                         quantity=quantity,
                         agent_id=self.agent_id,
+                        day=self.current_day,
                         time=current_time,
                         order_type=side,
                         asset_id=asset_id,

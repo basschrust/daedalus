@@ -159,6 +159,7 @@ class OrderQueue:
                             price=order.executed_price,
                             cash=cash,
                             volume=volume,
+                            day=order.day,
                             time=current_time,
                             order=order,
                         )

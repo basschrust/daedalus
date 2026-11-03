@@ -226,6 +226,7 @@ class MMZOHAgent(Agent):
                                 price=price_bid,
                                 quantity=buy_volume,  # 7,#1, # we ćould raise the quantity in each ladder step...
                                 agent_id=self.agent_id,
+                                day=self.current_day,
                                 time=current_time,
                                 order_type=BUY,
                                 asset_id=market.asset_id,
@@ -236,6 +237,7 @@ class MMZOHAgent(Agent):
                                 price=Price(st + (k + 1) * self.xi),
                                 quantity=sell_volume,  # 7,#1,
                                 agent_id=self.agent_id,
+                                day=self.current_day,
                                 time=current_time,
                                 order_type=SELL,
                                 asset_id=market.asset_id,

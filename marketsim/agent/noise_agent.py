@@ -203,6 +203,7 @@ class NoiseAgent(Agent):
                 price=Price(price),
                 quantity=quantity,
                 agent_id=self.agent_id,
+                day=self.current_day,
                 time=current_time,
                 order_type=side,
                 asset_id=market.asset_id,

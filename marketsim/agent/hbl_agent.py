@@ -858,6 +858,7 @@ class HBLAgent(Agent):
                         price=Price(opt_price),
                         quantity=quantity,  # TODO: AK well, let's make it bigger to make some profits (Poisson?)
                         agent_id=self.agent_id,
+                        day=self.current_day,
                         time=current_time,
                         order_type=1 if side == BUY else -1,
                         asset_id=asset_id,
@@ -882,6 +883,7 @@ class HBLAgent(Agent):
                         price=Price(price),
                         quantity=1,
                         agent_id=self.agent_id,
+                        day=self.current_day,
                         time=current_time,
                         order_type=1 if side == BUY else -1,
                         asset_id=asset_id,

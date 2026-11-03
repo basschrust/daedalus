@@ -20,6 +20,7 @@ def make_order(
         order_type=side,
         quantity=quantity,
         agent_id=38,
+        day=0,
         time=0,
         asset_id=asset_id,
     )

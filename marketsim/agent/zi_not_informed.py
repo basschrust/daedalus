@@ -29,8 +29,6 @@ class ZIAgentNotInformed(Agent):
         output_dir: Path | str = "tmp",
         fx_rate_provider: FXRateProvider | None = None,
     ) -> None:
-        # q_max: int, shade: List, pv_var: float, eta: float = 1.0
-        # , lam=1.0, mean_volume: float = 5.0):
         default_configuration = {
             "q_max": 1000,
             "shade": [0.1, 0.2],
@@ -116,6 +114,7 @@ class ZIAgentNotInformed(Agent):
                         price=Price(price),
                         quantity=quantity,
                         agent_id=self.agent_id,
+                        day=self.current_day,
                         time=current_time,
                         order_type=side,
                         asset_id=asset_id,

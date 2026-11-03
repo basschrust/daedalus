@@ -160,6 +160,7 @@ class RegimeTraderAgent(Agent):
                         price=Price(limit),
                         quantity=quantity,
                         agent_id=self.agent_id,
+                        day=self.current_day,
                         time=current_time,
                         order_type=regime,
                         asset_id=asset_id,
