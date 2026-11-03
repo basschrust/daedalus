@@ -43,6 +43,10 @@ class NoiseAgent(Agent):
             "historical_volatility_scale": 0.1,
             "max_price_deviation": 0.02,
             "volume_lookback": 20,
+            "future_lam_multiplier": 0.25,
+            "future_mean_contracts": 1.5,
+            "future_max_order_contracts": 5,
+            "future_max_position_contracts": 20,
         }
         self.configuration = default_configuration | (
             configuration if configuration is not None else {}
@@ -79,7 +83,10 @@ class NoiseAgent(Agent):
             orders = []
 
             # Decide whether the agent acts at this time step.
-            if random.random() >= self.lam:
+            activity = self.lam
+            if market.instrument_class == "future":
+                activity *= float(self.configuration["future_lam_multiplier"])
+            if random.random() >= activity:
                 continue
 
             if self.withdraw_old:
@@ -90,11 +97,36 @@ class NoiseAgent(Agent):
             # --------------------------------------------------
             # 1. ORDER QUANTITY - HISTORICAL VOLUME
             # --------------------------------------------------
-            quantity = self.get_order_quantity(
-                asset_id,
-                fallback=self.mean_volume,
-                max_quantity=self.q_max,
-            )
+            if market.instrument_class == "future":
+                mean_contracts = float(self.configuration["future_mean_contracts"])
+                max_order = int(self.configuration["future_max_order_contracts"])
+                quantity = min(
+                    int(np.random.poisson(mean_contracts)),
+                    max_order,
+                )
+                # Limit the absolute futures position.
+                position = int(self.futures_position.get(asset_id, 0))
+                max_position = int(self.configuration["future_max_position_contracts"])
+                if side == BUY:
+                    quantity = min(
+                        quantity,
+                        max(0, max_position - position),
+                    )
+                else:
+                    quantity = min(
+                        quantity,
+                        max(0, max_position + position),
+                    )
+            else:
+                # all but futures instruments: TODO: check options :)
+                quantity = self.get_order_quantity(
+                    asset_id,
+                    fallback=self.mean_volume,
+                    max_quantity=self.q_max,
+                )
+
+            if quantity <= 0:
+                continue
 
             # --------------------------------------------------
             # 2. REFERENCE PRICE - CURRENT ORDER BOOK
