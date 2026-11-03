@@ -136,7 +136,7 @@ class Agent(ABC):
 
         self.market_knowledge = market_knowledge or {}
 
-        self.logger = setup_agent_logger(agent_id=self.agent_id, output_dir=self.output_dir)
+        self.logger = setup_agent_logger(agent=self, output_dir=self.output_dir)
 
         self.repository.save_agent(self)
 
@@ -347,8 +347,10 @@ class Agent(ABC):
     def record_trade(self, matched_order: MatchedOrder) -> None:
         self.current_time = matched_order.time
         quantity = matched_order.order.order_type * matched_order.order.quantity
-        cash = -Price(
-            matched_order.price * matched_order.order.quantity * matched_order.order.order_type
+        cash = -Decimal(
+            Decimal(matched_order.price)
+            * matched_order.order.quantity
+            * matched_order.order.order_type
         )
 
         # self.update_position(quantity=quantity, cash=cash, asset_id=matched_order.order.asset_id)
@@ -888,10 +890,17 @@ class Agent(ABC):
 
         expected_orders = sim_time * activity
 
-        return max(
-            1.0,
-            daily_volume * fraction / expected_orders,
-        )
+        mean_volume = daily_volume * fraction / expected_orders
+
+        regime = getattr(self, "volume_regime", None)
+
+        if regime is not None and market.instrument_class == "stock":
+            mean_volume *= regime.factor(
+                day=self.current_day,
+                asset_id=asset_id,
+            )
+
+        return max(0.0, mean_volume)
 
     def get_order_price_std(
         self,

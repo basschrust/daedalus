@@ -1,7 +1,14 @@
+from __future__ import annotations
+
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from loguru import logger
+
+if TYPE_CHECKING:
+    from marketsim.agent.agent import Agent
+    from marketsim.market.instruments.security import Security
 
 # Keep reference to the real console
 terminal = sys.stdout
@@ -60,36 +67,36 @@ def setup_subject_logger(output_dir: Path = Path("tmp")) -> None:
     )
 
 
-def setup_market_logger(asset_id: int, output_dir: Path | str = "tmp"):
+def setup_market_logger(*, market: Security, output_dir: Path | str = "tmp"):
     if output_dir == "tmp":
-        return logger.bind(market_id=asset_id)
+        return logger.bind(market_id=market.asset_id)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     logger.add(
-        output_dir / f"market_{asset_id}.log",
+        output_dir / f"market_{market.asset_id}_{market.short_name}.log",
         format="{elapsed} | {message}",
         level="DEBUG",
-        filter=lambda record: record["extra"].get("market_id") == asset_id,
+        filter=lambda record: record["extra"].get("market_id") == market.asset_id,
     )
 
-    return logger.bind(market_id=asset_id)
+    return logger.bind(market_id=market.asset_id)
 
 
-def setup_agent_logger(agent_id: int, output_dir: Path | str = "tmp"):
+def setup_agent_logger(*, agent: Agent, output_dir: Path | str = "tmp"):
     if output_dir == "tmp":
-        return logger.bind(agent_id=agent_id)
+        return logger.bind(agent_id=agent.agent_id)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     logger.add(
-        output_dir / f"agent_logs/agent_{agent_id}.log",
+        output_dir / f"agent_logs/agent_{agent.agent_id}_{agent.group}.log",
         format="{elapsed} | {message}",
         level="DEBUG",
-        filter=lambda record: record["extra"].get("agent_id") == agent_id,
+        filter=lambda record: record["extra"].get("agent_id") == agent.agent_id,
     )
 
-    return logger.bind(agent_id=agent_id)
+    return logger.bind(agent_id=agent.agent_id)
 
 
 class StreamToLogger:

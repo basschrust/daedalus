@@ -70,6 +70,7 @@ def test_copy_and_decrease_preserves_order_properties():
         order_type=SELL,
         quantity=10,
         agent_id=42,
+        day=0,
         time=17,
         asset_id=5,
         valid_until=100,
@@ -128,6 +129,7 @@ def test_large_sell_order_against_many_small_buy_orders(stock):
             order_type=BUY,
             quantity=1,
             agent_id=i,
+            day=stock.current_day,
             time=i,
             asset_id=stock.asset_id,
         )
@@ -142,6 +144,7 @@ def test_large_sell_order_against_many_small_buy_orders(stock):
         order_type=SELL,
         quantity=number_of_orders,
         agent_id=9999,
+        day=stock.current_day,
         time=number_of_orders + 1,
         asset_id=stock.asset_id,
     )
@@ -174,6 +177,7 @@ def test_large_sell_order_leaves_remaining_quantity(stock):
             order_type=BUY,
             quantity=1,
             agent_id=i,
+            day=stock.current_day,
             time=i,
             asset_id=stock.asset_id,
         )
@@ -184,6 +188,7 @@ def test_large_sell_order_leaves_remaining_quantity(stock):
         order_type=SELL,
         quantity=incoming_quantity,
         agent_id=9999,
+        day=stock.current_day,
         time=resting_quantity + 1,
         asset_id=stock.asset_id,
     )

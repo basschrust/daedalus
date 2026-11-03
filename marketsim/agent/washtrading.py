@@ -117,6 +117,7 @@ class WashTradingAgent(Agent):
                                         quantity=self.quantity,
                                         agent_id=self.agent_id,
                                         asset_id=asset_id,
+                                        day=self.current_day,
                                         time=current_time,
                                         order_type=1 if self.manipulation_side == "BUY" else -1,
                                     )

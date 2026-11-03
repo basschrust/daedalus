@@ -26,6 +26,7 @@ def make_order(market, tick=0):
         order_type=BUY,
         quantity=100,
         agent_id=38,
+        day=market.current_day,
         time=tick,
         asset_id=market.asset_id,
     )

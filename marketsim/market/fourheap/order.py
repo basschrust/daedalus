@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 from marketsim.utils.id_generator import id_generator
 
 if TYPE_CHECKING:
-    from marketsim.fourheap import Order
     from marketsim.market import Price
+    from marketsim.market.fourheap import Order
 
 
 def validate_price(price: Price) -> None:
@@ -21,6 +21,7 @@ class Order:
     order_type: int  # -1 for a sell order, +1 for a buy order
     quantity: int
     agent_id: int
+    day: int
     time: int
     order_id: int
     asset_id: int
@@ -36,10 +37,12 @@ class Order:
 
     def __init__(
         self,
+        *,
         price: Price,
         order_type: int,
         quantity: int,
         agent_id: int,
+        day: int,
         time: int,
         asset_id: int,
         parent_id: int | None = None,
@@ -51,6 +54,7 @@ class Order:
         self.order_type = order_type
         self.quantity = quantity
         self.agent_id = agent_id
+        self.day = day
         self.time = time
         self.asset_id = asset_id
         self.order_id = id_generator.next()
@@ -70,13 +74,13 @@ class Order:
             order_type=self.order_type,
             quantity=self.quantity - transact_quantity,
             agent_id=self.agent_id,
+            day=self.day,
             time=self.time,
             parent_id=self.order_id,
             asset_id=self.asset_id,
             valid_until=self.valid_until,
         )
         self.update_quantity_filled(self.quantity - transact_quantity)
-        # self.update_quantity_filled(transact_quantity)
         return new_order
 
     def __eq__(self, other: Order | None) -> bool:
@@ -100,6 +104,7 @@ class Order:
 @dataclass
 class MatchedOrder:
     price: Price
+    day: int
     time: int
     order: Order
     volume: int

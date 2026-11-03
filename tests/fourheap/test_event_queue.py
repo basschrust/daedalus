@@ -11,6 +11,7 @@ def test_event_queue_consumes_activities():
         order_type=BUY,
         quantity=100,
         agent_id=38,
+        day=0,
         time=10,
         asset_id=0,
     )

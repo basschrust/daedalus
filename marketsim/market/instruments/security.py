@@ -4,6 +4,7 @@ import math
 from abc import ABC
 from collections import defaultdict
 from datetime import date
+from decimal import Decimal
 from itertools import accumulate
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -27,8 +28,8 @@ if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
 
     from marketsim.agent import Agent
-    from marketsim.fourheap import MatchedOrder, Order
     from marketsim.market import Index
+    from marketsim.market.fourheap import MatchedOrder, Order
 
 
 class Security(ABC):
@@ -70,7 +71,7 @@ class Security(ABC):
         self.agents = {}
         self.name = name
 
-        self.logger = setup_market_logger(asset_id=self.asset_id, output_dir=output_dir)
+        self.logger = setup_market_logger(market=self, output_dir=output_dir)
 
         self.current_day = 0
         self.eod_status = "closed"  # open/closed  to make eod procedure idempotent
@@ -157,7 +158,9 @@ class Security(ABC):
     def step(self, current_time: int) -> list[MatchedOrder]:
         # step is operations happening during single time_tick
         # TODO Need to figure out how to handle ties for price and time - AK: maybe fractal time?
-        self.logger.info(f"Starting step for time tick: {str(current_time)}")
+        self.logger.info(
+            f"Starting step for time tick: {str(current_time)} (day: {str(self.current_day)})"
+        )
         if self.status != "active":
             self.logger.info(f"Security {self.name} is inactive!")
             return []
@@ -316,8 +319,8 @@ class Security(ABC):
             else:
                 self.trade_stats[key]["count_buy"] += 1
                 self.trade_stats[key]["volume_buy"] += matched_order.order.quantity
-                self.trade_stats[key]["cash_buy"] += (
-                    matched_order.order.quantity * matched_order.price
+                self.trade_stats[key]["cash_buy"] += matched_order.order.quantity * Decimal(
+                    matched_order.price
                 )
 
         elif matched_order.order.order_type == -1:
@@ -354,8 +357,8 @@ class Security(ABC):
             else:
                 self.trade_stats[key]["count_sell"] += 1
                 self.trade_stats[key]["volume_sell"] += matched_order.order.quantity
-                self.trade_stats[key]["cash_sell"] += (
-                    matched_order.order.quantity * matched_order.price
+                self.trade_stats[key]["cash_sell"] += matched_order.order.quantity * Decimal(
+                    matched_order.price
                 )
         else:
             raise ValueError(f"Unknown order type {matched_order.order.order_type}")
@@ -540,7 +543,7 @@ class Security(ABC):
 
         if self.status == "active":
             self.logger.info(
-                f"Starting Start-of-Day procedure for {self.name}, day: {self.current_day}"
+                f"\n\n\nStarting Start-of-Day procedure for {self.name}, day: {self.current_day}"
             )
             self.eod_status = "open"
 
@@ -749,7 +752,7 @@ class Security(ABC):
             if self.status != "active" and self.instrument_class == "stock":
                 # other instruments cleaned up in their subclasses.
                 self.cleanup()
-            self.logger.info(f"EoD procedure of day: {self.current_day - 1} completed.")
+            self.logger.info(f"EoD procedure of day: {self.current_day - 1} completed.\n\n")
         else:
             raise ValueError(f"Unknown eod status: {self.eod_status}")
 
