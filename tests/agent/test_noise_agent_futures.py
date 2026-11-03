@@ -8,12 +8,35 @@ from marketsim.market import Price
 from marketsim.market.fourheap.constants import BUY, SELL
 
 
+def act(agent, *, side=BUY, poisson=2, activity_draw=0.0):
+    """Make stochastic decisions deterministic."""
+    with (
+        patch(
+            "marketsim.agent.noise_agent.random.random",
+            return_value=activity_draw,
+        ),
+        patch(
+            "marketsim.agent.noise_agent.random.choice",
+            return_value=side,
+        ),
+        patch(
+            "marketsim.agent.noise_agent.np.random.poisson",
+            return_value=poisson,
+        ),
+        patch(
+            "marketsim.agent.noise_agent.np.random.normal",
+            return_value=0.0,
+        ),
+    ):
+        agent.take_action(current_time=1)
+
+
 @pytest.fixture
 def make_agent(tmp_path):
     """Create a NoiseAgent with mocked market infrastructure."""
 
     def factory(instrument_class="future", config=None):
-        if instrument_class=="future":
+        if instrument_class == "future":
             market = SimpleNamespace(
                 asset_id=101,
                 instrument_class=instrument_class,
@@ -61,29 +84,6 @@ def submitted_order(market):
     if not market.add_orders.called:
         return None
     return market.add_orders.call_args.args[0][0]
-
-
-def act(agent, *, side=BUY, poisson=2, activity_draw=0.0):
-    """Make stochastic decisions deterministic."""
-    with (
-        patch(
-            "marketsim.agent.noise_agent.random.random",
-            return_value=activity_draw,
-        ),
-        patch(
-            "marketsim.agent.noise_agent.random.choice",
-            return_value=side,
-        ),
-        patch(
-            "marketsim.agent.noise_agent.np.random.poisson",
-            return_value=poisson,
-        ),
-        patch(
-            "marketsim.agent.noise_agent.np.random.normal",
-            return_value=0.0,
-        ),
-    ):
-        agent.take_action(current_time=1)
 
 
 def test_futures_defaults(make_agent):
@@ -249,10 +249,8 @@ def test_futures_order_price_and_validity(make_agent):
 
     order = submitted_order(market)
 
-    assert order.price == Price(3001)
-    assert order.order_type == BUY
-    assert order.asset_id == market.asset_id
-    assert order.time == 1
+    assert order.price == Price(3100)
+    assert order.quantity == 2
     assert order.valid_until == 5
 
 

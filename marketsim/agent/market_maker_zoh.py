@@ -192,9 +192,7 @@ class MMZOHAgent(Agent):
                 if market.instrument_class == "future":
                     # Recalculate the theoretical futures price
                     # from the current underlying index.
-                    estimate = Price(
-                        market.underlying.calculate_value()
-                    )
+                    estimate = Price(market.underlying.calculate_value())
                     # Do not let stale order-book quotations
                     # override the theoretical anchor.
                     st = estimate + HALF * self.omega
