@@ -258,6 +258,22 @@ markets:
     multiplier: 20.0
     margin_rate: 0.1
 agents:
+  relative_momentum:
+    agent_class: RelativeMomentumAgent
+    instrument_classes:
+    - stock
+    number: 2
+    config:
+      lookback_sessions: 252
+      turnover_sessions: 30
+      min_median_turnover: 250000
+      portfolio_size: 10
+      rebalance_sessions: 5
+      aggression: 0.003
+      order_validity_ticks: 3
+      base_currency: PLN
+      initial_cash:
+        PLN: 10000000
   arbitrageurs:
     agent_class: IndexFuturesArbitrageAgent
     number: 5
@@ -402,7 +418,7 @@ agents:
 historical_prices:
   enabled: true
   path: market_data/wig20_auto.ohlcv.csv
-  lookback_sessions: 250
+  lookback_sessions: 252
   cutoff_date: '2026-11-03'
   allow_short_history:
   - WIG20

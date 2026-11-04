@@ -14,6 +14,7 @@ from marketsim.agent import (
     MomentumAgent,
     NoiseAgent,
     OptionMMZOHAgent,
+    RelativeMomentumAgent,
     SpoofingAgent,
     WashTradingAgent,
     ZIAgentNotInformed,
@@ -415,6 +416,16 @@ class Simulator:
             # momentum
             if agent_group["agent_class"] == "MomentumAgent":
                 agent = MomentumAgent(
+                    markets=markets,
+                    configuration=configuration,
+                    repository=self.repository,
+                    group=group_name,
+                    output_dir=self.output_dir,
+                )
+                self.add_agents([agent])
+
+            if agent_group["agent_class"] == "RelativeMomentumAgent":
+                agent = RelativeMomentumAgent(
                     markets=markets,
                     configuration=configuration,
                     repository=self.repository,

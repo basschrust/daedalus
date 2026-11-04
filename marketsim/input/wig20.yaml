@@ -4,7 +4,7 @@ days: 60
 sim_time: 50
 seed: 67
 
-lookback_sessions: 250
+lookback_sessions: 252
 
 agents_profile: gpw_50d.yaml
 
