@@ -1,11 +1,13 @@
 """Focused tests for agent history assembly and order sizing."""
 
+import math
 from datetime import date, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pandas as pd
+import pytest
 
 from marketsim.agent.relative_momentum_agent import RelativeMomentumAgent
 from marketsim.agent.strategies.relative_momentum import MomentumSettings
@@ -85,3 +87,59 @@ def test_different_currency_is_not_sized_as_base_currency():
     agent.markets = {1: market}
     agent.take_action(0)
     market.add_orders.assert_not_called()
+
+
+@pytest.mark.parametrize("best_ask", [float("inf"), float("-inf"), float("nan")])
+def test_rebalance_falls_back_to_last_price_for_invalid_ask(best_ask):
+    agent = _agent()
+    market = _market()
+    market.order_book.get_best_ask = lambda: best_ask
+    agent.markets = {1: market}
+
+    agent.take_action(0)
+
+    market.add_orders.assert_called_once()
+    order = market.add_orders.call_args.args[0][0]
+
+    assert math.isfinite(float(order.price))
+    assert float(order.price) == 12.0
+    assert order.quantity == 83
+
+
+def test_rebalance_uses_valid_best_ask():
+    agent = _agent()
+    market = _market()
+    market.order_book.get_best_ask = lambda: 12.50
+    agent.markets = {1: market}
+
+    agent.take_action(0)
+
+    order = market.add_orders.call_args.args[0][0]
+
+    assert float(order.price) == 12.50
+    assert order.quantity == 80
+
+
+def test_rebalance_falls_back_to_last_price_for_invalid_bid():
+    agent = _agent()
+    market = _market()
+    market.order_book.get_best_bid = lambda: float("-inf")
+    agent.position[1] = 100
+    agent.get_cash_balance.return_value = Decimal("0")
+    agent.markets = {1: market}
+
+    # No selected instruments => sell existing position.
+    from unittest.mock import patch
+
+    with patch(
+        "marketsim.agent.relative_momentum_agent.equal_weight_targets",
+        return_value={"ABC": 0.0},
+    ):
+        agent.take_action(0)
+
+    market.add_orders.assert_called_once()
+    order = market.add_orders.call_args.args[0][0]
+
+    assert math.isfinite(float(order.price))
+    assert float(order.price) == 12.0
+    assert order.quantity == 100

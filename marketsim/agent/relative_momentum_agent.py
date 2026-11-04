@@ -6,10 +6,10 @@ this first execution adapter supports cash equities in the agent's base currency
 
 from __future__ import annotations
 
+import math
 from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
-import math
 
 import pandas as pd
 
@@ -165,9 +165,7 @@ class RelativeMomentumAgent(Agent):
                 reference = last_price
             aggression = float(self.configuration["aggression"])
 
-            limit_value = reference * (
-                1 + aggression if side == BUY else 1 - aggression
-            )
+            limit_value = reference * (1 + aggression if side == BUY else 1 - aggression)
             if not math.isfinite(limit_value) or limit_value <= 0:
                 self.logger.warning(
                     f"Relative momentum: invalid order limit for {market.symbol}: "
