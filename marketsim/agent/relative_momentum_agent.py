@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
+import math
 
 import pandas as pd
 
@@ -152,11 +153,29 @@ class RelativeMomentumAgent(Agent):
                 if side == BUY
                 else market.order_book.get_best_bid()
             )
-            reference = float(opposing) if opposing is not None else float(market.last_traded_price)
+            last_price = float(market.last_traded_price)
+            if not math.isfinite(last_price) or last_price <= 0:
+                self.logger.warning(
+                    f"Relative momentum: invalid last price for {market.symbol}: {last_price}"
+                )
+                continue
+            reference = float(opposing) if opposing is not None else last_price
+            # An empty order book can return +inf or -inf.
+            if not math.isfinite(reference) or reference <= 0:
+                reference = last_price
             aggression = float(self.configuration["aggression"])
-            limit = Price(
-                max(0.01, reference * (1 + aggression if side == BUY else 1 - aggression))
+
+            limit_value = reference * (
+                1 + aggression if side == BUY else 1 - aggression
             )
+            if not math.isfinite(limit_value) or limit_value <= 0:
+                self.logger.warning(
+                    f"Relative momentum: invalid order limit for {market.symbol}: "
+                    f"reference={reference}, aggression={aggression}"
+                )
+                continue
+            limit = Price(max(0.01, limit_value))
+
             if side == BUY:
                 quantity = min(delta, int(cash / Decimal(str(limit))))
                 cash -= Decimal(quantity) * Decimal(str(limit))
