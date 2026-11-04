@@ -694,6 +694,13 @@ class Simulator:
     def run(self) -> None:
         terminal.write("\nStarting simulation...\n")
 
+        if self.simulation_dates:
+            simulation_start = self.simulation_dates[0]
+            cutoff_date = simulation_start - pd.Timedelta(days=1)
+
+            terminal.write(f"Historical cut-off date: {cutoff_date:%Y-%m-%d}\n")
+            terminal.write(f"Simulation start date: {simulation_start:%Y-%m-%d}\n")
+
         for day in range(self.days):
             terminal.write(f"\nStarting day {str(day + 1)} out of {self.days}\n")
             self.sod(day=day)  # start of day
