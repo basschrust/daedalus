@@ -427,10 +427,14 @@ class Simulator:
             if agent_group["agent_class"] == "RelativeMomentumAgent":
                 agent = RelativeMomentumAgent(
                     markets=markets,
-                    configuration=configuration,
+                    configuration={
+                        **configuration,
+                        "rebalance_offset": i,
+                    },
                     repository=self.repository,
                     group=group_name,
                     output_dir=self.output_dir,
+                    fx_rate_provider=self.fx_rate_provider,
                 )
                 self.add_agents([agent])
 

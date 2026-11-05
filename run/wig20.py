@@ -5,6 +5,7 @@ from pathlib import Path
 
 import yaml
 from dotenv import load_dotenv
+from snowflake.connector.errors import DatabaseError, OperationalError
 
 from marketsim.input.config import (
     create_run_directory,
@@ -35,8 +36,16 @@ def main():
     with config_path.open(encoding="utf-8") as stream:
         settings = yaml.safe_load(stream)
 
-    connection = connect()
-
+    try:
+        connection = connect()
+    except (DatabaseError, OperationalError) as exc:
+        print(
+            "\nERROR: Cannot connect to Snowflake.\n"
+            "The server may be unreachable, or the network/DNS "
+            "configuration may be incorrect.\n"
+            f"Details: {exc}\n"
+        )
+        raise SystemExit(1) from None
     try:
         path, cutoff, index_level = prepare(connection, settings, root)
     finally:

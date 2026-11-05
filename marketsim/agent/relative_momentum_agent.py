@@ -40,7 +40,8 @@ class RelativeMomentumAgent(Agent):
             "turnover_sessions": 30,
             "min_median_turnover": 250_000.0,
             "portfolio_size": 10,
-            "rebalance_sessions": 21,
+            "rebalance_sessions": 20,
+            "rebalance_offset": 0,
             "aggression": 0.003,
             "order_validity_ticks": 3,
             **(configuration or {}),
@@ -62,6 +63,9 @@ class RelativeMomentumAgent(Agent):
         self.rebalance_sessions = int(config["rebalance_sessions"])
         if self.rebalance_sessions < 1:
             raise ValueError("rebalance_sessions must be positive")
+        self.rebalance_offset = int(config["rebalance_offset"])
+        if not 0 <= self.rebalance_offset < self.rebalance_sessions:
+            raise ValueError("rebalance_offset must be between 0 and rebalance_sessions - 1")
         self._simulated_bars: dict[int, list[dict]] = {}
         self._last_rebalance_day: int | None = None
 
@@ -116,7 +120,9 @@ class RelativeMomentumAgent(Agent):
         return histories, symbols, as_of or date.min
 
     def take_action(self, current_time: int) -> None:
-        if current_time != 0 or self.current_day % self.rebalance_sessions:
+        if current_time != 0:
+            return
+        if (self.current_day - self.rebalance_offset) % self.rebalance_sessions != 0:
             return
         if self._last_rebalance_day == self.current_day:
             return

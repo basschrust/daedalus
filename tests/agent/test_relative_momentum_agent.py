@@ -143,3 +143,21 @@ def test_rebalance_falls_back_to_last_price_for_invalid_bid():
     assert math.isfinite(float(order.price))
     assert float(order.price) == 12.0
     assert order.quantity == 100
+
+
+@pytest.mark.parametrize("day", range(60))
+def test_exactly_one_agent_rebalances_each_day(day):
+    active_offsets = [offset for offset in range(20) if (day - offset) % 20 == 0]
+
+    assert active_offsets == [day % 20]
+
+
+@pytest.mark.parametrize("offset", range(20))
+def test_agent_rebalances_every_twenty_sessions(offset):
+    scheduled_days = [day for day in range(60) if (day - offset) % 20 == 0]
+
+    assert scheduled_days == [
+        offset,
+        offset + 20,
+        offset + 40,
+    ]
