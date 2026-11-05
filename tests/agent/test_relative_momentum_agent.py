@@ -27,6 +27,8 @@ def _agent():
     agent._last_rebalance_day = None
     agent.position = {1: 0}
     agent.get_cash_balance = MagicMock(return_value=Decimal("1000"))
+    agent.rebalance_sessions = 1
+    agent.rebalance_offset = 0
     return agent
 
 
