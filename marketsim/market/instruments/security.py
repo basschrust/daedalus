@@ -274,7 +274,9 @@ class Security(ABC):
 
         # record for plots and summary:
         current_time = matched_order.time
-        self.record_volume_and_price(matched_order=matched_order)
+        if matched_order.order.order_type == 1:
+            # to avoid double-counted volume
+            self.record_volume_and_price(matched_order=matched_order)
 
         # record for each agent:
         agent_id = matched_order.order.agent_id

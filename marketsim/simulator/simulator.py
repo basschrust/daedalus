@@ -21,6 +21,7 @@ from marketsim.agent import (
 )
 from marketsim.agent.regime_trader import RegimeTraderAgent
 from marketsim.agent.washtrading import WashTradingPool
+from marketsim.analysis.report import MarketRealismReport
 from marketsim.database.repositories.factory import create_repository
 from marketsim.loggers.basic import terminal
 from marketsim.market import Future, FXRateProvider, Index, Option, Price, Security, Stock
@@ -50,6 +51,7 @@ class Simulator:
         historical_ohlcv_by_symbol: dict[str, pd.DataFrame] | None = None,
         simulation_dates: list[date] | None = None,
         plot_group_flows_enabled: bool = False,
+        market_realism_report: MarketRealismReport | None = None,
     ):
         self.logger = logger.bind()
         self.logger.info("Initializing simulation with parameters in market_structure.yaml ...")
@@ -109,6 +111,7 @@ class Simulator:
             market_sigma=0.55,
             stock_sigma=0.30,
         )
+        self.market_realism_report = market_realism_report
 
         self.fx_rate_provider = FXRateProvider()
         for day, rates in (fx_rates or {}).items():
@@ -726,6 +729,8 @@ class Simulator:
                 self.show_progress_bar(step)
 
             self.eod(day=day)
+            if self.market_realism_report is not None:
+                self.market_realism_report.collect_day(self, day)
 
         terminal.write("\nSimulation complete.")
         terminal.write("\nPreparing summary...\n")
