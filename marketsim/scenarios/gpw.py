@@ -9,14 +9,14 @@ import pandas as pd
 import yaml
 
 from marketsim.market.historical_prices import load_simulation_dates
-from marketsim.scenarios.gpw_universe import discover_derivatives
-from marketsim.scenarios.gpw_universe import discover_stocks
+from marketsim.scenarios.gpw_universe import discover_derivatives, discover_stocks
 from marketsim.scenarios.wig20 import (
+    candidate_dates,
+    constituents,
     futures_expiration_day,
     query,
     to_price,
 )
-from marketsim.scenarios.wig20 import candidate_dates
 
 OHLCV = ("open", "high", "low", "close", "volume")
 
@@ -463,7 +463,7 @@ def prepare(conn, settings: dict, root: Path):
     # Keep a report of stocks that cannot be included.
     rejected = []
 
-    for symbol in members.symbol:
+    for symbol in stocks.symbol:
         frame = stock_history.get(symbol)
 
         if frame is None or len(frame) < min_history:
@@ -488,7 +488,8 @@ def prepare(conn, settings: dict, root: Path):
     if not stock_history:
         raise ValueError("No eligible WIG stocks")
 
-    index_prices = load_index_history(conn, "WIG", cutoff, lookback)
+    wig20_members = constituents(conn, cutoff)
+    wig20_history = load_index_history(conn, "WIG20", cutoff, lookback)
 
     output = root / "marketsim" / "input"
     data_dir = output / "market_data"
@@ -507,9 +508,20 @@ def prepare(conn, settings: dict, root: Path):
     markets = build_stock_markets(stock_history)
 
     # Build WIG only if all its constituents are present.
-    if len(stock_history) == len(members):
-        markets["wig"] = build_index_market("WIG", members, stock_history, index_prices)
+    if len(stock_history) == len(stocks):
+        markets["wig"] = build_index_market("WIG", stocks, stock_history, markets)
     else:
+        missing = set(wig20_members.symbol) - set(stock_history)
+
+        if missing:
+            raise ValueError(f"Cannot construct WIG20. Missing constituents: {sorted(missing)}")
+
+        markets["wig20"] = build_index_market(
+            "WIG20",
+            wig20_members,
+            stock_history,
+            wig20_history,
+        )
         rejected.append(
             {
                 "symbol": "WIG",
@@ -547,8 +559,8 @@ def prepare(conn, settings: dict, root: Path):
         data["symbol"] = symbol
         frames.append(data[["symbol", "date", *OHLCV]])
 
-    index_data = index_prices.copy()
-    index_data["symbol"] = "WIG"
+    index_data = wig20_history.copy()
+    index_data["symbol"] = "WIG20"
     frames.append(index_data[["symbol", "date", *OHLCV]])
 
     # Historical derivative prices are loaded separately,
