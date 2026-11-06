@@ -41,7 +41,9 @@ def make_agent(tmp_path):
                 asset_id=101,
                 instrument_class=instrument_class,
                 underlying=SimpleNamespace(
+                    instrument_class="index",
                     calculate_value=MagicMock(return_value=Price(3100)),
+                    last_traded_price=Price(3100),
                 ),
                 last_traded_price=Price(3000),
                 order_book=SimpleNamespace(

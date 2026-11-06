@@ -138,7 +138,7 @@ class Future(Security):
                         "volume": self.traded_prices_df["volume"].sum(),
                         "asset_id": self.asset_id,
                         "day": self.current_day - 1,
-                        "theoretical": self.underlying.calculate_value(),
+                        "theoretical": self.calculate_theoretical_value(),
                     }
                 ]
             )
@@ -200,3 +200,10 @@ class Future(Security):
             return pd.Series(dtype=float)
 
         return pd.concat(parts).sort_index()
+
+    def calculate_theoretical_value(self) -> Price:
+        """Simplified futures fair value, excluding carry and dividends."""
+        if self.underlying.instrument_class == "index":
+            return Price(self.underlying.calculate_value())
+
+        return Price(self.underlying.last_traded_price)

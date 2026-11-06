@@ -528,9 +528,7 @@ class Simulator:
             for market in markets:
                 history = getattr(market, "historical_ohlcv", None)
                 if history is not None and not history.empty:
-                    daily_volume = pd.to_numeric(
-                        history["volume"], errors="coerce"
-                    ).mean()
+                    daily_volume = pd.to_numeric(history["volume"], errors="coerce").mean()
                     if pd.isna(daily_volume) or daily_volume <= 0:
                         continue
                 eligible.append(market)

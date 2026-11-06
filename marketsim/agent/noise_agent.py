@@ -161,7 +161,7 @@ class NoiseAgent(Agent):
                 underlying = market.underlying
                 if underlying.instrument_class == "index":
                     # Recalculate index from its constituents.
-                    reference = float(underlying.calculate_value())
+                    reference = float(market.calculate_theoretical_value())
                 else:
                     # Single-stock futures.
                     reference = float(underlying.last_traded_price)
