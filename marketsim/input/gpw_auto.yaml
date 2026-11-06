@@ -1,0 +1,4952 @@
+seed: 67
+days: 50
+sim_time: 10
+lob_plot_interval: 10000
+markets:
+  06n.wa:
+    name: 06N.WA
+    short_name: 06N.WA
+    symbol: 06N.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.25'
+    currency: PLN
+  08n.wa:
+    name: 08N.WA
+    short_name: 08N.WA
+    symbol: 08N.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.61'
+    currency: PLN
+  11b.wa:
+    name: 11B.WA
+    short_name: 11B.WA
+    symbol: 11B.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '113.70'
+    currency: PLN
+  1at.wa:
+    name: 1AT.WA
+    short_name: 1AT.WA
+    symbol: 1AT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '60.60'
+    currency: PLN
+  3rg.wa:
+    name: 3RG.WA
+    short_name: 3RG.WA
+    symbol: 3RG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.66'
+    currency: PLN
+  4ms.wa:
+    name: 4MS.WA
+    short_name: 4MS.WA
+    symbol: 4MS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '6.48'
+    currency: PLN
+  aat.wa:
+    name: AAT.WA
+    short_name: AAT.WA
+    symbol: AAT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.64'
+    currency: PLN
+  abe.wa:
+    name: ABE.WA
+    short_name: ABE.WA
+    symbol: ABE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '137.80'
+    currency: PLN
+  abs.wa:
+    name: ABS.WA
+    short_name: ABS.WA
+    symbol: ABS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '87.00'
+    currency: PLN
+  acg.wa:
+    name: ACG.WA
+    short_name: ACG.WA
+    symbol: ACG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '20.90'
+    currency: PLN
+  acp.wa:
+    name: ACP.WA
+    short_name: ACP.WA
+    symbol: ACP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '231.00'
+    currency: PLN
+  act.wa:
+    name: ACT.WA
+    short_name: ACT.WA
+    symbol: ACT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '51.00'
+    currency: PLN
+  adv.wa:
+    name: ADV.WA
+    short_name: ADV.WA
+    symbol: ADV.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.57'
+    currency: PLN
+  adx.wa:
+    name: ADX.WA
+    short_name: ADX.WA
+    symbol: ADX.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.13'
+    currency: PLN
+  ago.wa:
+    name: AGO.WA
+    short_name: AGO.WA
+    symbol: AGO.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '12.90'
+    currency: PLN
+  agt.wa:
+    name: AGT.WA
+    short_name: AGT.WA
+    symbol: AGT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '3.67'
+    currency: PLN
+  ale.wa:
+    name: ALE.WA
+    short_name: ALE.WA
+    symbol: ALE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '59.46'
+    currency: PLN
+  alg.wa:
+    name: ALG.WA
+    short_name: ALG.WA
+    symbol: ALG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.70'
+    currency: PLN
+  ali.wa:
+    name: ALI.WA
+    short_name: ALI.WA
+    symbol: ALI.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '3.70'
+    currency: PLN
+  all.wa:
+    name: ALL.WA
+    short_name: ALL.WA
+    symbol: ALL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '16.30'
+    currency: PLN
+  alr.wa:
+    name: ALR.WA
+    short_name: ALR.WA
+    symbol: ALR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '137.45'
+    currency: PLN
+  amb.wa:
+    name: AMB.WA
+    short_name: AMB.WA
+    symbol: AMB.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '18.58'
+    currency: PLN
+  amc.wa:
+    name: AMC.WA
+    short_name: AMC.WA
+    symbol: AMC.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '44.20'
+    currency: PLN
+  anr.wa:
+    name: ANR.WA
+    short_name: ANR.WA
+    symbol: ANR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '23.25'
+    currency: PLN
+  ape.wa:
+    name: APE.WA
+    short_name: APE.WA
+    symbol: APE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '5.16'
+    currency: PLN
+  apl.wa:
+    name: APL.WA
+    short_name: APL.WA
+    symbol: APL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.09'
+    currency: PLN
+  apn.wa:
+    name: APN.WA
+    short_name: APN.WA
+    symbol: APN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '17.80'
+    currency: PLN
+  apr.wa:
+    name: APR.WA
+    short_name: APR.WA
+    symbol: APR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '27.90'
+    currency: PLN
+  apt.wa:
+    name: APT.WA
+    short_name: APT.WA
+    symbol: APT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '25.00'
+    currency: PLN
+  arh.wa:
+    name: ARH.WA
+    short_name: ARH.WA
+    symbol: ARH.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '52.00'
+    currency: PLN
+  arl.wa:
+    name: ARL.WA
+    short_name: ARL.WA
+    symbol: ARL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '22.95'
+    currency: PLN
+  art.wa:
+    name: ART.WA
+    short_name: ART.WA
+    symbol: ART.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '19.00'
+    currency: PLN
+  asb.wa:
+    name: ASB.WA
+    short_name: ASB.WA
+    symbol: ASB.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '141.60'
+    currency: PLN
+  ase.wa:
+    name: ASE.WA
+    short_name: ASE.WA
+    symbol: ASE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '72.00'
+    currency: PLN
+  asm.wa:
+    name: ASM.WA
+    short_name: ASM.WA
+    symbol: ASM.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.14'
+    currency: PLN
+  ast.wa:
+    name: AST.WA
+    short_name: AST.WA
+    symbol: AST.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '30.10'
+    currency: PLN
+  atc.wa:
+    name: ATC.WA
+    short_name: ATC.WA
+    symbol: ATC.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '5.16'
+    currency: PLN
+  atd.wa:
+    name: ATD.WA
+    short_name: ATD.WA
+    symbol: ATD.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '4.26'
+    currency: PLN
+  atg.wa:
+    name: ATG.WA
+    short_name: ATG.WA
+    symbol: ATG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '3.54'
+    currency: PLN
+  atp.wa:
+    name: ATP.WA
+    short_name: ATP.WA
+    symbol: ATP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '21.00'
+    currency: PLN
+  atr.wa:
+    name: ATR.WA
+    short_name: ATR.WA
+    symbol: ATR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '52.00'
+    currency: PLN
+  ats.wa:
+    name: ATS.WA
+    short_name: ATS.WA
+    symbol: ATS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.19'
+    currency: PLN
+  att.wa:
+    name: ATT.WA
+    short_name: ATT.WA
+    symbol: ATT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '16.88'
+    currency: PLN
+  awm.wa:
+    name: AWM.WA
+    short_name: AWM.WA
+    symbol: AWM.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.24'
+    currency: PLN
+  bbd.wa:
+    name: BBD.WA
+    short_name: BBD.WA
+    symbol: BBD.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '5.38'
+    currency: PLN
+  bbt.wa:
+    name: BBT.WA
+    short_name: BBT.WA
+    symbol: BBT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '5.28'
+    currency: PLN
+  bcm.wa:
+    name: BCM.WA
+    short_name: BCM.WA
+    symbol: BCM.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '5.10'
+    currency: PLN
+  bcs.wa:
+    name: BCS.WA
+    short_name: BCS.WA
+    symbol: BCS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.97'
+    currency: PLN
+  bcx.wa:
+    name: BCX.WA
+    short_name: BCX.WA
+    symbol: BCX.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '68.00'
+    currency: PLN
+  bdf.wa:
+    name: BDF.WA
+    short_name: BDF.WA
+    symbol: BDF.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '5.10'
+    currency: PLN
+  bdx.wa:
+    name: BDX.WA
+    short_name: BDX.WA
+    symbol: BDX.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '756.20'
+    currency: PLN
+  bft.wa:
+    name: BFT.WA
+    short_name: BFT.WA
+    symbol: BFT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '6170.00'
+    currency: PLN
+  bhw.wa:
+    name: BHW.WA
+    short_name: BHW.WA
+    symbol: BHW.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '122.80'
+    currency: PLN
+  bio.wa:
+    name: BIO.WA
+    short_name: BIO.WA
+    symbol: BIO.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '3.51'
+    currency: PLN
+  bip.wa:
+    name: BIP.WA
+    short_name: BIP.WA
+    symbol: BIP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '19.05'
+    currency: PLN
+  blo.wa:
+    name: BLO.WA
+    short_name: BLO.WA
+    symbol: BLO.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '21.35'
+    currency: PLN
+  bmc.wa:
+    name: BMC.WA
+    short_name: BMC.WA
+    symbol: BMC.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '10.77'
+    currency: PLN
+  bmx.wa:
+    name: BMX.WA
+    short_name: BMX.WA
+    symbol: BMX.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '8.85'
+    currency: PLN
+  bnp.wa:
+    name: BNP.WA
+    short_name: BNP.WA
+    symbol: BNP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '176.00'
+    currency: PLN
+  bos.wa:
+    name: BOS.WA
+    short_name: BOS.WA
+    symbol: BOS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '10.18'
+    currency: PLN
+  bow.wa:
+    name: BOW.WA
+    short_name: BOW.WA
+    symbol: BOW.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '6.86'
+    currency: PLN
+  brs.wa:
+    name: BRS.WA
+    short_name: BRS.WA
+    symbol: BRS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '4.42'
+    currency: PLN
+  bst.wa:
+    name: BST.WA
+    short_name: BST.WA
+    symbol: BST.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '29.00'
+    currency: PLN
+  cap.wa:
+    name: CAP.WA
+    short_name: CAP.WA
+    symbol: CAP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.44'
+    currency: PLN
+  car.wa:
+    name: CAR.WA
+    short_name: CAR.WA
+    symbol: CAR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1046.00'
+    currency: PLN
+  cav.wa:
+    name: CAV.WA
+    short_name: CAV.WA
+    symbol: CAV.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '12.60'
+    currency: PLN
+  cbf.wa:
+    name: CBF.WA
+    short_name: CBF.WA
+    symbol: CBF.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '190.00'
+    currency: PLN
+  cce.wa:
+    name: CCE.WA
+    short_name: CCE.WA
+    symbol: CCE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.27'
+    currency: PLN
+  cdl.wa:
+    name: CDL.WA
+    short_name: CDL.WA
+    symbol: CDL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '11.60'
+    currency: PLN
+  cdr.wa:
+    name: CDR.WA
+    short_name: CDR.WA
+    symbol: CDR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '262.60'
+    currency: PLN
+  cez.wa:
+    name: CEZ.WA
+    short_name: CEZ.WA
+    symbol: CEZ.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '245.00'
+    currency: PLN
+  cfi.wa:
+    name: CFI.WA
+    short_name: CFI.WA
+    symbol: CFI.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.14'
+    currency: PLN
+  cig.wa:
+    name: CIG.WA
+    short_name: CIG.WA
+    symbol: CIG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.39'
+    currency: PLN
+  clc.wa:
+    name: CLC.WA
+    short_name: CLC.WA
+    symbol: CLC.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.74'
+    currency: PLN
+  cld.wa:
+    name: CLD.WA
+    short_name: CLD.WA
+    symbol: CLD.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '101.00'
+    currency: PLN
+  cle.wa:
+    name: CLE.WA
+    short_name: CLE.WA
+    symbol: CLE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.69'
+    currency: PLN
+  cln.wa:
+    name: CLN.WA
+    short_name: CLN.WA
+    symbol: CLN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '16.66'
+    currency: PLN
+  cmp.wa:
+    name: CMP.WA
+    short_name: CMP.WA
+    symbol: CMP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '96.00'
+    currency: PLN
+  cog.wa:
+    name: COG.WA
+    short_name: COG.WA
+    symbol: COG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '4.69'
+    currency: PLN
+  cpd.wa:
+    name: CPD.WA
+    short_name: CPD.WA
+    symbol: CPD.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.68'
+    currency: PLN
+  cpi.wa:
+    name: CPI.WA
+    short_name: CPI.WA
+    symbol: CPI.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '68.80'
+    currency: PLN
+  cpl.wa:
+    name: CPL.WA
+    short_name: CPL.WA
+    symbol: CPL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '10.50'
+    currency: PLN
+  cpr.wa:
+    name: CPR.WA
+    short_name: CPR.WA
+    symbol: CPR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.16'
+    currency: PLN
+  cps.wa:
+    name: CPS.WA
+    short_name: CPS.WA
+    symbol: CPS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '12.55'
+    currency: PLN
+  cri.wa:
+    name: CRI.WA
+    short_name: CRI.WA
+    symbol: CRI.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '776.00'
+    currency: PLN
+  crj.wa:
+    name: CRJ.WA
+    short_name: CRJ.WA
+    symbol: CRJ.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '342.00'
+    currency: PLN
+  crm.wa:
+    name: CRM.WA
+    short_name: CRM.WA
+    symbol: CRM.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.48'
+    currency: PLN
+  crq.wa:
+    name: CRQ.WA
+    short_name: CRQ.WA
+    symbol: CRQ.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '195.50'
+    currency: PLN
+  csr.wa:
+    name: CSR.WA
+    short_name: CSR.WA
+    symbol: CSR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '9.00'
+    currency: PLN
+  cts.wa:
+    name: CTS.WA
+    short_name: CTS.WA
+    symbol: CTS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '6.25'
+    currency: PLN
+  ctx.wa:
+    name: CTX.WA
+    short_name: CTX.WA
+    symbol: CTX.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '55.00'
+    currency: PLN
+  czt.wa:
+    name: CZT.WA
+    short_name: CZT.WA
+    symbol: CZT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.55'
+    currency: PLN
+  dad.wa:
+    name: DAD.WA
+    short_name: DAD.WA
+    symbol: DAD.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '88.20'
+    currency: PLN
+  dat.wa:
+    name: DAT.WA
+    short_name: DAT.WA
+    symbol: DAT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '75.00'
+    currency: PLN
+  dbc.wa:
+    name: DBC.WA
+    short_name: DBC.WA
+    symbol: DBC.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '87.00'
+    currency: PLN
+  dbe.wa:
+    name: DBE.WA
+    short_name: DBE.WA
+    symbol: DBE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '6.52'
+    currency: PLN
+  dcr.wa:
+    name: DCR.WA
+    short_name: DCR.WA
+    symbol: DCR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '75.70'
+    currency: PLN
+  dek.wa:
+    name: DEK.WA
+    short_name: DEK.WA
+    symbol: DEK.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '56.40'
+    currency: PLN
+  del.wa:
+    name: DEL.WA
+    short_name: DEL.WA
+    symbol: DEL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '5.94'
+    currency: PLN
+  dga.wa:
+    name: DGA.WA
+    short_name: DGA.WA
+    symbol: DGA.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '19.75'
+    currency: PLN
+  dge.wa:
+    name: DGE.WA
+    short_name: DGE.WA
+    symbol: DGE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '19.60'
+    currency: PLN
+  dia.wa:
+    name: DIA.WA
+    short_name: DIA.WA
+    symbol: DIA.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '150.00'
+    currency: PLN
+  dig.wa:
+    name: DIG.WA
+    short_name: DIG.WA
+    symbol: DIG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '280.00'
+    currency: PLN
+  dmg.wa:
+    name: DMG.WA
+    short_name: DMG.WA
+    symbol: DMG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.84'
+    currency: PLN
+  dnp.wa:
+    name: DNP.WA
+    short_name: DNP.WA
+    symbol: DNP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '39.85'
+    currency: PLN
+  dom.wa:
+    name: DOM.WA
+    short_name: DOM.WA
+    symbol: DOM.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '242.00'
+    currency: PLN
+  dtr.wa:
+    name: DTR.WA
+    short_name: DTR.WA
+    symbol: DTR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '7.45'
+    currency: PLN
+  dvl.wa:
+    name: DVL.WA
+    short_name: DVL.WA
+    symbol: DVL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '8.11'
+    currency: PLN
+  eah.wa:
+    name: EAH.WA
+    short_name: EAH.WA
+    symbol: EAH.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '30.60'
+    currency: PLN
+  eat.wa:
+    name: EAT.WA
+    short_name: EAT.WA
+    symbol: EAT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '9.59'
+    currency: PLN
+  ebp.wa:
+    name: EBP.WA
+    short_name: EBP.WA
+    symbol: EBP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '786.40'
+    currency: PLN
+  ecb.wa:
+    name: ECB.WA
+    short_name: ECB.WA
+    symbol: ECB.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '19.24'
+    currency: PLN
+  ech.wa:
+    name: ECH.WA
+    short_name: ECH.WA
+    symbol: ECH.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '5.41'
+    currency: PLN
+  edi.wa:
+    name: EDI.WA
+    short_name: EDI.WA
+    symbol: EDI.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '7.32'
+    currency: PLN
+  efk.wa:
+    name: EFK.WA
+    short_name: EFK.WA
+    symbol: EFK.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '6.60'
+    currency: PLN
+  ehg.wa:
+    name: EHG.WA
+    short_name: EHG.WA
+    symbol: EHG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '14.80'
+    currency: PLN
+  ekp.wa:
+    name: EKP.WA
+    short_name: EKP.WA
+    symbol: EKP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.20'
+    currency: PLN
+  elt.wa:
+    name: ELT.WA
+    short_name: ELT.WA
+    symbol: ELT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '59.00'
+    currency: PLN
+  ena.wa:
+    name: ENA.WA
+    short_name: ENA.WA
+    symbol: ENA.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '21.16'
+    currency: PLN
+  ene.wa:
+    name: ENE.WA
+    short_name: ENE.WA
+    symbol: ENE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '19.60'
+    currency: PLN
+  eng.wa:
+    name: ENG.WA
+    short_name: ENG.WA
+    symbol: ENG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '27.45'
+    currency: PLN
+  eni.wa:
+    name: ENI.WA
+    short_name: ENI.WA
+    symbol: ENI.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.56'
+    currency: PLN
+  enp.wa:
+    name: ENP.WA
+    short_name: ENP.WA
+    symbol: ENP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.68'
+    currency: PLN
+  ent.wa:
+    name: ENT.WA
+    short_name: ENT.WA
+    symbol: ENT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '49.00'
+    currency: PLN
+  equ.wa:
+    name: EQU.WA
+    short_name: EQU.WA
+    symbol: EQU.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.45'
+    currency: PLN
+  erb.wa:
+    name: ERB.WA
+    short_name: ERB.WA
+    symbol: ERB.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '24.20'
+    currency: PLN
+  erg.wa:
+    name: ERG.WA
+    short_name: ERG.WA
+    symbol: ERG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '48.00'
+    currency: PLN
+  est.wa:
+    name: EST.WA
+    short_name: EST.WA
+    symbol: EST.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.24'
+    currency: PLN
+  etl.wa:
+    name: ETL.WA
+    short_name: ETL.WA
+    symbol: ETL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '30.30'
+    currency: PLN
+  euc.wa:
+    name: EUC.WA
+    short_name: EUC.WA
+    symbol: EUC.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.51'
+    currency: PLN
+  eur.wa:
+    name: EUR.WA
+    short_name: EUR.WA
+    symbol: EUR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '4.84'
+    currency: PLN
+  fab.wa:
+    name: FAB.WA
+    short_name: FAB.WA
+    symbol: FAB.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '26.70'
+    currency: PLN
+  fee.wa:
+    name: FEE.WA
+    short_name: FEE.WA
+    symbol: FEE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '15.40'
+    currency: PLN
+  fhb.wa:
+    name: FHB.WA
+    short_name: FHB.WA
+    symbol: FHB.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.18'
+    currency: PLN
+  fmg.wa:
+    name: FMG.WA
+    short_name: FMG.WA
+    symbol: FMG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '45.80'
+    currency: PLN
+  fon.wa:
+    name: FON.WA
+    short_name: FON.WA
+    symbol: FON.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.61'
+    currency: PLN
+  fro.wa:
+    name: FRO.WA
+    short_name: FRO.WA
+    symbol: FRO.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '28.20'
+    currency: PLN
+  fsg.wa:
+    name: FSG.WA
+    short_name: FSG.WA
+    symbol: FSG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '14.00'
+    currency: PLN
+  fte.wa:
+    name: FTE.WA
+    short_name: FTE.WA
+    symbol: FTE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '13.05'
+    currency: PLN
+  gif.wa:
+    name: GIF.WA
+    short_name: GIF.WA
+    symbol: GIF.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.78'
+    currency: PLN
+  gki.wa:
+    name: GKI.WA
+    short_name: GKI.WA
+    symbol: GKI.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '4.35'
+    currency: PLN
+  gmt.wa:
+    name: GMT.WA
+    short_name: GMT.WA
+    symbol: GMT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.50'
+    currency: PLN
+  gns.wa:
+    name: GNS.WA
+    short_name: GNS.WA
+    symbol: GNS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '14.50'
+    currency: PLN
+  gob.wa:
+    name: GOB.WA
+    short_name: GOB.WA
+    symbol: GOB.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '19.30'
+    currency: PLN
+  gop.wa:
+    name: GOP.WA
+    short_name: GOP.WA
+    symbol: GOP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '11.55'
+    currency: PLN
+  gpp.wa:
+    name: GPP.WA
+    short_name: GPP.WA
+    symbol: GPP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '52.50'
+    currency: PLN
+  gpw.wa:
+    name: GPW.WA
+    short_name: GPW.WA
+    symbol: GPW.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '97.00'
+    currency: PLN
+  grn.wa:
+    name: GRN.WA
+    short_name: GRN.WA
+    symbol: GRN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '15.00'
+    currency: PLN
+  grx.wa:
+    name: GRX.WA
+    short_name: GRX.WA
+    symbol: GRX.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.40'
+    currency: PLN
+  gtc.wa:
+    name: GTC.WA
+    short_name: GTC.WA
+    symbol: GTC.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.30'
+    currency: PLN
+  gtn.wa:
+    name: GTN.WA
+    short_name: GTN.WA
+    symbol: GTN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.28'
+    currency: PLN
+  gvt.wa:
+    name: GVT.WA
+    short_name: GVT.WA
+    symbol: GVT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.14'
+    currency: PLN
+  hdr.wa:
+    name: HDR.WA
+    short_name: HDR.WA
+    symbol: HDR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '7.36'
+    currency: PLN
+  hel.wa:
+    name: HEL.WA
+    short_name: HEL.WA
+    symbol: HEL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '44.30'
+    currency: PLN
+  hrp.wa:
+    name: HRP.WA
+    short_name: HRP.WA
+    symbol: HRP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '5.30'
+    currency: PLN
+  hrs.wa:
+    name: HRS.WA
+    short_name: HRS.WA
+    symbol: HRS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.69'
+    currency: PLN
+  hug.wa:
+    name: HUG.WA
+    short_name: HUG.WA
+    symbol: HUG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '24.75'
+    currency: PLN
+  ibs.wa:
+    name: IBS.WA
+    short_name: IBS.WA
+    symbol: IBS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '61.60'
+    currency: PLN
+  ice.wa:
+    name: ICE.WA
+    short_name: ICE.WA
+    symbol: ICE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '53.00'
+    currency: PLN
+  idm.wa:
+    name: IDM.WA
+    short_name: IDM.WA
+    symbol: IDM.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.44'
+    currency: PLN
+  ifi.wa:
+    name: IFI.WA
+    short_name: IFI.WA
+    symbol: IFI.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '19.06'
+    currency: PLN
+  ifr.wa:
+    name: IFR.WA
+    short_name: IFR.WA
+    symbol: IFR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.13'
+    currency: PLN
+  imc.wa:
+    name: IMC.WA
+    short_name: IMC.WA
+    symbol: IMC.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '20.85'
+    currency: PLN
+  imp.wa:
+    name: IMP.WA
+    short_name: IMP.WA
+    symbol: IMP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.90'
+    currency: PLN
+  ims.wa:
+    name: IMS.WA
+    short_name: IMS.WA
+    symbol: IMS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '3.44'
+    currency: PLN
+  inc.wa:
+    name: INC.WA
+    short_name: INC.WA
+    symbol: INC.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.23'
+    currency: PLN
+  ing.wa:
+    name: ING.WA
+    short_name: ING.WA
+    symbol: ING.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '469.60'
+    currency: PLN
+  ink.wa:
+    name: INK.WA
+    short_name: INK.WA
+    symbol: INK.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '34.40'
+    currency: PLN
+  inl.wa:
+    name: INL.WA
+    short_name: INL.WA
+    symbol: INL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '8.68'
+    currency: PLN
+  inp.wa:
+    name: INP.WA
+    short_name: INP.WA
+    symbol: INP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '6.75'
+    currency: PLN
+  ipe.wa:
+    name: IPE.WA
+    short_name: IPE.WA
+    symbol: IPE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '8.46'
+    currency: PLN
+  ipo.wa:
+    name: IPO.WA
+    short_name: IPO.WA
+    symbol: IPO.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.28'
+    currency: PLN
+  itb.wa:
+    name: ITB.WA
+    short_name: ITB.WA
+    symbol: ITB.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.28'
+    currency: PLN
+  izb.wa:
+    name: IZB.WA
+    short_name: IZB.WA
+    symbol: IZB.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '39.40'
+    currency: PLN
+  izo.wa:
+    name: IZO.WA
+    short_name: IZO.WA
+    symbol: IZO.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '3.79'
+    currency: PLN
+  izs.wa:
+    name: IZS.WA
+    short_name: IZS.WA
+    symbol: IZS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.81'
+    currency: PLN
+  jrh.wa:
+    name: JRH.WA
+    short_name: JRH.WA
+    symbol: JRH.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '3.68'
+    currency: PLN
+  jsw.wa:
+    name: JSW.WA
+    short_name: JSW.WA
+    symbol: JSW.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '26.71'
+    currency: PLN
+  jww.wa:
+    name: JWW.WA
+    short_name: JWW.WA
+    symbol: JWW.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.96'
+    currency: PLN
+  kch.wa:
+    name: KCH.WA
+    short_name: KCH.WA
+    symbol: KCH.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.12'
+    currency: PLN
+  ker.wa:
+    name: KER.WA
+    short_name: KER.WA
+    symbol: KER.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '19.66'
+    currency: PLN
+  kgh.wa:
+    name: KGH.WA
+    short_name: KGH.WA
+    symbol: KGH.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '279.80'
+    currency: PLN
+  kgl.wa:
+    name: KGL.WA
+    short_name: KGL.WA
+    symbol: KGL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '13.50'
+    currency: PLN
+  kgn.wa:
+    name: KGN.WA
+    short_name: KGN.WA
+    symbol: KGN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '86.40'
+    currency: PLN
+  kmp.wa:
+    name: KMP.WA
+    short_name: KMP.WA
+    symbol: KMP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '20.80'
+    currency: PLN
+  kom.wa:
+    name: KOM.WA
+    short_name: KOM.WA
+    symbol: KOM.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '5.72'
+    currency: PLN
+  kpd.wa:
+    name: KPD.WA
+    short_name: KPD.WA
+    symbol: KPD.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '20.80'
+    currency: PLN
+  kpl.wa:
+    name: KPL.WA
+    short_name: KPL.WA
+    symbol: KPL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '17.25'
+    currency: PLN
+  krk.wa:
+    name: KRK.WA
+    short_name: KRK.WA
+    symbol: KRK.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1088.00'
+    currency: PLN
+  kru.wa:
+    name: KRU.WA
+    short_name: KRU.WA
+    symbol: KRU.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '330.80'
+    currency: PLN
+  ksg.wa:
+    name: KSG.WA
+    short_name: KSG.WA
+    symbol: KSG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.63'
+    currency: PLN
+  kty.wa:
+    name: KTY.WA
+    short_name: KTY.WA
+    symbol: KTY.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1260.00'
+    currency: PLN
+  kvt.wa:
+    name: KVT.WA
+    short_name: KVT.WA
+    symbol: KVT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '12.60'
+    currency: PLN
+  lbt.wa:
+    name: LBT.WA
+    short_name: LBT.WA
+    symbol: LBT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.75'
+    currency: PLN
+  lbw.wa:
+    name: LBW.WA
+    short_name: LBW.WA
+    symbol: LBW.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '9.90'
+    currency: PLN
+  len.wa:
+    name: LEN.WA
+    short_name: LEN.WA
+    symbol: LEN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.98'
+    currency: PLN
+  les.wa:
+    name: LES.WA
+    short_name: LES.WA
+    symbol: LES.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.15'
+    currency: PLN
+  lkd.wa:
+    name: LKD.WA
+    short_name: LKD.WA
+    symbol: LKD.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '23.70'
+    currency: PLN
+  lmu.wa:
+    name: LMU.WA
+    short_name: LMU.WA
+    symbol: LMU.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '19.50'
+    currency: PLN
+  lpp.wa:
+    name: LPP.WA
+    short_name: LPP.WA
+    symbol: LPP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '28080.00'
+    currency: PLN
+  lrq.wa:
+    name: LRQ.WA
+    short_name: LRQ.WA
+    symbol: LRQ.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.75'
+    currency: PLN
+  lsi.wa:
+    name: LSI.WA
+    short_name: LSI.WA
+    symbol: LSI.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '36.30'
+    currency: PLN
+  ltx.wa:
+    name: LTX.WA
+    short_name: LTX.WA
+    symbol: LTX.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '7.46'
+    currency: PLN
+  lwb.wa:
+    name: LWB.WA
+    short_name: LWB.WA
+    symbol: LWB.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '23.75'
+    currency: PLN
+  mab.wa:
+    name: MAB.WA
+    short_name: MAB.WA
+    symbol: MAB.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '7.80'
+    currency: PLN
+  mak.wa:
+    name: MAK.WA
+    short_name: MAK.WA
+    symbol: MAK.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '23.00'
+    currency: PLN
+  man.wa:
+    name: MAN.WA
+    short_name: MAN.WA
+    symbol: MAN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.62'
+    currency: PLN
+  mbk.wa:
+    name: MBK.WA
+    short_name: MBK.WA
+    symbol: MBK.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1641.50'
+    currency: PLN
+  mbr.wa:
+    name: MBR.WA
+    short_name: MBR.WA
+    symbol: MBR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '402.50'
+    currency: PLN
+  mbw.wa:
+    name: MBW.WA
+    short_name: MBW.WA
+    symbol: MBW.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '11.20'
+    currency: PLN
+  mci.wa:
+    name: MCI.WA
+    short_name: MCI.WA
+    symbol: MCI.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '28.00'
+    currency: PLN
+  mcr.wa:
+    name: MCR.WA
+    short_name: MCR.WA
+    symbol: MCR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '13.45'
+    currency: PLN
+  mdg.wa:
+    name: MDG.WA
+    short_name: MDG.WA
+    symbol: MDG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '20.50'
+    currency: PLN
+  mdi.wa:
+    name: MDI.WA
+    short_name: MDI.WA
+    symbol: MDI.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.70'
+    currency: PLN
+  mdv.wa:
+    name: MDV.WA
+    short_name: MDV.WA
+    symbol: MDV.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '97.20'
+    currency: PLN
+  meg.wa:
+    name: MEG.WA
+    short_name: MEG.WA
+    symbol: MEG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '6.05'
+    currency: PLN
+  mex.wa:
+    name: MEX.WA
+    short_name: MEX.WA
+    symbol: MEX.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '3.39'
+    currency: PLN
+  mfo.wa:
+    name: MFO.WA
+    short_name: MFO.WA
+    symbol: MFO.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '24.20'
+    currency: PLN
+  mgt.wa:
+    name: MGT.WA
+    short_name: MGT.WA
+    symbol: MGT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '58.60'
+    currency: PLN
+  mil.wa:
+    name: MIL.WA
+    short_name: MIL.WA
+    symbol: MIL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '22.78'
+    currency: PLN
+  mir.wa:
+    name: MIR.WA
+    short_name: MIR.WA
+    symbol: MIR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.61'
+    currency: PLN
+  mlg.wa:
+    name: MLG.WA
+    short_name: MLG.WA
+    symbol: MLG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '100.00'
+    currency: PLN
+  mlk.wa:
+    name: MLK.WA
+    short_name: MLK.WA
+    symbol: MLK.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.33'
+    currency: PLN
+  mls.wa:
+    name: MLS.WA
+    short_name: MLS.WA
+    symbol: MLS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '14.00'
+    currency: PLN
+  mnc.wa:
+    name: MNC.WA
+    short_name: MNC.WA
+    symbol: MNC.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '37.50'
+    currency: PLN
+  moc.wa:
+    name: MOC.WA
+    short_name: MOC.WA
+    symbol: MOC.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '5.57'
+    currency: PLN
+  mol.wa:
+    name: MOL.WA
+    short_name: MOL.WA
+    symbol: MOL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '60.25'
+    currency: PLN
+  mon.wa:
+    name: MON.WA
+    short_name: MON.WA
+    symbol: MON.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '4.85'
+    currency: PLN
+  mov.wa:
+    name: MOV.WA
+    short_name: MOV.WA
+    symbol: MOV.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '6.70'
+    currency: PLN
+  mqr.wa:
+    name: MQR.WA
+    short_name: MQR.WA
+    symbol: MQR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.39'
+    currency: PLN
+  mrb.wa:
+    name: MRB.WA
+    short_name: MRB.WA
+    symbol: MRB.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '11.20'
+    currency: PLN
+  mrc.wa:
+    name: MRC.WA
+    short_name: MRC.WA
+    symbol: MRC.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '57.80'
+    currency: PLN
+  msp.wa:
+    name: MSP.WA
+    short_name: MSP.WA
+    symbol: MSP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '11.80'
+    currency: PLN
+  msw.wa:
+    name: MSW.WA
+    short_name: MSW.WA
+    symbol: MSW.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '3.71'
+    currency: PLN
+  msz.wa:
+    name: MSZ.WA
+    short_name: MSZ.WA
+    symbol: MSZ.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '6.64'
+    currency: PLN
+  mur.wa:
+    name: MUR.WA
+    short_name: MUR.WA
+    symbol: MUR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '37.70'
+    currency: PLN
+  mvp.wa:
+    name: MVP.WA
+    short_name: MVP.WA
+    symbol: MVP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '8.10'
+    currency: PLN
+  mwt.wa:
+    name: MWT.WA
+    short_name: MWT.WA
+    symbol: MWT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.46'
+    currency: PLN
+  mxc.wa:
+    name: MXC.WA
+    short_name: MXC.WA
+    symbol: MXC.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '5.78'
+    currency: PLN
+  mza.wa:
+    name: MZA.WA
+    short_name: MZA.WA
+    symbol: MZA.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '8.30'
+    currency: PLN
+  ncl.wa:
+    name: NCL.WA
+    short_name: NCL.WA
+    symbol: NCL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '83.00'
+    currency: PLN
+  neu.wa:
+    name: NEU.WA
+    short_name: NEU.WA
+    symbol: NEU.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '694.00'
+    currency: PLN
+  nng.wa:
+    name: NNG.WA
+    short_name: NNG.WA
+    symbol: NNG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.28'
+    currency: PLN
+  ntc.wa:
+    name: NTC.WA
+    short_name: NTC.WA
+    symbol: NTC.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.61'
+    currency: PLN
+  ntt.wa:
+    name: NTT.WA
+    short_name: NTT.WA
+    symbol: NTT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '27.20'
+    currency: PLN
+  ntu.wa:
+    name: NTU.WA
+    short_name: NTU.WA
+    symbol: NTU.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '4.84'
+    currency: PLN
+  nva.wa:
+    name: NVA.WA
+    short_name: NVA.WA
+    symbol: NVA.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '17.90'
+    currency: PLN
+  nvg.wa:
+    name: NVG.WA
+    short_name: NVG.WA
+    symbol: NVG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.40'
+    currency: PLN
+  nvt.wa:
+    name: NVT.WA
+    short_name: NVT.WA
+    symbol: NVT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '107.50'
+    currency: PLN
+  nwa.wa:
+    name: NWA.WA
+    short_name: NWA.WA
+    symbol: NWA.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '28.40'
+    currency: PLN
+  nwg.wa:
+    name: NWG.WA
+    short_name: NWG.WA
+    symbol: NWG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '92.60'
+    currency: PLN
+  nxg.wa:
+    name: NXG.WA
+    short_name: NXG.WA
+    symbol: NXG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.41'
+    currency: PLN
+  obl.wa:
+    name: OBL.WA
+    short_name: OBL.WA
+    symbol: OBL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '40.60'
+    currency: PLN
+  odl.wa:
+    name: ODL.WA
+    short_name: ODL.WA
+    symbol: ODL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '18.05'
+    currency: PLN
+  oml.wa:
+    name: OML.WA
+    short_name: OML.WA
+    symbol: OML.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.41'
+    currency: PLN
+  ond.wa:
+    name: OND.WA
+    short_name: OND.WA
+    symbol: OND.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '7.89'
+    currency: PLN
+  ono.wa:
+    name: ONO.WA
+    short_name: ONO.WA
+    symbol: ONO.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.75'
+    currency: PLN
+  opl.wa:
+    name: OPL.WA
+    short_name: OPL.WA
+    symbol: OPL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '16.71'
+    currency: PLN
+  opm.wa:
+    name: OPM.WA
+    short_name: OPM.WA
+    symbol: OPM.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '5.75'
+    currency: PLN
+  opn.wa:
+    name: OPN.WA
+    short_name: OPN.WA
+    symbol: OPN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '102.00'
+    currency: PLN
+  otm.wa:
+    name: OTM.WA
+    short_name: OTM.WA
+    symbol: OTM.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '4.53'
+    currency: PLN
+  ots.wa:
+    name: OTS.WA
+    short_name: OTS.WA
+    symbol: OTS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '14.78'
+    currency: PLN
+  pas.wa:
+    name: PAS.WA
+    short_name: PAS.WA
+    symbol: PAS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '151.00'
+    currency: PLN
+  pat.wa:
+    name: PAT.WA
+    short_name: PAT.WA
+    symbol: PAT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.84'
+    currency: PLN
+  pbf.wa:
+    name: PBF.WA
+    short_name: PBF.WA
+    symbol: PBF.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.54'
+    currency: PLN
+  pbg.wa:
+    name: PBG.WA
+    short_name: PBG.WA
+    symbol: PBG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.02'
+    currency: PLN
+  pbx.wa:
+    name: PBX.WA
+    short_name: PBX.WA
+    symbol: PBX.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '8.55'
+    currency: PLN
+  pce.wa:
+    name: PCE.WA
+    short_name: PCE.WA
+    symbol: PCE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '7.00'
+    currency: PLN
+  pcf.wa:
+    name: PCF.WA
+    short_name: PCF.WA
+    symbol: PCF.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '3.18'
+    currency: PLN
+  pco.wa:
+    name: PCO.WA
+    short_name: PCO.WA
+    symbol: PCO.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '48.89'
+    currency: PLN
+  pcr.wa:
+    name: PCR.WA
+    short_name: PCR.WA
+    symbol: PCR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '63.40'
+    currency: PLN
+  pcx.wa:
+    name: PCX.WA
+    short_name: PCX.WA
+    symbol: PCX.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.08'
+    currency: PLN
+  pen.wa:
+    name: PEN.WA
+    short_name: PEN.WA
+    symbol: PEN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.96'
+    currency: PLN
+  peo.wa:
+    name: PEO.WA
+    short_name: PEO.WA
+    symbol: PEO.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '264.90'
+    currency: PLN
+  pep.wa:
+    name: PEP.WA
+    short_name: PEP.WA
+    symbol: PEP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '52.10'
+    currency: PLN
+  pge.wa:
+    name: PGE.WA
+    short_name: PGE.WA
+    symbol: PGE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '15.90'
+    currency: PLN
+  pgm.wa:
+    name: PGM.WA
+    short_name: PGM.WA
+    symbol: PGM.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.26'
+    currency: PLN
+  pgv.wa:
+    name: PGV.WA
+    short_name: PGV.WA
+    symbol: PGV.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.42'
+    currency: PLN
+  phn.wa:
+    name: PHN.WA
+    short_name: PHN.WA
+    symbol: PHN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '8.90'
+    currency: PLN
+  phr.wa:
+    name: PHR.WA
+    short_name: PHR.WA
+    symbol: PHR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.73'
+    currency: PLN
+  pjp.wa:
+    name: PJP.WA
+    short_name: PJP.WA
+    symbol: PJP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '21.40'
+    currency: PLN
+  pkn.wa:
+    name: PKN.WA
+    short_name: PKN.WA
+    symbol: PKN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '140.72'
+    currency: PLN
+  pko.wa:
+    name: PKO.WA
+    short_name: PKO.WA
+    symbol: PKO.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '116.60'
+    currency: PLN
+  pkp.wa:
+    name: PKP.WA
+    short_name: PKP.WA
+    symbol: PKP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '9.95'
+    currency: PLN
+  plw.wa:
+    name: PLW.WA
+    short_name: PLW.WA
+    symbol: PLW.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '250.00'
+    currency: PLN
+  plz.wa:
+    name: PLZ.WA
+    short_name: PLZ.WA
+    symbol: PLZ.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.19'
+    currency: PLN
+  pps.wa:
+    name: PPS.WA
+    short_name: PPS.WA
+    symbol: PPS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.71'
+    currency: PLN
+  pri.wa:
+    name: PRI.WA
+    short_name: PRI.WA
+    symbol: PRI.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '3.98'
+    currency: PLN
+  prm.wa:
+    name: PRM.WA
+    short_name: PRM.WA
+    symbol: PRM.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '22.20'
+    currency: PLN
+  prt.wa:
+    name: PRT.WA
+    short_name: PRT.WA
+    symbol: PRT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.80'
+    currency: PLN
+  ptg.wa:
+    name: PTG.WA
+    short_name: PTG.WA
+    symbol: PTG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '20.00'
+    currency: PLN
+  ptw.wa:
+    name: PTW.WA
+    short_name: PTW.WA
+    symbol: PTW.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '145.00'
+    currency: PLN
+  pwx.wa:
+    name: PWX.WA
+    short_name: PWX.WA
+    symbol: PWX.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.90'
+    currency: PLN
+  pxm.wa:
+    name: PXM.WA
+    short_name: PXM.WA
+    symbol: PXM.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '6.91'
+    currency: PLN
+  pzu.wa:
+    name: PZU.WA
+    short_name: PZU.WA
+    symbol: PZU.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '73.68'
+    currency: PLN
+  qna.wa:
+    name: QNA.WA
+    short_name: QNA.WA
+    symbol: QNA.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '30.10'
+    currency: PLN
+  qnt.wa:
+    name: QNT.WA
+    short_name: QNT.WA
+    symbol: QNT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '37.20'
+    currency: PLN
+  qrs.wa:
+    name: QRS.WA
+    short_name: QRS.WA
+    symbol: QRS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '12.18'
+    currency: PLN
+  raf.wa:
+    name: RAF.WA
+    short_name: RAF.WA
+    symbol: RAF.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '37.50'
+    currency: PLN
+  rbw.wa:
+    name: RBW.WA
+    short_name: RBW.WA
+    symbol: RBW.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '122.00'
+    currency: PLN
+  rdn.wa:
+    name: RDN.WA
+    short_name: RDN.WA
+    symbol: RDN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.05'
+    currency: PLN
+  rex.wa:
+    name: REX.WA
+    short_name: REX.WA
+    symbol: REX.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '11.20'
+    currency: PLN
+  rhd.wa:
+    name: RHD.WA
+    short_name: RHD.WA
+    symbol: RHD.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.04'
+    currency: PLN
+  rlp.wa:
+    name: RLP.WA
+    short_name: RLP.WA
+    symbol: RLP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '5.80'
+    currency: PLN
+  rmk.wa:
+    name: RMK.WA
+    short_name: RMK.WA
+    symbol: RMK.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '19.85'
+    currency: PLN
+  rnc.wa:
+    name: RNC.WA
+    short_name: RNC.WA
+    symbol: RNC.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.44'
+    currency: PLN
+  rnd.wa:
+    name: RND.WA
+    short_name: RND.WA
+    symbol: RND.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '69.00'
+    currency: PLN
+  rnk.wa:
+    name: RNK.WA
+    short_name: RNK.WA
+    symbol: RNK.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '4.16'
+    currency: PLN
+  rob.wa:
+    name: ROB.WA
+    short_name: ROB.WA
+    symbol: ROB.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '28.50'
+    currency: PLN
+  rpc.wa:
+    name: RPC.WA
+    short_name: RPC.WA
+    symbol: RPC.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '22.70'
+    currency: PLN
+  rvu.wa:
+    name: RVU.WA
+    short_name: RVU.WA
+    symbol: RVU.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '16.82'
+    currency: PLN
+  rwl.wa:
+    name: RWL.WA
+    short_name: RWL.WA
+    symbol: RWL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '15.80'
+    currency: PLN
+  s2b.wa:
+    name: S2B.WA
+    short_name: S2B.WA
+    symbol: S2B.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '60.62'
+    currency: PLN
+  san.wa:
+    name: SAN.WA
+    short_name: SAN.WA
+    symbol: SAN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '47.76'
+    currency: PLN
+  scp.wa:
+    name: SCP.WA
+    short_name: SCP.WA
+    symbol: SCP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '141.40'
+    currency: PLN
+  scw.wa:
+    name: SCW.WA
+    short_name: SCW.WA
+    symbol: SCW.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '305.00'
+    currency: PLN
+  sek.wa:
+    name: SEK.WA
+    short_name: SEK.WA
+    symbol: SEK.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '10.25'
+    currency: PLN
+  sel.wa:
+    name: SEL.WA
+    short_name: SEL.WA
+    symbol: SEL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '58.80'
+    currency: PLN
+  sfg.wa:
+    name: SFG.WA
+    short_name: SFG.WA
+    symbol: SFG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '4.79'
+    currency: PLN
+  sfs.wa:
+    name: SFS.WA
+    short_name: SFS.WA
+    symbol: SFS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.39'
+    currency: PLN
+  sgn.wa:
+    name: SGN.WA
+    short_name: SGN.WA
+    symbol: SGN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '92.60'
+    currency: PLN
+  shd.wa:
+    name: SHD.WA
+    short_name: SHD.WA
+    symbol: SHD.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.13'
+    currency: PLN
+  shg.wa:
+    name: SHG.WA
+    short_name: SHG.WA
+    symbol: SHG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.18'
+    currency: PLN
+  sim.wa:
+    name: SIM.WA
+    short_name: SIM.WA
+    symbol: SIM.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.26'
+    currency: PLN
+  ska.wa:
+    name: SKA.WA
+    short_name: SKA.WA
+    symbol: SKA.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '83.80'
+    currency: PLN
+  skh.wa:
+    name: SKH.WA
+    short_name: SKH.WA
+    symbol: SKH.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '36.60'
+    currency: PLN
+  skl.wa:
+    name: SKL.WA
+    short_name: SKL.WA
+    symbol: SKL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.10'
+    currency: PLN
+  slv.wa:
+    name: SLV.WA
+    short_name: SLV.WA
+    symbol: SLV.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '16.40'
+    currency: PLN
+  snk.wa:
+    name: SNK.WA
+    short_name: SNK.WA
+    symbol: SNK.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '19.40'
+    currency: PLN
+  snt.wa:
+    name: SNT.WA
+    short_name: SNT.WA
+    symbol: SNT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '321.60'
+    currency: PLN
+  snw.wa:
+    name: SNW.WA
+    short_name: SNW.WA
+    symbol: SNW.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.86'
+    currency: PLN
+  snx.wa:
+    name: SNX.WA
+    short_name: SNX.WA
+    symbol: SNX.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '3.52'
+    currency: PLN
+  son.wa:
+    name: SON.WA
+    short_name: SON.WA
+    symbol: SON.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '12.55'
+    currency: PLN
+  sph.wa:
+    name: SPH.WA
+    short_name: SPH.WA
+    symbol: SPH.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '14.70'
+    currency: PLN
+  spr.wa:
+    name: SPR.WA
+    short_name: SPR.WA
+    symbol: SPR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '325.00'
+    currency: PLN
+  stf.wa:
+    name: STF.WA
+    short_name: STF.WA
+    symbol: STF.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '8.46'
+    currency: PLN
+  stp.wa:
+    name: STP.WA
+    short_name: STP.WA
+    symbol: STP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '242.00'
+    currency: PLN
+  sts.wa:
+    name: STS.WA
+    short_name: STS.WA
+    symbol: STS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.25'
+    currency: PLN
+  stx.wa:
+    name: STX.WA
+    short_name: STX.WA
+    symbol: STX.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.96'
+    currency: PLN
+  sve.wa:
+    name: SVE.WA
+    short_name: SVE.WA
+    symbol: SVE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.58'
+    currency: PLN
+  svrs.wa:
+    name: SVRS.WA
+    short_name: SVRS.WA
+    symbol: SVRS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '3.46'
+    currency: PLN
+  swg.wa:
+    name: SWG.WA
+    short_name: SWG.WA
+    symbol: SWG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '34.80'
+    currency: PLN
+  tar.wa:
+    name: TAR.WA
+    short_name: TAR.WA
+    symbol: TAR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '116.50'
+    currency: PLN
+  tbl.wa:
+    name: TBL.WA
+    short_name: TBL.WA
+    symbol: TBL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.55'
+    currency: PLN
+  ten.wa:
+    name: TEN.WA
+    short_name: TEN.WA
+    symbol: TEN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '90.05'
+    currency: PLN
+  thg.wa:
+    name: THG.WA
+    short_name: THG.WA
+    symbol: THG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '5.32'
+    currency: PLN
+  tlx.wa:
+    name: TLX.WA
+    short_name: TLX.WA
+    symbol: TLX.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '17.10'
+    currency: PLN
+  tmr.wa:
+    name: TMR.WA
+    short_name: TMR.WA
+    symbol: TMR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '80.00'
+    currency: PLN
+  toa.wa:
+    name: TOA.WA
+    short_name: TOA.WA
+    symbol: TOA.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '11.30'
+    currency: PLN
+  tor.wa:
+    name: TOR.WA
+    short_name: TOR.WA
+    symbol: TOR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '63.40'
+    currency: PLN
+  tow.wa:
+    name: TOW.WA
+    short_name: TOW.WA
+    symbol: TOW.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.63'
+    currency: PLN
+  tpe.wa:
+    name: TPE.WA
+    short_name: TPE.WA
+    symbol: TPE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '9.13'
+    currency: PLN
+  tri.wa:
+    name: TRI.WA
+    short_name: TRI.WA
+    symbol: TRI.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '3.98'
+    currency: PLN
+  trk.wa:
+    name: TRK.WA
+    short_name: TRK.WA
+    symbol: TRK.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '3.06'
+    currency: PLN
+  trn.wa:
+    name: TRN.WA
+    short_name: TRN.WA
+    symbol: TRN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '13.50'
+    currency: PLN
+  trr.wa:
+    name: TRR.WA
+    short_name: TRR.WA
+    symbol: TRR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.54'
+    currency: PLN
+  tsg.wa:
+    name: TSG.WA
+    short_name: TSG.WA
+    symbol: TSG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.55'
+    currency: PLN
+  txt.wa:
+    name: TXT.WA
+    short_name: TXT.WA
+    symbol: TXT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '37.88'
+    currency: PLN
+  ucg.wa:
+    name: UCG.WA
+    short_name: UCG.WA
+    symbol: UCG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '337.60'
+    currency: PLN
+  ulg.wa:
+    name: ULG.WA
+    short_name: ULG.WA
+    symbol: ULG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '11.40'
+    currency: PLN
+  ulm.wa:
+    name: ULM.WA
+    short_name: ULM.WA
+    symbol: ULM.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '53.00'
+    currency: PLN
+  unf.wa:
+    name: UNF.WA
+    short_name: UNF.WA
+    symbol: UNF.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.33'
+    currency: PLN
+  uni.wa:
+    name: UNI.WA
+    short_name: UNI.WA
+    symbol: UNI.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '14.00'
+    currency: PLN
+  unt.wa:
+    name: UNT.WA
+    short_name: UNT.WA
+    symbol: UNT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '147.20'
+    currency: PLN
+  urt.wa:
+    name: URT.WA
+    short_name: URT.WA
+    symbol: URT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '42.20'
+    currency: PLN
+  vgo.wa:
+    name: VGO.WA
+    short_name: VGO.WA
+    symbol: VGO.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '520.00'
+    currency: PLN
+  vin.wa:
+    name: VIN.WA
+    short_name: VIN.WA
+    symbol: VIN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '13.50'
+    currency: PLN
+  vot.wa:
+    name: VOT.WA
+    short_name: VOT.WA
+    symbol: VOT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '39.20'
+    currency: PLN
+  vox.wa:
+    name: VOX.WA
+    short_name: VOX.WA
+    symbol: VOX.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '155.80'
+    currency: PLN
+  vrc.wa:
+    name: VRC.WA
+    short_name: VRC.WA
+    symbol: VRC.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '115.40'
+    currency: PLN
+  vrg.wa:
+    name: VRG.WA
+    short_name: VRG.WA
+    symbol: VRG.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '5.16'
+    currency: PLN
+  vvd.wa:
+    name: VVD.WA
+    short_name: VVD.WA
+    symbol: VVD.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.49'
+    currency: PLN
+  was.wa:
+    name: WAS.WA
+    short_name: WAS.WA
+    symbol: WAS.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '7.08'
+    currency: PLN
+  wen.wa:
+    name: WEN.WA
+    short_name: WEN.WA
+    symbol: WEN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '45.80'
+    currency: PLN
+  wik.wa:
+    name: WIK.WA
+    short_name: WIK.WA
+    symbol: WIK.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '9.65'
+    currency: PLN
+  wlt.wa:
+    name: WLT.WA
+    short_name: WLT.WA
+    symbol: WLT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '4.47'
+    currency: PLN
+  wpl.wa:
+    name: WPL.WA
+    short_name: WPL.WA
+    symbol: WPL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '55.30'
+    currency: PLN
+  wpr.wa:
+    name: WPR.WA
+    short_name: WPR.WA
+    symbol: WPR.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.35'
+    currency: PLN
+  wtn.wa:
+    name: WTN.WA
+    short_name: WTN.WA
+    symbol: WTN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '10.60'
+    currency: PLN
+  wwl.wa:
+    name: WWL.WA
+    short_name: WWL.WA
+    symbol: WWL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '722.00'
+    currency: PLN
+  wxf.wa:
+    name: WXF.WA
+    short_name: WXF.WA
+    symbol: WXF.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '1.99'
+    currency: PLN
+  xpl.wa:
+    name: XPL.WA
+    short_name: XPL.WA
+    symbol: XPL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '2.92'
+    currency: PLN
+  xtb.wa:
+    name: XTB.WA
+    short_name: XTB.WA
+    symbol: XTB.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '126.26'
+    currency: PLN
+  xtp.wa:
+    name: XTP.WA
+    short_name: XTP.WA
+    symbol: XTP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '69.00'
+    currency: PLN
+  yan.wa:
+    name: YAN.WA
+    short_name: YAN.WA
+    symbol: YAN.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '19.00'
+    currency: PLN
+  yrl.wa:
+    name: YRL.WA
+    short_name: YRL.WA
+    symbol: YRL.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '5.42'
+    currency: PLN
+  zab.wa:
+    name: ZAB.WA
+    short_name: ZAB.WA
+    symbol: ZAB.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '31.75'
+    currency: PLN
+  zap.wa:
+    name: ZAP.WA
+    short_name: ZAP.WA
+    symbol: ZAP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '43.40'
+    currency: PLN
+  zep.wa:
+    name: ZEP.WA
+    short_name: ZEP.WA
+    symbol: ZEP.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '18.02'
+    currency: PLN
+  zmt.wa:
+    name: ZMT.WA
+    short_name: ZMT.WA
+    symbol: ZMT.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '0.57'
+    currency: PLN
+  zre.wa:
+    name: ZRE.WA
+    short_name: ZRE.WA
+    symbol: ZRE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '8.15'
+    currency: PLN
+  zue.wa:
+    name: ZUE.WA
+    short_name: ZUE.WA
+    symbol: ZUE.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '11.85'
+    currency: PLN
+  zuk.wa:
+    name: ZUK.WA
+    short_name: ZUK.WA
+    symbol: ZUK.WA
+    instrument_class: stock
+    market_type: continuous
+    reference_price: '4.98'
+    currency: PLN
+  wig20:
+    symbol: WIG20
+    name: WIG20
+    short_name: WIG20
+    instrument_class: index
+    components:
+    - security: ale.wa
+      weight: 0.1066
+      base_price: '59.46'
+    - security: alr.wa
+      weight: 0.0206
+      base_price: '137.45'
+    - security: bdx.wa
+      weight: 0.0159
+      base_price: '756.20'
+    - security: cdr.wa
+      weight: 0.0336
+      base_price: '262.60'
+    - security: dnp.wa
+      weight: 0.0336
+      base_price: '39.85'
+    - security: ebp.wa
+      weight: 0.0568
+      base_price: '786.40'
+    - security: kgh.wa
+      weight: 0.0718
+      base_price: '279.80'
+    - security: kru.wa
+      weight: 0.0112
+      base_price: '330.80'
+    - security: kty.wa
+      weight: 0.0217
+      base_price: '1260.00'
+    - security: lpp.wa
+      weight: 0.0618
+      base_price: '28080.00'
+    - security: mbk.wa
+      weight: 0.033
+      base_price: '1641.50'
+    - security: mdv.wa
+      weight: 0.0087
+      base_price: '97.20'
+    - security: pco.wa
+      weight: 0.0147
+      base_price: '48.89'
+    - security: peo.wa
+      weight: 0.0803
+      base_price: '264.90'
+    - security: pge.wa
+      weight: 0.0255
+      base_price: '15.90'
+    - security: pkn.wa
+      weight: 0.1423
+      base_price: '140.72'
+    - security: pko.wa
+      weight: 0.141
+      base_price: '116.60'
+    - security: pzu.wa
+      weight: 0.0734
+      base_price: '73.68'
+    - security: tpe.wa
+      weight: 0.0179
+      base_price: '9.13'
+    - security: zab.wa
+      weight: 0.0296
+      base_price: '31.75'
+    base_index_level: '4209.15'
+  f11bz26:
+    symbol: F11BZ26
+    name: F11BZ26
+    short_name: F11BZ26
+    instrument_class: future
+    underlying: 11b.wa
+    expiration: 29
+    multiplier: 10.0
+    margin_rate: 0.1
+  f11bh27:
+    symbol: F11BH27
+    name: F11BH27
+    short_name: F11BH27
+    instrument_class: future
+    underlying: 11b.wa
+    expiration: 50
+    multiplier: 10.0
+    margin_rate: 0.1
+  f11bm27:
+    symbol: F11BM27
+    name: F11BM27
+    short_name: F11BM27
+    instrument_class: future
+    underlying: 11b.wa
+    expiration: 50
+    multiplier: 10.0
+    margin_rate: 0.1
+  facpz26:
+    symbol: FACPZ26
+    name: FACPZ26
+    short_name: FACPZ26
+    instrument_class: future
+    underlying: acp.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  facph27:
+    symbol: FACPH27
+    name: FACPH27
+    short_name: FACPH27
+    instrument_class: future
+    underlying: acp.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  facpm27:
+    symbol: FACPM27
+    name: FACPM27
+    short_name: FACPM27
+    instrument_class: future
+    underlying: acp.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  falez26:
+    symbol: FALEZ26
+    name: FALEZ26
+    short_name: FALEZ26
+    instrument_class: future
+    underlying: ale.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  faleh27:
+    symbol: FALEH27
+    name: FALEH27
+    short_name: FALEH27
+    instrument_class: future
+    underlying: ale.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  falem27:
+    symbol: FALEM27
+    name: FALEM27
+    short_name: FALEM27
+    instrument_class: future
+    underlying: ale.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  falrz26:
+    symbol: FALRZ26
+    name: FALRZ26
+    short_name: FALRZ26
+    instrument_class: future
+    underlying: alr.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  falrh27:
+    symbol: FALRH27
+    name: FALRH27
+    short_name: FALRH27
+    instrument_class: future
+    underlying: alr.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  falrm27:
+    symbol: FALRM27
+    name: FALRM27
+    short_name: FALRM27
+    instrument_class: future
+    underlying: alr.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  faprz26:
+    symbol: FAPRZ26
+    name: FAPRZ26
+    short_name: FAPRZ26
+    instrument_class: future
+    underlying: apr.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  faprh27:
+    symbol: FAPRH27
+    name: FAPRH27
+    short_name: FAPRH27
+    instrument_class: future
+    underlying: apr.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fasbz26:
+    symbol: FASBZ26
+    name: FASBZ26
+    short_name: FASBZ26
+    instrument_class: future
+    underlying: asb.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fasbh27:
+    symbol: FASBH27
+    name: FASBH27
+    short_name: FASBH27
+    instrument_class: future
+    underlying: asb.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fattz26:
+    symbol: FATTZ26
+    name: FATTZ26
+    short_name: FATTZ26
+    instrument_class: future
+    underlying: att.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fatth27:
+    symbol: FATTH27
+    name: FATTH27
+    short_name: FATTH27
+    instrument_class: future
+    underlying: att.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fattm27:
+    symbol: FATTM27
+    name: FATTM27
+    short_name: FATTM27
+    instrument_class: future
+    underlying: att.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fbdxz26:
+    symbol: FBDXZ26
+    name: FBDXZ26
+    short_name: FBDXZ26
+    instrument_class: future
+    underlying: bdx.wa
+    expiration: 29
+    multiplier: 10.0
+    margin_rate: 0.1
+  fbdxh27:
+    symbol: FBDXH27
+    name: FBDXH27
+    short_name: FBDXH27
+    instrument_class: future
+    underlying: bdx.wa
+    expiration: 50
+    multiplier: 10.0
+    margin_rate: 0.1
+  fbdxm27:
+    symbol: FBDXM27
+    name: FBDXM27
+    short_name: FBDXM27
+    instrument_class: future
+    underlying: bdx.wa
+    expiration: 50
+    multiplier: 10.0
+    margin_rate: 0.1
+  fcarz26:
+    symbol: FCARZ26
+    name: FCARZ26
+    short_name: FCARZ26
+    instrument_class: future
+    underlying: car.wa
+    expiration: 29
+    multiplier: 10.0
+    margin_rate: 0.1
+  fcarh27:
+    symbol: FCARH27
+    name: FCARH27
+    short_name: FCARH27
+    instrument_class: future
+    underlying: car.wa
+    expiration: 50
+    multiplier: 10.0
+    margin_rate: 0.1
+  fcdrz26:
+    symbol: FCDRZ26
+    name: FCDRZ26
+    short_name: FCDRZ26
+    instrument_class: future
+    underlying: cdr.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fcdrh27:
+    symbol: FCDRH27
+    name: FCDRH27
+    short_name: FCDRH27
+    instrument_class: future
+    underlying: cdr.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fcdrm27:
+    symbol: FCDRM27
+    name: FCDRM27
+    short_name: FCDRM27
+    instrument_class: future
+    underlying: cdr.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fcpsz26:
+    symbol: FCPSZ26
+    name: FCPSZ26
+    short_name: FCPSZ26
+    instrument_class: future
+    underlying: cps.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fcpsh27:
+    symbol: FCPSH27
+    name: FCPSH27
+    short_name: FCPSH27
+    instrument_class: future
+    underlying: cps.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fcpsm27:
+    symbol: FCPSM27
+    name: FCPSM27
+    short_name: FCPSM27
+    instrument_class: future
+    underlying: cps.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fdiaz26:
+    symbol: FDIAZ26
+    name: FDIAZ26
+    short_name: FDIAZ26
+    instrument_class: future
+    underlying: dia.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fdiah27:
+    symbol: FDIAH27
+    name: FDIAH27
+    short_name: FDIAH27
+    instrument_class: future
+    underlying: dia.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fdnpz26:
+    symbol: FDNPZ26
+    name: FDNPZ26
+    short_name: FDNPZ26
+    instrument_class: future
+    underlying: dnp.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fdnph27:
+    symbol: FDNPH27
+    name: FDNPH27
+    short_name: FDNPH27
+    instrument_class: future
+    underlying: dnp.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fdnpm27:
+    symbol: FDNPM27
+    name: FDNPM27
+    short_name: FDNPM27
+    instrument_class: future
+    underlying: dnp.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fdomz26:
+    symbol: FDOMZ26
+    name: FDOMZ26
+    short_name: FDOMZ26
+    instrument_class: future
+    underlying: dom.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fdomh27:
+    symbol: FDOMH27
+    name: FDOMH27
+    short_name: FDOMH27
+    instrument_class: future
+    underlying: dom.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fdomm27:
+    symbol: FDOMM27
+    name: FDOMM27
+    short_name: FDOMM27
+    instrument_class: future
+    underlying: dom.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  featz26:
+    symbol: FEATZ26
+    name: FEATZ26
+    short_name: FEATZ26
+    instrument_class: future
+    underlying: eat.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  febpz26:
+    symbol: FEBPZ26
+    name: FEBPZ26
+    short_name: FEBPZ26
+    instrument_class: future
+    underlying: ebp.wa
+    expiration: 29
+    multiplier: 10.0
+    margin_rate: 0.1
+  febph27:
+    symbol: FEBPH27
+    name: FEBPH27
+    short_name: FEBPH27
+    instrument_class: future
+    underlying: ebp.wa
+    expiration: 50
+    multiplier: 10.0
+    margin_rate: 0.1
+  febpm27:
+    symbol: FEBPM27
+    name: FEBPM27
+    short_name: FEBPM27
+    instrument_class: future
+    underlying: ebp.wa
+    expiration: 50
+    multiplier: 10.0
+    margin_rate: 0.1
+  fenaz26:
+    symbol: FENAZ26
+    name: FENAZ26
+    short_name: FENAZ26
+    instrument_class: future
+    underlying: ena.wa
+    expiration: 29
+    multiplier: 1000.0
+    margin_rate: 0.1
+  fenah27:
+    symbol: FENAH27
+    name: FENAH27
+    short_name: FENAH27
+    instrument_class: future
+    underlying: ena.wa
+    expiration: 50
+    multiplier: 1000.0
+    margin_rate: 0.1
+  fgpwz26:
+    symbol: FGPWZ26
+    name: FGPWZ26
+    short_name: FGPWZ26
+    instrument_class: future
+    underlying: gpw.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fgpwh27:
+    symbol: FGPWH27
+    name: FGPWH27
+    short_name: FGPWH27
+    instrument_class: future
+    underlying: gpw.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fingz26:
+    symbol: FINGZ26
+    name: FINGZ26
+    short_name: FINGZ26
+    instrument_class: future
+    underlying: ing.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fingh27:
+    symbol: FINGH27
+    name: FINGH27
+    short_name: FINGH27
+    instrument_class: future
+    underlying: ing.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fjswz26:
+    symbol: FJSWZ26
+    name: FJSWZ26
+    short_name: FJSWZ26
+    instrument_class: future
+    underlying: jsw.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fjswh27:
+    symbol: FJSWH27
+    name: FJSWH27
+    short_name: FJSWH27
+    instrument_class: future
+    underlying: jsw.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fjswm27:
+    symbol: FJSWM27
+    name: FJSWM27
+    short_name: FJSWM27
+    instrument_class: future
+    underlying: jsw.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fkghz26:
+    symbol: FKGHZ26
+    name: FKGHZ26
+    short_name: FKGHZ26
+    instrument_class: future
+    underlying: kgh.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fkghh27:
+    symbol: FKGHH27
+    name: FKGHH27
+    short_name: FKGHH27
+    instrument_class: future
+    underlying: kgh.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fkghm27:
+    symbol: FKGHM27
+    name: FKGHM27
+    short_name: FKGHM27
+    instrument_class: future
+    underlying: kgh.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fkruz26:
+    symbol: FKRUZ26
+    name: FKRUZ26
+    short_name: FKRUZ26
+    instrument_class: future
+    underlying: kru.wa
+    expiration: 29
+    multiplier: 10.0
+    margin_rate: 0.1
+  fkruh27:
+    symbol: FKRUH27
+    name: FKRUH27
+    short_name: FKRUH27
+    instrument_class: future
+    underlying: kru.wa
+    expiration: 50
+    multiplier: 10.0
+    margin_rate: 0.1
+  fkrum27:
+    symbol: FKRUM27
+    name: FKRUM27
+    short_name: FKRUM27
+    instrument_class: future
+    underlying: kru.wa
+    expiration: 50
+    multiplier: 10.0
+    margin_rate: 0.1
+  fktyz26:
+    symbol: FKTYZ26
+    name: FKTYZ26
+    short_name: FKTYZ26
+    instrument_class: future
+    underlying: kty.wa
+    expiration: 29
+    multiplier: 10.0
+    margin_rate: 0.1
+  fktyh27:
+    symbol: FKTYH27
+    name: FKTYH27
+    short_name: FKTYH27
+    instrument_class: future
+    underlying: kty.wa
+    expiration: 50
+    multiplier: 10.0
+    margin_rate: 0.1
+  fktym27:
+    symbol: FKTYM27
+    name: FKTYM27
+    short_name: FKTYM27
+    instrument_class: future
+    underlying: kty.wa
+    expiration: 50
+    multiplier: 10.0
+    margin_rate: 0.1
+  flppz26:
+    symbol: FLPPZ26
+    name: FLPPZ26
+    short_name: FLPPZ26
+    instrument_class: future
+    underlying: lpp.wa
+    expiration: 29
+    multiplier: 1.02
+    margin_rate: 0.1
+  flpph27:
+    symbol: FLPPH27
+    name: FLPPH27
+    short_name: FLPPH27
+    instrument_class: future
+    underlying: lpp.wa
+    expiration: 50
+    multiplier: 1.0
+    margin_rate: 0.1
+  flppm27:
+    symbol: FLPPM27
+    name: FLPPM27
+    short_name: FLPPM27
+    instrument_class: future
+    underlying: lpp.wa
+    expiration: 50
+    multiplier: 1.0
+    margin_rate: 0.1
+  flwbz26:
+    symbol: FLWBZ26
+    name: FLWBZ26
+    short_name: FLWBZ26
+    instrument_class: future
+    underlying: lwb.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  flwbh27:
+    symbol: FLWBH27
+    name: FLWBH27
+    short_name: FLWBH27
+    instrument_class: future
+    underlying: lwb.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fmabz26:
+    symbol: FMABZ26
+    name: FMABZ26
+    short_name: FMABZ26
+    instrument_class: future
+    underlying: mab.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fmbkz26:
+    symbol: FMBKZ26
+    name: FMBKZ26
+    short_name: FMBKZ26
+    instrument_class: future
+    underlying: mbk.wa
+    expiration: 29
+    multiplier: 10.0
+    margin_rate: 0.1
+  fmbkh27:
+    symbol: FMBKH27
+    name: FMBKH27
+    short_name: FMBKH27
+    instrument_class: future
+    underlying: mbk.wa
+    expiration: 50
+    multiplier: 10.0
+    margin_rate: 0.1
+  fmbkm27:
+    symbol: FMBKM27
+    name: FMBKM27
+    short_name: FMBKM27
+    instrument_class: future
+    underlying: mbk.wa
+    expiration: 50
+    multiplier: 10.0
+    margin_rate: 0.1
+  fmdvz26:
+    symbol: FMDVZ26
+    name: FMDVZ26
+    short_name: FMDVZ26
+    instrument_class: future
+    underlying: mdv.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fmdvh27:
+    symbol: FMDVH27
+    name: FMDVH27
+    short_name: FMDVH27
+    instrument_class: future
+    underlying: mdv.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fmdvm27:
+    symbol: FMDVM27
+    name: FMDVM27
+    short_name: FMDVM27
+    instrument_class: future
+    underlying: mdv.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fmilz26:
+    symbol: FMILZ26
+    name: FMILZ26
+    short_name: FMILZ26
+    instrument_class: future
+    underlying: mil.wa
+    expiration: 29
+    multiplier: 1000.0
+    margin_rate: 0.1
+  fmilh27:
+    symbol: FMILH27
+    name: FMILH27
+    short_name: FMILH27
+    instrument_class: future
+    underlying: mil.wa
+    expiration: 50
+    multiplier: 1000.0
+    margin_rate: 0.1
+  foplz26:
+    symbol: FOPLZ26
+    name: FOPLZ26
+    short_name: FOPLZ26
+    instrument_class: future
+    underlying: opl.wa
+    expiration: 29
+    multiplier: 1000.0
+    margin_rate: 0.1
+  foplh27:
+    symbol: FOPLH27
+    name: FOPLH27
+    short_name: FOPLH27
+    instrument_class: future
+    underlying: opl.wa
+    expiration: 50
+    multiplier: 1000.0
+    margin_rate: 0.1
+  foplm27:
+    symbol: FOPLM27
+    name: FOPLM27
+    short_name: FOPLM27
+    instrument_class: future
+    underlying: opl.wa
+    expiration: 50
+    multiplier: 1000.0
+    margin_rate: 0.1
+  fpcoz26:
+    symbol: FPCOZ26
+    name: FPCOZ26
+    short_name: FPCOZ26
+    instrument_class: future
+    underlying: pco.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fpcoh27:
+    symbol: FPCOH27
+    name: FPCOH27
+    short_name: FPCOH27
+    instrument_class: future
+    underlying: pco.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fpcom27:
+    symbol: FPCOM27
+    name: FPCOM27
+    short_name: FPCOM27
+    instrument_class: future
+    underlying: pco.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fpeoz26:
+    symbol: FPEOZ26
+    name: FPEOZ26
+    short_name: FPEOZ26
+    instrument_class: future
+    underlying: peo.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fpeoh27:
+    symbol: FPEOH27
+    name: FPEOH27
+    short_name: FPEOH27
+    instrument_class: future
+    underlying: peo.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fpeom27:
+    symbol: FPEOM27
+    name: FPEOM27
+    short_name: FPEOM27
+    instrument_class: future
+    underlying: peo.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fpgez26:
+    symbol: FPGEZ26
+    name: FPGEZ26
+    short_name: FPGEZ26
+    instrument_class: future
+    underlying: pge.wa
+    expiration: 29
+    multiplier: 1000.0
+    margin_rate: 0.1
+  fpgeh27:
+    symbol: FPGEH27
+    name: FPGEH27
+    short_name: FPGEH27
+    instrument_class: future
+    underlying: pge.wa
+    expiration: 50
+    multiplier: 1000.0
+    margin_rate: 0.1
+  fpgem27:
+    symbol: FPGEM27
+    name: FPGEM27
+    short_name: FPGEM27
+    instrument_class: future
+    underlying: pge.wa
+    expiration: 50
+    multiplier: 1000.0
+    margin_rate: 0.1
+  fpknz26:
+    symbol: FPKNZ26
+    name: FPKNZ26
+    short_name: FPKNZ26
+    instrument_class: future
+    underlying: pkn.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fpknh27:
+    symbol: FPKNH27
+    name: FPKNH27
+    short_name: FPKNH27
+    instrument_class: future
+    underlying: pkn.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fpknm27:
+    symbol: FPKNM27
+    name: FPKNM27
+    short_name: FPKNM27
+    instrument_class: future
+    underlying: pkn.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fpkoz26:
+    symbol: FPKOZ26
+    name: FPKOZ26
+    short_name: FPKOZ26
+    instrument_class: future
+    underlying: pko.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fpkoh27:
+    symbol: FPKOH27
+    name: FPKOH27
+    short_name: FPKOH27
+    instrument_class: future
+    underlying: pko.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fpkom27:
+    symbol: FPKOM27
+    name: FPKOM27
+    short_name: FPKOM27
+    instrument_class: future
+    underlying: pko.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fpkpz26:
+    symbol: FPKPZ26
+    name: FPKPZ26
+    short_name: FPKPZ26
+    instrument_class: future
+    underlying: pkp.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fpkph27:
+    symbol: FPKPH27
+    name: FPKPH27
+    short_name: FPKPH27
+    instrument_class: future
+    underlying: pkp.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fpxmz26:
+    symbol: FPXMZ26
+    name: FPXMZ26
+    short_name: FPXMZ26
+    instrument_class: future
+    underlying: pxm.wa
+    expiration: 29
+    multiplier: 1000.0
+    margin_rate: 0.1
+  fpxmh27:
+    symbol: FPXMH27
+    name: FPXMH27
+    short_name: FPXMH27
+    instrument_class: future
+    underlying: pxm.wa
+    expiration: 50
+    multiplier: 1000.0
+    margin_rate: 0.1
+  fpzuz26:
+    symbol: FPZUZ26
+    name: FPZUZ26
+    short_name: FPZUZ26
+    instrument_class: future
+    underlying: pzu.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fpzuh27:
+    symbol: FPZUH27
+    name: FPZUH27
+    short_name: FPZUH27
+    instrument_class: future
+    underlying: pzu.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fpzum27:
+    symbol: FPZUM27
+    name: FPZUM27
+    short_name: FPZUM27
+    instrument_class: future
+    underlying: pzu.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fsvez26:
+    symbol: FSVEZ26
+    name: FSVEZ26
+    short_name: FSVEZ26
+    instrument_class: future
+    underlying: sve.wa
+    expiration: 29
+    multiplier: 1000.0
+    margin_rate: 0.1
+  fsveh27:
+    symbol: FSVEH27
+    name: FSVEH27
+    short_name: FSVEH27
+    instrument_class: future
+    underlying: sve.wa
+    expiration: 50
+    multiplier: 1000.0
+    margin_rate: 0.1
+  ftenz26:
+    symbol: FTENZ26
+    name: FTENZ26
+    short_name: FTENZ26
+    instrument_class: future
+    underlying: ten.wa
+    expiration: 29
+    multiplier: 10.0
+    margin_rate: 0.1
+  ftenh27:
+    symbol: FTENH27
+    name: FTENH27
+    short_name: FTENH27
+    instrument_class: future
+    underlying: ten.wa
+    expiration: 50
+    multiplier: 10.0
+    margin_rate: 0.1
+  ftenm27:
+    symbol: FTENM27
+    name: FTENM27
+    short_name: FTENM27
+    instrument_class: future
+    underlying: ten.wa
+    expiration: 50
+    multiplier: 10.0
+    margin_rate: 0.1
+  ftpez26:
+    symbol: FTPEZ26
+    name: FTPEZ26
+    short_name: FTPEZ26
+    instrument_class: future
+    underlying: tpe.wa
+    expiration: 29
+    multiplier: 1000.0
+    margin_rate: 0.1
+  ftpeh27:
+    symbol: FTPEH27
+    name: FTPEH27
+    short_name: FTPEH27
+    instrument_class: future
+    underlying: tpe.wa
+    expiration: 50
+    multiplier: 1000.0
+    margin_rate: 0.1
+  ftpem27:
+    symbol: FTPEM27
+    name: FTPEM27
+    short_name: FTPEM27
+    instrument_class: future
+    underlying: tpe.wa
+    expiration: 50
+    multiplier: 1000.0
+    margin_rate: 0.1
+  fw20z2620:
+    symbol: FW20Z2620
+    name: FW20Z2620
+    short_name: FW20Z2620
+    instrument_class: future
+    underlying: wig20
+    expiration: 29
+    multiplier: 20.0
+    margin_rate: 0.1
+  fw20h2720:
+    symbol: FW20H2720
+    name: FW20H2720
+    short_name: FW20H2720
+    instrument_class: future
+    underlying: wig20
+    expiration: 50
+    multiplier: 20.0
+    margin_rate: 0.1
+  fw20m2720:
+    symbol: FW20M2720
+    name: FW20M2720
+    short_name: FW20M2720
+    instrument_class: future
+    underlying: wig20
+    expiration: 50
+    multiplier: 20.0
+    margin_rate: 0.1
+  fw20u2720:
+    symbol: FW20U2720
+    name: FW20U2720
+    short_name: FW20U2720
+    instrument_class: future
+    underlying: wig20
+    expiration: 50
+    multiplier: 20.0
+    margin_rate: 0.1
+  fxtbz26:
+    symbol: FXTBZ26
+    name: FXTBZ26
+    short_name: FXTBZ26
+    instrument_class: future
+    underlying: xtb.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fxtbh27:
+    symbol: FXTBH27
+    name: FXTBH27
+    short_name: FXTBH27
+    instrument_class: future
+    underlying: xtb.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fxtbm27:
+    symbol: FXTBM27
+    name: FXTBM27
+    short_name: FXTBM27
+    instrument_class: future
+    underlying: xtb.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fzabz26:
+    symbol: FZABZ26
+    name: FZABZ26
+    short_name: FZABZ26
+    instrument_class: future
+    underlying: zab.wa
+    expiration: 29
+    multiplier: 100.0
+    margin_rate: 0.1
+  fzabh27:
+    symbol: FZABH27
+    name: FZABH27
+    short_name: FZABH27
+    instrument_class: future
+    underlying: zab.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+  fzabm27:
+    symbol: FZABM27
+    name: FZABM27
+    short_name: FZABM27
+    instrument_class: future
+    underlying: zab.wa
+    expiration: 50
+    multiplier: 100.0
+    margin_rate: 0.1
+agents:
+  relative_momentum:
+    agent_class: RelativeMomentumAgent
+    instrument_classes:
+    - stock
+    number: 20
+    config:
+      lookback_sessions: 252
+      turnover_sessions: 30
+      min_median_turnover: 250000
+      portfolio_size: 10
+      rebalance_sessions: 20
+      aggression: 0.003
+      order_validity_ticks: 3
+      base_currency: PLN
+      initial_cash:
+        PLN: 1000000
+  arbitrageurs:
+    agent_class: IndexFuturesArbitrageAgent
+    number: 5
+    config:
+      entry_threshold: 0.0015
+      exit_threshold: 0.0004
+      order_quantity: 25
+      max_order_quantity: 100
+      max_position: 500
+      max_gross_exposure_pln: 100000000
+      volume_aggression: 8.0
+      max_stock_order_quantity: 10000
+      validity_period: 1
+      initial_cash:
+        PLN: 100000000
+  noise_tight:
+    agent_class: NoiseAgent
+    instrument_classes:
+    - stock
+    - future
+    number: 7
+    config:
+      lam: 0.4
+      mean_volume: 150
+      mean_spread: 0.7
+      validity_period: 3
+      volume_fraction: 0.003
+      use_historical_volatility: true
+      historical_volatility_scale: 0.15
+      volume_lookback: 20
+      volatility_lookback: 20
+      max_price_deviation: 0.02
+      volume_basis: notional
+      initial_cash:
+        PLN: 1000000
+  noise_medium:
+    agent_class: NoiseAgent
+    instrument_classes:
+    - stock
+    - future
+    number: 10
+    config:
+      lam: 0.3
+      mean_volume: 200
+      mean_spread: 1.5
+      validity_period: 10
+      volume_fraction: 0.03
+      historical_volatility_scale: 0.2
+      max_price_deviation: 0.02
+      volume_basis: notional
+      initial_cash:
+        PLN: 1000000
+  noise_wide:
+    agent_class: NoiseAgent
+    number: 8
+    config:
+      lam: 0.2
+      mean_volume: 250
+      mean_spread: 4.0
+      validity_period: 20
+      volume_fraction: 0.003
+      historical_volatility_scale: 0.15
+      max_price_deviation: 0.02
+      volume_basis: notional
+      initial_cash:
+        PLN: 1000000
+  market_makers:
+    agent_class: MMZOHAgent
+    instrument_classes:
+    - stock
+    - future
+    number: 1
+    config:
+      rebalance_by: time
+      rebalance_period: 4
+      volume_fraction: 0.02
+      historical_volatility_scale: 0.7
+      max_price_deviation: 0.04
+      K: 4
+      xi: 0.1
+      omega: 0.1
+      q_max: 1000000
+  momentum_fast:
+    agent_class: MomentumAgent
+    instrument_classes:
+    - stock
+    number: 2
+    config:
+      momentum_mode: intraday
+      period: 5
+      threshold: 0.001
+      lam: 0.3
+      mean_volume: 150
+      q_max: 10000
+      aggression: 0.0005
+      volume_fraction: 0.005
+      historical_volatility_scale: 0.7
+      max_price_deviation: 0.07
+      initial_cash:
+        PLN: 10000000
+  momentum_slow:
+    agent_class: MomentumAgent
+    instrument_classes:
+    - stock
+    number: 2
+    config:
+      momentum_mode: daily
+      daily_lookback: 10
+      threshold: 0.01
+      lam: 0.2
+      mean_volume: 150
+      q_max: 5000
+      aggression: 0.0005
+      volume_fraction: 0.005
+      historical_volatility_scale: 0.7
+      max_price_deviation: 0.09
+      initial_cash:
+        PLN: 10000000
+  hbl:
+    agent_class: HBLAgent
+    number: 6
+  regime_traders:
+    agent_class: RegimeTraderAgent
+    instrument_classes:
+    - stock
+    number: 2
+    config:
+      lam: 0.55
+      mean_volume: 200
+      regime_switch_probability: 0.02
+      bullish_probability: 0.45
+      bearish_probability: 0.45
+      aggression_ticks: 10
+      tick_size: 0.01
+      validity_period: 3
+      max_position: 20000
+      volume_fraction: 0.01
+      historical_volatility_scale: 0.6
+      max_price_deviation: 0.08
+      initial_cash:
+        PLN: 10000000
+historical_prices:
+  enabled: true
+  path: market_data/gpw_auto.ohlcv.csv
+  lookback_sessions: 252
+  cutoff_date: '2026-11-05'
+  allow_short_history:
+  - 06N.WA
+  - 08N.WA
+  - 11B.WA
+  - 1AT.WA
+  - 3RG.WA
+  - 4MS.WA
+  - AAT.WA
+  - ABE.WA
+  - ABS.WA
+  - ACG.WA
+  - ACP.WA
+  - ACT.WA
+  - ADV.WA
+  - ADX.WA
+  - AGO.WA
+  - AGT.WA
+  - ALE.WA
+  - ALG.WA
+  - ALI.WA
+  - ALL.WA
+  - ALR.WA
+  - AMB.WA
+  - AMC.WA
+  - ANR.WA
+  - APE.WA
+  - APL.WA
+  - APN.WA
+  - APR.WA
+  - APT.WA
+  - ARH.WA
+  - ARL.WA
+  - ART.WA
+  - ASB.WA
+  - ASE.WA
+  - ASM.WA
+  - AST.WA
+  - ATC.WA
+  - ATD.WA
+  - ATG.WA
+  - ATP.WA
+  - ATR.WA
+  - ATS.WA
+  - ATT.WA
+  - AWM.WA
+  - BBD.WA
+  - BBT.WA
+  - BCM.WA
+  - BCS.WA
+  - BCX.WA
+  - BDF.WA
+  - BDX.WA
+  - BFT.WA
+  - BHW.WA
+  - BIO.WA
+  - BIP.WA
+  - BLO.WA
+  - BMC.WA
+  - BMX.WA
+  - BNP.WA
+  - BOS.WA
+  - BOW.WA
+  - BRS.WA
+  - BST.WA
+  - CAP.WA
+  - CAR.WA
+  - CAV.WA
+  - CBF.WA
+  - CCE.WA
+  - CDL.WA
+  - CDR.WA
+  - CEZ.WA
+  - CFI.WA
+  - CIG.WA
+  - CLC.WA
+  - CLD.WA
+  - CLE.WA
+  - CLN.WA
+  - CMP.WA
+  - COG.WA
+  - CPD.WA
+  - CPI.WA
+  - CPL.WA
+  - CPR.WA
+  - CPS.WA
+  - CRI.WA
+  - CRJ.WA
+  - CRM.WA
+  - CRQ.WA
+  - CSR.WA
+  - CTS.WA
+  - CTX.WA
+  - CZT.WA
+  - DAD.WA
+  - DAT.WA
+  - DBC.WA
+  - DBE.WA
+  - DCR.WA
+  - DEK.WA
+  - DEL.WA
+  - DGA.WA
+  - DGE.WA
+  - DIA.WA
+  - DIG.WA
+  - DMG.WA
+  - DNP.WA
+  - DOM.WA
+  - DTR.WA
+  - DVL.WA
+  - EAH.WA
+  - EAT.WA
+  - EBP.WA
+  - ECB.WA
+  - ECH.WA
+  - EDI.WA
+  - EFK.WA
+  - EHG.WA
+  - EKP.WA
+  - ELT.WA
+  - ENA.WA
+  - ENE.WA
+  - ENG.WA
+  - ENI.WA
+  - ENP.WA
+  - ENT.WA
+  - EQU.WA
+  - ERB.WA
+  - ERG.WA
+  - EST.WA
+  - ETL.WA
+  - EUC.WA
+  - EUR.WA
+  - F11BH27
+  - F11BM27
+  - F11BZ26
+  - FAB.WA
+  - FACPH27
+  - FACPM27
+  - FACPZ26
+  - FALEH27
+  - FALEM27
+  - FALEZ26
+  - FALRH27
+  - FALRM27
+  - FALRZ26
+  - FAPRH27
+  - FAPRZ26
+  - FASBH27
+  - FASBZ26
+  - FATTH27
+  - FATTM27
+  - FATTZ26
+  - FBDXH27
+  - FBDXM27
+  - FBDXZ26
+  - FCARH27
+  - FCARZ26
+  - FCDRH27
+  - FCDRM27
+  - FCDRZ26
+  - FCPSH27
+  - FCPSM27
+  - FCPSZ26
+  - FDIAH27
+  - FDIAZ26
+  - FDNPH27
+  - FDNPM27
+  - FDNPZ26
+  - FDOMH27
+  - FDOMM27
+  - FDOMZ26
+  - FEATZ26
+  - FEBPH27
+  - FEBPM27
+  - FEBPZ26
+  - FEE.WA
+  - FENAH27
+  - FENAZ26
+  - FGPWH27
+  - FGPWZ26
+  - FHB.WA
+  - FINGH27
+  - FINGZ26
+  - FJSWH27
+  - FJSWM27
+  - FJSWZ26
+  - FKGHH27
+  - FKGHM27
+  - FKGHZ26
+  - FKRUH27
+  - FKRUM27
+  - FKRUZ26
+  - FKTYH27
+  - FKTYM27
+  - FKTYZ26
+  - FLPPH27
+  - FLPPM27
+  - FLPPZ26
+  - FLWBH27
+  - FLWBZ26
+  - FMABZ26
+  - FMBKH27
+  - FMBKM27
+  - FMBKZ26
+  - FMDVH27
+  - FMDVM27
+  - FMDVZ26
+  - FMG.WA
+  - FMILH27
+  - FMILZ26
+  - FON.WA
+  - FOPLH27
+  - FOPLM27
+  - FOPLZ26
+  - FPCOH27
+  - FPCOM27
+  - FPCOZ26
+  - FPEOH27
+  - FPEOM27
+  - FPEOZ26
+  - FPGEH27
+  - FPGEM27
+  - FPGEZ26
+  - FPKNH27
+  - FPKNM27
+  - FPKNZ26
+  - FPKOH27
+  - FPKOM27
+  - FPKOZ26
+  - FPKPH27
+  - FPKPZ26
+  - FPXMH27
+  - FPXMZ26
+  - FPZUH27
+  - FPZUM27
+  - FPZUZ26
+  - FRO.WA
+  - FSG.WA
+  - FSVEH27
+  - FSVEZ26
+  - FTE.WA
+  - FTENH27
+  - FTENM27
+  - FTENZ26
+  - FTPEH27
+  - FTPEM27
+  - FTPEZ26
+  - FW20H2720
+  - FW20M2720
+  - FW20U2720
+  - FW20Z2620
+  - FXTBH27
+  - FXTBM27
+  - FXTBZ26
+  - FZABH27
+  - FZABM27
+  - FZABZ26
+  - GIF.WA
+  - GKI.WA
+  - GMT.WA
+  - GNS.WA
+  - GOB.WA
+  - GOP.WA
+  - GPP.WA
+  - GPW.WA
+  - GRN.WA
+  - GRX.WA
+  - GTC.WA
+  - GTN.WA
+  - GVT.WA
+  - HDR.WA
+  - HEL.WA
+  - HRP.WA
+  - HRS.WA
+  - HUG.WA
+  - IBS.WA
+  - ICE.WA
+  - IDM.WA
+  - IFI.WA
+  - IFR.WA
+  - IMC.WA
+  - IMP.WA
+  - IMS.WA
+  - INC.WA
+  - ING.WA
+  - INK.WA
+  - INL.WA
+  - INP.WA
+  - IPE.WA
+  - IPO.WA
+  - ITB.WA
+  - IZB.WA
+  - IZO.WA
+  - IZS.WA
+  - JRH.WA
+  - JSW.WA
+  - JWW.WA
+  - KCH.WA
+  - KER.WA
+  - KGH.WA
+  - KGL.WA
+  - KGN.WA
+  - KMP.WA
+  - KOM.WA
+  - KPD.WA
+  - KPL.WA
+  - KRK.WA
+  - KRU.WA
+  - KSG.WA
+  - KTY.WA
+  - KVT.WA
+  - LBT.WA
+  - LBW.WA
+  - LEN.WA
+  - LES.WA
+  - LKD.WA
+  - LMU.WA
+  - LPP.WA
+  - LRQ.WA
+  - LSI.WA
+  - LTX.WA
+  - LWB.WA
+  - MAB.WA
+  - MAK.WA
+  - MAN.WA
+  - MBK.WA
+  - MBR.WA
+  - MBW.WA
+  - MCI.WA
+  - MCR.WA
+  - MDG.WA
+  - MDI.WA
+  - MDV.WA
+  - MEG.WA
+  - MEX.WA
+  - MFO.WA
+  - MGT.WA
+  - MIL.WA
+  - MIR.WA
+  - MLG.WA
+  - MLK.WA
+  - MLS.WA
+  - MNC.WA
+  - MOC.WA
+  - MOL.WA
+  - MON.WA
+  - MOV.WA
+  - MQR.WA
+  - MRB.WA
+  - MRC.WA
+  - MSP.WA
+  - MSW.WA
+  - MSZ.WA
+  - MUR.WA
+  - MVP.WA
+  - MWT.WA
+  - MXC.WA
+  - MZA.WA
+  - NCL.WA
+  - NEU.WA
+  - NNG.WA
+  - NTC.WA
+  - NTT.WA
+  - NTU.WA
+  - NVA.WA
+  - NVG.WA
+  - NVT.WA
+  - NWA.WA
+  - NWG.WA
+  - NXG.WA
+  - OBL.WA
+  - ODL.WA
+  - OML.WA
+  - OND.WA
+  - ONO.WA
+  - OPL.WA
+  - OPM.WA
+  - OPN.WA
+  - OTM.WA
+  - OTS.WA
+  - PAS.WA
+  - PAT.WA
+  - PBF.WA
+  - PBG.WA
+  - PBX.WA
+  - PCE.WA
+  - PCF.WA
+  - PCO.WA
+  - PCR.WA
+  - PCX.WA
+  - PEN.WA
+  - PEO.WA
+  - PEP.WA
+  - PGE.WA
+  - PGM.WA
+  - PGV.WA
+  - PHN.WA
+  - PHR.WA
+  - PJP.WA
+  - PKN.WA
+  - PKO.WA
+  - PKP.WA
+  - PLW.WA
+  - PLZ.WA
+  - PPS.WA
+  - PRI.WA
+  - PRM.WA
+  - PRT.WA
+  - PTG.WA
+  - PTW.WA
+  - PWX.WA
+  - PXM.WA
+  - PZU.WA
+  - QNA.WA
+  - QNT.WA
+  - QRS.WA
+  - RAF.WA
+  - RBW.WA
+  - RDN.WA
+  - REX.WA
+  - RHD.WA
+  - RLP.WA
+  - RMK.WA
+  - RNC.WA
+  - RND.WA
+  - RNK.WA
+  - ROB.WA
+  - RPC.WA
+  - RVU.WA
+  - RWL.WA
+  - S2B.WA
+  - SAN.WA
+  - SCP.WA
+  - SCW.WA
+  - SEK.WA
+  - SEL.WA
+  - SFG.WA
+  - SFS.WA
+  - SGN.WA
+  - SHD.WA
+  - SHG.WA
+  - SIM.WA
+  - SKA.WA
+  - SKH.WA
+  - SKL.WA
+  - SLV.WA
+  - SNK.WA
+  - SNT.WA
+  - SNW.WA
+  - SNX.WA
+  - SON.WA
+  - SPH.WA
+  - SPR.WA
+  - STF.WA
+  - STP.WA
+  - STS.WA
+  - STX.WA
+  - SVE.WA
+  - SVRS.WA
+  - SWG.WA
+  - TAR.WA
+  - TBL.WA
+  - TEN.WA
+  - THG.WA
+  - TLX.WA
+  - TMR.WA
+  - TOA.WA
+  - TOR.WA
+  - TOW.WA
+  - TPE.WA
+  - TRI.WA
+  - TRK.WA
+  - TRN.WA
+  - TRR.WA
+  - TSG.WA
+  - TXT.WA
+  - UCG.WA
+  - ULG.WA
+  - ULM.WA
+  - UNF.WA
+  - UNI.WA
+  - UNT.WA
+  - URT.WA
+  - VGO.WA
+  - VIN.WA
+  - VOT.WA
+  - VOX.WA
+  - VRC.WA
+  - VRG.WA
+  - VVD.WA
+  - WAS.WA
+  - WEN.WA
+  - WIG20
+  - WIK.WA
+  - WLT.WA
+  - WPL.WA
+  - WPR.WA
+  - WTN.WA
+  - WWL.WA
+  - WXF.WA
+  - XPL.WA
+  - XTB.WA
+  - XTP.WA
+  - YAN.WA
+  - YRL.WA
+  - ZAB.WA
+  - ZAP.WA
+  - ZEP.WA
+  - ZMT.WA
+  - ZRE.WA
+  - ZUE.WA
+  - ZUK.WA
+start_date: '2026-11-06'
+non_trading_dates:
+- '2026-11-11'
+- '2026-12-24'
+- '2026-12-25'
+- '2026-12-31'
+- '2027-01-01'
+- '2027-01-06'

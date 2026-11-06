@@ -451,6 +451,22 @@ class Simulator:
                 )
                 self.add_agents([agent])
             if agent_group["agent_class"] == "IndexFuturesArbitrageAgent":
+                futures = [
+                    market
+                    for market in self.markets.values()
+                    if (
+                        market.instrument_class == "future"
+                        and market.is_tradable
+                        and market.underlying.instrument_class == "index"
+                    )
+                ]
+                selected = {future.asset_id: future for future in futures}
+                for future in futures:
+                    for component in future.underlying.components.values():
+                        stock = component["security"]
+                        if stock.is_tradable:
+                            selected[stock.asset_id] = stock
+                markets = list(selected.values())
                 agent = IndexFuturesArbitrageAgent(
                     markets=markets,
                     configuration=configuration,

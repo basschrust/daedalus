@@ -21,37 +21,6 @@ from marketsim.scenarios.wig20 import (
 OHLCV = ("open", "high", "low", "close", "volume")
 
 
-def wig_members(conn, cutoff: date) -> pd.DataFrame:
-    """Official WIG constituents at the historical cutoff."""
-    result = query(
-        conn,
-        """
-        SELECT SECURITY_SYMBOL AS SYMBOL, WEIGHT
-        FROM INDEX_CONSTITUENTS
-        WHERE INDEX_SYMBOL = 'WIG'
-          AND VALID_FROM <= %s
-          AND (VALID_TO IS NULL OR VALID_TO >= %s)
-        ORDER BY SECURITY_SYMBOL
-        """,
-        (cutoff, cutoff),
-    )
-
-    if result.empty:
-        raise ValueError(
-            f"No WIG constituents found for {cutoff}. Check INDEX_CONSTITUENTS in Ikaros."
-        )
-
-    if result.symbol.isna().any() or result.symbol.duplicated().any():
-        raise ValueError("Invalid or duplicate WIG constituents")
-
-    result["weight"] = pd.to_numeric(result.weight, errors="raise")
-
-    if (result.weight <= 0).any():
-        raise ValueError("WIG constituent weights must be positive")
-
-    return result
-
-
 def load_stock_history(
     conn,
     symbols: list[str],
@@ -505,30 +474,21 @@ def prepare(conn, settings: dict, root: Path):
 
     simulation_dates = load_simulation_dates(base)
 
+    # Build WIG only if all its constituents are present.
     markets = build_stock_markets(stock_history)
 
-    # Build WIG only if all its constituents are present.
-    if len(stock_history) == len(stocks):
-        markets["wig"] = build_index_market("WIG", stocks, stock_history, markets)
-    else:
-        missing = set(wig20_members.symbol) - set(stock_history)
+    # Construct WIG20 from its actual constituents.
+    missing = set(wig20_members.symbol) - set(stock_history)
 
-        if missing:
-            raise ValueError(f"Cannot construct WIG20. Missing constituents: {sorted(missing)}")
+    if missing:
+        raise ValueError(f"Cannot construct WIG20. Missing constituents: {sorted(missing)}")
 
-        markets["wig20"] = build_index_market(
-            "WIG20",
-            wig20_members,
-            stock_history,
-            wig20_history,
-        )
-        rejected.append(
-            {
-                "symbol": "WIG",
-                "instrument_type": "INDEX",
-                "reason": "missing_constituent",
-            }
-        )
+    markets["wig20"] = build_index_market(
+        "WIG20",
+        wig20_members,
+        stock_history,
+        wig20_history,
+    )
 
     derivatives = discover_derivatives(conn, cutoff)
 
