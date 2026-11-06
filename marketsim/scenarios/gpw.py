@@ -10,11 +10,13 @@ import yaml
 
 from marketsim.market.historical_prices import load_simulation_dates
 from marketsim.scenarios.gpw_universe import discover_derivatives
+from marketsim.scenarios.gpw_universe import discover_stocks
 from marketsim.scenarios.wig20 import (
     futures_expiration_day,
     query,
     to_price,
 )
+from marketsim.scenarios.wig20 import candidate_dates
 
 OHLCV = ("open", "high", "low", "close", "volume")
 
@@ -437,29 +439,23 @@ def prepare(conn, settings: dict, root: Path):
         raise ValueError("Invalid history requirements")
 
     # Use the latest available WIG index session before today.
-    cutoff_frame = query(
-        conn,
-        """
-        SELECT MAX(TO_DATE("DATE")) AS CUTOFF
-        FROM INDEX_PRICES
-        WHERE INDEX_SYMBOL = 'WIG'
-          AND TO_DATE("DATE") < %s
-        """,
-        (date.today(),),
-    )
+    dates = candidate_dates(conn, date.today() - timedelta(days=1))
 
-    cutoff = cutoff_frame.iloc[0]["cutoff"]
+    if not dates:
+        raise ValueError("No GPW stock prices available")
 
-    if pd.isna(cutoff):
-        raise ValueError("No WIG cutoff available")
+    cutoff = pd.Timestamp(dates[0]).date()
 
-    cutoff = pd.Timestamp(cutoff).date()
+    print(f"GPW historical cutoff: {cutoff}")
 
-    members = wig_members(conn, cutoff)
+    stocks = discover_stocks(conn, cutoff)
+
+    if stocks.empty:
+        raise ValueError(f"No GPW stocks found for {cutoff}")
 
     stock_history = load_stock_history(
         conn,
-        members.symbol.tolist(),
+        stocks.symbol.tolist(),
         cutoff,
         lookback,
     )
