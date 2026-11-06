@@ -455,9 +455,9 @@ class Simulator:
                     market
                     for market in self.markets.values()
                     if (
-                        market.instrument_class == "future"
-                        and market.is_tradable
-                        and market.underlying.instrument_class == "index"
+                            market.instrument_class == "future"
+                            and market.is_tradable
+                            and market.underlying.instrument_class == "index"
                     )
                 ]
                 selected = {future.asset_id: future for future in futures}
