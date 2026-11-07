@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pandas as pd
-import re
 from typing_extensions import TYPE_CHECKING
 
 from marketsim.market.instruments.security import Security
@@ -17,14 +17,13 @@ if TYPE_CHECKING:
     from marketsim.market.fourheap import MatchedOrder
 
 
-
 def parse_expiration(value: int | str) -> int:
     """Convert relative expiry to simulation trading days."""
     if isinstance(value, bool):
         raise ValueError("Invalid option expiration")
     if isinstance(value, int):
-        if value <= 0:
-            raise ValueError("Option expiration must be positive")
+        if value < 0:
+            raise ValueError("Option expiration cannot be negative")
         return value
     if isinstance(value, str):
         value = value.strip().upper()
@@ -44,7 +43,6 @@ def parse_expiration(value: int | str) -> int:
     raise ValueError(f"Unsupported option expiration: {value!r}")
 
 
-
 class Option(Security):
     def __init__(
         self,
@@ -62,7 +60,7 @@ class Option(Security):
         self.underlying = underlying
         self.strike = derivatives_config["strike"]
         self.expiration = parse_expiration(derivatives_config["expiration"])
-        #self.expiration = derivatives_config["expiration"]  # TODO: prepare mapper for this
+        # self.expiration = derivatives_config["expiration"]  # TODO: prepare mapper for this
         # so that we can give relative time or precise dates or just take it from option series
         # for now we set mostly as 248 (number of trading days per year)
         self.option_side = derivatives_config["option_side"]  # CALL/PUT

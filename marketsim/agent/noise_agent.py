@@ -158,13 +158,7 @@ class NoiseAgent(Agent):
                 reference = best_bid if best_bid is not None else last_price
 
             if market.instrument_class == "future":
-                underlying = market.underlying
-                if underlying.instrument_class == "index":
-                    # Recalculate index from its constituents.
-                    reference = float(market.calculate_theoretical_value())
-                else:
-                    # Single-stock futures.
-                    reference = float(underlying.last_traded_price)
+                reference = float(market.calculate_theoretical_value())
 
             if not math.isfinite(reference) or reference <= 0:
                 continue
