@@ -95,7 +95,7 @@ def test_future_uses_theoretical_price_not_last_trade(make_agent):
     agent, market = make_agent()
 
     market.last_traded_price = Price(2900)
-    market.underlying.calculate_value.return_value = Price(3100)
+    market.calculate_theoretical_value.return_value = Price(3100)
 
     market.order_book.get_best_bid.return_value = Price(2999)
     market.order_book.get_best_ask.return_value = Price(3001)
@@ -105,7 +105,7 @@ def test_future_uses_theoretical_price_not_last_trade(make_agent):
     order = submitted_order(market)
 
     assert order.price == Price(3100)
-    market.underlying.calculate_value.assert_called_once()
+    market.calculate_theoretical_value.assert_called_once_with()
 
 
 ###  trading
