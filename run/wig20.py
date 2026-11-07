@@ -5,7 +5,9 @@ from pathlib import Path
 
 import yaml
 from dotenv import load_dotenv
+from snowflake.connector.errors import DatabaseError, OperationalError
 
+from marketsim.analysis.report import MarketRealismReport
 from marketsim.input.config import (
     create_run_directory,
     load_config,
@@ -35,8 +37,16 @@ def main():
     with config_path.open(encoding="utf-8") as stream:
         settings = yaml.safe_load(stream)
 
-    connection = connect()
-
+    try:
+        connection = connect()
+    except (DatabaseError, OperationalError) as exc:
+        print(
+            "\nERROR: Cannot connect to Snowflake.\n"
+            "The server may be unreachable, or the network/DNS "
+            "configuration may be incorrect.\n"
+            f"Details: {exc}\n"
+        )
+        raise SystemExit(1) from None
     try:
         path, cutoff, index_level = prepare(connection, settings, root)
     finally:
@@ -66,11 +76,21 @@ def main():
     sim_kwargs = kwargs_for(Simulator, config)
     sim_kwargs["historical_ohlcv_by_symbol"] = historical
     sim_kwargs["simulation_dates"] = simulation_dates
+    mrc_enabled = settings.get("market_realism", {}).get("enabled", True)
+    mrc = MarketRealismReport() if mrc_enabled else None
+    sim_kwargs["market_realism_report"] = mrc
 
     sim = Simulator(**sim_kwargs)
 
     try:
         sim.run()
+        if mrc is not None:
+            report = mrc.generate(sim, output_dir)
+
+            print(
+                f"Market realism control complete: "
+                f"{report['symbol'].nunique()} instruments analyzed."
+            )
     finally:
         close = getattr(sim.repository, "close", None)
         if callable(close):

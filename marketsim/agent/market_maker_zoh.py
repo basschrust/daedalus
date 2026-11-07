@@ -105,18 +105,22 @@ class MMZOHAgent(Agent):
                 )
 
             volumes = pd.to_numeric(history["volume"], errors="coerce")
-
             if (
                 volumes.isna().any()
                 or not (volumes >= 0).all()
                 or not np.isfinite(volumes.to_numpy(dtype=float)).all()
             ):
                 raise ValueError(f"Invalid historical volume for {market.name}")
-
             daily_volume = float(volumes.mean())
-
-            if not math.isfinite(daily_volume) or daily_volume <= 0:
+            if not math.isfinite(daily_volume):
                 raise ValueError(f"Invalid historical volume for {market.name}")
+            if daily_volume == 0:
+                self.volume_by_asset[asset_id] = 0
+                self.logger.warning(
+                    f"MM volume calibration: {market.name} has zero "
+                    "historical volume; no liquidity will be quoted"
+                )
+                continue
 
             rebalance_count = math.ceil(sim_time / self.rebalance_period)
 

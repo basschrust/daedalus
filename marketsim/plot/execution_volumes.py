@@ -110,7 +110,7 @@ def plot_execution_volumes_by_asset(
             "_",
             asset_name,
         ).strip("._")
-        path = output_dir / f"{safe_name}_{asset_id}_execution_volumes.png"
+        path = output_dir / f"market_{asset_id}_{safe_name}_execution_volumes.png"
         fig.savefig(path, dpi=150)
         plt.close(fig)
         result.append(path)
