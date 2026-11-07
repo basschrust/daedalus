@@ -1,5 +1,5 @@
 seed: 67
-days: 50
+days: 5
 sim_time: 10
 lob_plot_interval: 10000
 markets:
@@ -3220,7 +3220,7 @@ markets:
     short_name: F11BZ26
     instrument_class: future
     underlying: 11b.wa
-    expiration: 29
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   f11bh27:
@@ -3229,7 +3229,7 @@ markets:
     short_name: F11BH27
     instrument_class: future
     underlying: 11b.wa
-    expiration: 50
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   f11bm27:
@@ -3238,7 +3238,7 @@ markets:
     short_name: F11BM27
     instrument_class: future
     underlying: 11b.wa
-    expiration: 50
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   facpz26:
@@ -3247,7 +3247,7 @@ markets:
     short_name: FACPZ26
     instrument_class: future
     underlying: acp.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   facph27:
@@ -3256,7 +3256,7 @@ markets:
     short_name: FACPH27
     instrument_class: future
     underlying: acp.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   facpm27:
@@ -3265,7 +3265,7 @@ markets:
     short_name: FACPM27
     instrument_class: future
     underlying: acp.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   falez26:
@@ -3274,7 +3274,7 @@ markets:
     short_name: FALEZ26
     instrument_class: future
     underlying: ale.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   faleh27:
@@ -3283,7 +3283,7 @@ markets:
     short_name: FALEH27
     instrument_class: future
     underlying: ale.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   falem27:
@@ -3292,7 +3292,7 @@ markets:
     short_name: FALEM27
     instrument_class: future
     underlying: ale.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   falrz26:
@@ -3301,7 +3301,7 @@ markets:
     short_name: FALRZ26
     instrument_class: future
     underlying: alr.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   falrh27:
@@ -3310,7 +3310,7 @@ markets:
     short_name: FALRH27
     instrument_class: future
     underlying: alr.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   falrm27:
@@ -3319,7 +3319,7 @@ markets:
     short_name: FALRM27
     instrument_class: future
     underlying: alr.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   faprz26:
@@ -3328,7 +3328,7 @@ markets:
     short_name: FAPRZ26
     instrument_class: future
     underlying: apr.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   faprh27:
@@ -3337,7 +3337,7 @@ markets:
     short_name: FAPRH27
     instrument_class: future
     underlying: apr.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fasbz26:
@@ -3346,7 +3346,7 @@ markets:
     short_name: FASBZ26
     instrument_class: future
     underlying: asb.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fasbh27:
@@ -3355,7 +3355,7 @@ markets:
     short_name: FASBH27
     instrument_class: future
     underlying: asb.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fattz26:
@@ -3364,7 +3364,7 @@ markets:
     short_name: FATTZ26
     instrument_class: future
     underlying: att.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fatth27:
@@ -3373,7 +3373,7 @@ markets:
     short_name: FATTH27
     instrument_class: future
     underlying: att.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fattm27:
@@ -3382,7 +3382,7 @@ markets:
     short_name: FATTM27
     instrument_class: future
     underlying: att.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fbdxz26:
@@ -3391,7 +3391,7 @@ markets:
     short_name: FBDXZ26
     instrument_class: future
     underlying: bdx.wa
-    expiration: 29
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   fbdxh27:
@@ -3400,7 +3400,7 @@ markets:
     short_name: FBDXH27
     instrument_class: future
     underlying: bdx.wa
-    expiration: 50
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   fbdxm27:
@@ -3409,7 +3409,7 @@ markets:
     short_name: FBDXM27
     instrument_class: future
     underlying: bdx.wa
-    expiration: 50
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   fcarz26:
@@ -3418,7 +3418,7 @@ markets:
     short_name: FCARZ26
     instrument_class: future
     underlying: car.wa
-    expiration: 29
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   fcarh27:
@@ -3427,7 +3427,7 @@ markets:
     short_name: FCARH27
     instrument_class: future
     underlying: car.wa
-    expiration: 50
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   fcdrz26:
@@ -3436,7 +3436,7 @@ markets:
     short_name: FCDRZ26
     instrument_class: future
     underlying: cdr.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fcdrh27:
@@ -3445,7 +3445,7 @@ markets:
     short_name: FCDRH27
     instrument_class: future
     underlying: cdr.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fcdrm27:
@@ -3454,7 +3454,7 @@ markets:
     short_name: FCDRM27
     instrument_class: future
     underlying: cdr.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fcpsz26:
@@ -3463,7 +3463,7 @@ markets:
     short_name: FCPSZ26
     instrument_class: future
     underlying: cps.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fcpsh27:
@@ -3472,7 +3472,7 @@ markets:
     short_name: FCPSH27
     instrument_class: future
     underlying: cps.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fcpsm27:
@@ -3481,7 +3481,7 @@ markets:
     short_name: FCPSM27
     instrument_class: future
     underlying: cps.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fdiaz26:
@@ -3490,7 +3490,7 @@ markets:
     short_name: FDIAZ26
     instrument_class: future
     underlying: dia.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fdiah27:
@@ -3499,7 +3499,7 @@ markets:
     short_name: FDIAH27
     instrument_class: future
     underlying: dia.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fdnpz26:
@@ -3508,7 +3508,7 @@ markets:
     short_name: FDNPZ26
     instrument_class: future
     underlying: dnp.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fdnph27:
@@ -3517,7 +3517,7 @@ markets:
     short_name: FDNPH27
     instrument_class: future
     underlying: dnp.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fdnpm27:
@@ -3526,7 +3526,7 @@ markets:
     short_name: FDNPM27
     instrument_class: future
     underlying: dnp.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fdomz26:
@@ -3535,7 +3535,7 @@ markets:
     short_name: FDOMZ26
     instrument_class: future
     underlying: dom.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fdomh27:
@@ -3544,7 +3544,7 @@ markets:
     short_name: FDOMH27
     instrument_class: future
     underlying: dom.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fdomm27:
@@ -3553,7 +3553,7 @@ markets:
     short_name: FDOMM27
     instrument_class: future
     underlying: dom.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   featz26:
@@ -3562,7 +3562,7 @@ markets:
     short_name: FEATZ26
     instrument_class: future
     underlying: eat.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   febpz26:
@@ -3571,7 +3571,7 @@ markets:
     short_name: FEBPZ26
     instrument_class: future
     underlying: ebp.wa
-    expiration: 29
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   febph27:
@@ -3580,7 +3580,7 @@ markets:
     short_name: FEBPH27
     instrument_class: future
     underlying: ebp.wa
-    expiration: 50
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   febpm27:
@@ -3589,7 +3589,7 @@ markets:
     short_name: FEBPM27
     instrument_class: future
     underlying: ebp.wa
-    expiration: 50
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   fenaz26:
@@ -3598,7 +3598,7 @@ markets:
     short_name: FENAZ26
     instrument_class: future
     underlying: ena.wa
-    expiration: 29
+    expiration: 5
     multiplier: 1000.0
     margin_rate: 0.1
   fenah27:
@@ -3607,7 +3607,7 @@ markets:
     short_name: FENAH27
     instrument_class: future
     underlying: ena.wa
-    expiration: 50
+    expiration: 5
     multiplier: 1000.0
     margin_rate: 0.1
   fgpwz26:
@@ -3616,7 +3616,7 @@ markets:
     short_name: FGPWZ26
     instrument_class: future
     underlying: gpw.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fgpwh27:
@@ -3625,7 +3625,7 @@ markets:
     short_name: FGPWH27
     instrument_class: future
     underlying: gpw.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fingz26:
@@ -3634,7 +3634,7 @@ markets:
     short_name: FINGZ26
     instrument_class: future
     underlying: ing.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fingh27:
@@ -3643,7 +3643,7 @@ markets:
     short_name: FINGH27
     instrument_class: future
     underlying: ing.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fjswz26:
@@ -3652,7 +3652,7 @@ markets:
     short_name: FJSWZ26
     instrument_class: future
     underlying: jsw.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fjswh27:
@@ -3661,7 +3661,7 @@ markets:
     short_name: FJSWH27
     instrument_class: future
     underlying: jsw.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fjswm27:
@@ -3670,7 +3670,7 @@ markets:
     short_name: FJSWM27
     instrument_class: future
     underlying: jsw.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fkghz26:
@@ -3679,7 +3679,7 @@ markets:
     short_name: FKGHZ26
     instrument_class: future
     underlying: kgh.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fkghh27:
@@ -3688,7 +3688,7 @@ markets:
     short_name: FKGHH27
     instrument_class: future
     underlying: kgh.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fkghm27:
@@ -3697,7 +3697,7 @@ markets:
     short_name: FKGHM27
     instrument_class: future
     underlying: kgh.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fkruz26:
@@ -3706,7 +3706,7 @@ markets:
     short_name: FKRUZ26
     instrument_class: future
     underlying: kru.wa
-    expiration: 29
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   fkruh27:
@@ -3715,7 +3715,7 @@ markets:
     short_name: FKRUH27
     instrument_class: future
     underlying: kru.wa
-    expiration: 50
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   fkrum27:
@@ -3724,7 +3724,7 @@ markets:
     short_name: FKRUM27
     instrument_class: future
     underlying: kru.wa
-    expiration: 50
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   fktyz26:
@@ -3733,7 +3733,7 @@ markets:
     short_name: FKTYZ26
     instrument_class: future
     underlying: kty.wa
-    expiration: 29
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   fktyh27:
@@ -3742,7 +3742,7 @@ markets:
     short_name: FKTYH27
     instrument_class: future
     underlying: kty.wa
-    expiration: 50
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   fktym27:
@@ -3751,7 +3751,7 @@ markets:
     short_name: FKTYM27
     instrument_class: future
     underlying: kty.wa
-    expiration: 50
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   flppz26:
@@ -3760,7 +3760,7 @@ markets:
     short_name: FLPPZ26
     instrument_class: future
     underlying: lpp.wa
-    expiration: 29
+    expiration: 5
     multiplier: 1.02
     margin_rate: 0.1
   flpph27:
@@ -3769,7 +3769,7 @@ markets:
     short_name: FLPPH27
     instrument_class: future
     underlying: lpp.wa
-    expiration: 50
+    expiration: 5
     multiplier: 1.0
     margin_rate: 0.1
   flppm27:
@@ -3778,7 +3778,7 @@ markets:
     short_name: FLPPM27
     instrument_class: future
     underlying: lpp.wa
-    expiration: 50
+    expiration: 5
     multiplier: 1.0
     margin_rate: 0.1
   flwbz26:
@@ -3787,7 +3787,7 @@ markets:
     short_name: FLWBZ26
     instrument_class: future
     underlying: lwb.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   flwbh27:
@@ -3796,7 +3796,7 @@ markets:
     short_name: FLWBH27
     instrument_class: future
     underlying: lwb.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fmabz26:
@@ -3805,7 +3805,7 @@ markets:
     short_name: FMABZ26
     instrument_class: future
     underlying: mab.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fmbkz26:
@@ -3814,7 +3814,7 @@ markets:
     short_name: FMBKZ26
     instrument_class: future
     underlying: mbk.wa
-    expiration: 29
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   fmbkh27:
@@ -3823,7 +3823,7 @@ markets:
     short_name: FMBKH27
     instrument_class: future
     underlying: mbk.wa
-    expiration: 50
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   fmbkm27:
@@ -3832,7 +3832,7 @@ markets:
     short_name: FMBKM27
     instrument_class: future
     underlying: mbk.wa
-    expiration: 50
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   fmdvz26:
@@ -3841,7 +3841,7 @@ markets:
     short_name: FMDVZ26
     instrument_class: future
     underlying: mdv.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fmdvh27:
@@ -3850,7 +3850,7 @@ markets:
     short_name: FMDVH27
     instrument_class: future
     underlying: mdv.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fmdvm27:
@@ -3859,7 +3859,7 @@ markets:
     short_name: FMDVM27
     instrument_class: future
     underlying: mdv.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fmilz26:
@@ -3868,7 +3868,7 @@ markets:
     short_name: FMILZ26
     instrument_class: future
     underlying: mil.wa
-    expiration: 29
+    expiration: 5
     multiplier: 1000.0
     margin_rate: 0.1
   fmilh27:
@@ -3877,7 +3877,7 @@ markets:
     short_name: FMILH27
     instrument_class: future
     underlying: mil.wa
-    expiration: 50
+    expiration: 5
     multiplier: 1000.0
     margin_rate: 0.1
   foplz26:
@@ -3886,7 +3886,7 @@ markets:
     short_name: FOPLZ26
     instrument_class: future
     underlying: opl.wa
-    expiration: 29
+    expiration: 5
     multiplier: 1000.0
     margin_rate: 0.1
   foplh27:
@@ -3895,7 +3895,7 @@ markets:
     short_name: FOPLH27
     instrument_class: future
     underlying: opl.wa
-    expiration: 50
+    expiration: 5
     multiplier: 1000.0
     margin_rate: 0.1
   foplm27:
@@ -3904,7 +3904,7 @@ markets:
     short_name: FOPLM27
     instrument_class: future
     underlying: opl.wa
-    expiration: 50
+    expiration: 5
     multiplier: 1000.0
     margin_rate: 0.1
   fpcoz26:
@@ -3913,7 +3913,7 @@ markets:
     short_name: FPCOZ26
     instrument_class: future
     underlying: pco.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fpcoh27:
@@ -3922,7 +3922,7 @@ markets:
     short_name: FPCOH27
     instrument_class: future
     underlying: pco.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fpcom27:
@@ -3931,7 +3931,7 @@ markets:
     short_name: FPCOM27
     instrument_class: future
     underlying: pco.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fpeoz26:
@@ -3940,7 +3940,7 @@ markets:
     short_name: FPEOZ26
     instrument_class: future
     underlying: peo.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fpeoh27:
@@ -3949,7 +3949,7 @@ markets:
     short_name: FPEOH27
     instrument_class: future
     underlying: peo.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fpeom27:
@@ -3958,7 +3958,7 @@ markets:
     short_name: FPEOM27
     instrument_class: future
     underlying: peo.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fpgez26:
@@ -3967,7 +3967,7 @@ markets:
     short_name: FPGEZ26
     instrument_class: future
     underlying: pge.wa
-    expiration: 29
+    expiration: 5
     multiplier: 1000.0
     margin_rate: 0.1
   fpgeh27:
@@ -3976,7 +3976,7 @@ markets:
     short_name: FPGEH27
     instrument_class: future
     underlying: pge.wa
-    expiration: 50
+    expiration: 5
     multiplier: 1000.0
     margin_rate: 0.1
   fpgem27:
@@ -3985,7 +3985,7 @@ markets:
     short_name: FPGEM27
     instrument_class: future
     underlying: pge.wa
-    expiration: 50
+    expiration: 5
     multiplier: 1000.0
     margin_rate: 0.1
   fpknz26:
@@ -3994,7 +3994,7 @@ markets:
     short_name: FPKNZ26
     instrument_class: future
     underlying: pkn.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fpknh27:
@@ -4003,7 +4003,7 @@ markets:
     short_name: FPKNH27
     instrument_class: future
     underlying: pkn.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fpknm27:
@@ -4012,7 +4012,7 @@ markets:
     short_name: FPKNM27
     instrument_class: future
     underlying: pkn.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fpkoz26:
@@ -4021,7 +4021,7 @@ markets:
     short_name: FPKOZ26
     instrument_class: future
     underlying: pko.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fpkoh27:
@@ -4030,7 +4030,7 @@ markets:
     short_name: FPKOH27
     instrument_class: future
     underlying: pko.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fpkom27:
@@ -4039,7 +4039,7 @@ markets:
     short_name: FPKOM27
     instrument_class: future
     underlying: pko.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fpkpz26:
@@ -4048,7 +4048,7 @@ markets:
     short_name: FPKPZ26
     instrument_class: future
     underlying: pkp.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fpkph27:
@@ -4057,7 +4057,7 @@ markets:
     short_name: FPKPH27
     instrument_class: future
     underlying: pkp.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fpxmz26:
@@ -4066,7 +4066,7 @@ markets:
     short_name: FPXMZ26
     instrument_class: future
     underlying: pxm.wa
-    expiration: 29
+    expiration: 5
     multiplier: 1000.0
     margin_rate: 0.1
   fpxmh27:
@@ -4075,7 +4075,7 @@ markets:
     short_name: FPXMH27
     instrument_class: future
     underlying: pxm.wa
-    expiration: 50
+    expiration: 5
     multiplier: 1000.0
     margin_rate: 0.1
   fpzuz26:
@@ -4084,7 +4084,7 @@ markets:
     short_name: FPZUZ26
     instrument_class: future
     underlying: pzu.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fpzuh27:
@@ -4093,7 +4093,7 @@ markets:
     short_name: FPZUH27
     instrument_class: future
     underlying: pzu.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fpzum27:
@@ -4102,7 +4102,7 @@ markets:
     short_name: FPZUM27
     instrument_class: future
     underlying: pzu.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fsvez26:
@@ -4111,7 +4111,7 @@ markets:
     short_name: FSVEZ26
     instrument_class: future
     underlying: sve.wa
-    expiration: 29
+    expiration: 5
     multiplier: 1000.0
     margin_rate: 0.1
   fsveh27:
@@ -4120,7 +4120,7 @@ markets:
     short_name: FSVEH27
     instrument_class: future
     underlying: sve.wa
-    expiration: 50
+    expiration: 5
     multiplier: 1000.0
     margin_rate: 0.1
   ftenz26:
@@ -4129,7 +4129,7 @@ markets:
     short_name: FTENZ26
     instrument_class: future
     underlying: ten.wa
-    expiration: 29
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   ftenh27:
@@ -4138,7 +4138,7 @@ markets:
     short_name: FTENH27
     instrument_class: future
     underlying: ten.wa
-    expiration: 50
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   ftenm27:
@@ -4147,7 +4147,7 @@ markets:
     short_name: FTENM27
     instrument_class: future
     underlying: ten.wa
-    expiration: 50
+    expiration: 5
     multiplier: 10.0
     margin_rate: 0.1
   ftpez26:
@@ -4156,7 +4156,7 @@ markets:
     short_name: FTPEZ26
     instrument_class: future
     underlying: tpe.wa
-    expiration: 29
+    expiration: 5
     multiplier: 1000.0
     margin_rate: 0.1
   ftpeh27:
@@ -4165,7 +4165,7 @@ markets:
     short_name: FTPEH27
     instrument_class: future
     underlying: tpe.wa
-    expiration: 50
+    expiration: 5
     multiplier: 1000.0
     margin_rate: 0.1
   ftpem27:
@@ -4174,7 +4174,7 @@ markets:
     short_name: FTPEM27
     instrument_class: future
     underlying: tpe.wa
-    expiration: 50
+    expiration: 5
     multiplier: 1000.0
     margin_rate: 0.1
   fw20z2620:
@@ -4183,7 +4183,7 @@ markets:
     short_name: FW20Z2620
     instrument_class: future
     underlying: wig20
-    expiration: 29
+    expiration: 5
     multiplier: 20.0
     margin_rate: 0.1
   fw20h2720:
@@ -4192,7 +4192,7 @@ markets:
     short_name: FW20H2720
     instrument_class: future
     underlying: wig20
-    expiration: 50
+    expiration: 5
     multiplier: 20.0
     margin_rate: 0.1
   fw20m2720:
@@ -4201,7 +4201,7 @@ markets:
     short_name: FW20M2720
     instrument_class: future
     underlying: wig20
-    expiration: 50
+    expiration: 5
     multiplier: 20.0
     margin_rate: 0.1
   fw20u2720:
@@ -4210,7 +4210,7 @@ markets:
     short_name: FW20U2720
     instrument_class: future
     underlying: wig20
-    expiration: 50
+    expiration: 5
     multiplier: 20.0
     margin_rate: 0.1
   fxtbz26:
@@ -4219,7 +4219,7 @@ markets:
     short_name: FXTBZ26
     instrument_class: future
     underlying: xtb.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fxtbh27:
@@ -4228,7 +4228,7 @@ markets:
     short_name: FXTBH27
     instrument_class: future
     underlying: xtb.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fxtbm27:
@@ -4237,7 +4237,7 @@ markets:
     short_name: FXTBM27
     instrument_class: future
     underlying: xtb.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fzabz26:
@@ -4246,7 +4246,7 @@ markets:
     short_name: FZABZ26
     instrument_class: future
     underlying: zab.wa
-    expiration: 29
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fzabh27:
@@ -4255,7 +4255,7 @@ markets:
     short_name: FZABH27
     instrument_class: future
     underlying: zab.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
   fzabm27:
@@ -4264,7 +4264,7 @@ markets:
     short_name: FZABM27
     instrument_class: future
     underlying: zab.wa
-    expiration: 50
+    expiration: 5
     multiplier: 100.0
     margin_rate: 0.1
 agents:

@@ -1,6 +1,6 @@
 # Full GPW market simulation
 
-days: 50
+days: 5
 sim_time: 10
 seed: 67
 
