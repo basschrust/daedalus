@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
+import re
 from typing_extensions import TYPE_CHECKING
 
 from marketsim.market.instruments.security import Security
@@ -13,7 +14,35 @@ from marketsim.plot.candle import plot_candlestick_derivative
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
 
-    from marketsim.fourheap import MatchedOrder
+    from marketsim.market.fourheap import MatchedOrder
+
+
+
+def parse_expiration(value: int | str) -> int:
+    """Convert relative expiry to simulation trading days."""
+    if isinstance(value, bool):
+        raise ValueError("Invalid option expiration")
+    if isinstance(value, int):
+        if value <= 0:
+            raise ValueError("Option expiration must be positive")
+        return value
+    if isinstance(value, str):
+        value = value.strip().upper()
+        if value.isdigit():
+            return parse_expiration(int(value))
+        match = re.fullmatch(r"(\d+)([DWMY])", value)
+        if match:
+            quantity = int(match.group(1))
+            unit = match.group(2)
+            days_per_unit = {
+                "D": 1,
+                "W": 5,
+                "M": 21,
+                "Y": 248,
+            }
+            return parse_expiration(quantity * days_per_unit[unit])
+    raise ValueError(f"Unsupported option expiration: {value!r}")
+
 
 
 class Option(Security):
@@ -32,7 +61,8 @@ class Option(Security):
         self.instrument_class = "option"
         self.underlying = underlying
         self.strike = derivatives_config["strike"]
-        self.expiration = derivatives_config["expiration"]  # TODO: prepare mapper for this
+        self.expiration = parse_expiration(derivatives_config["expiration"])
+        #self.expiration = derivatives_config["expiration"]  # TODO: prepare mapper for this
         # so that we can give relative time or precise dates or just take it from option series
         # for now we set mostly as 248 (number of trading days per year)
         self.option_side = derivatives_config["option_side"]  # CALL/PUT

@@ -22,6 +22,7 @@ def make_agent(tmp_path):
                     calculate_value=MagicMock(return_value=Price(3100)),
                     last_traded_price=Price(3100),
                 ),
+                calculate_theoretical_value=MagicMock(return_value=Price(3100)),
                 last_traded_price=Price(3000),
                 order_book=SimpleNamespace(
                     get_best_bid=MagicMock(return_value=Price(2999)),

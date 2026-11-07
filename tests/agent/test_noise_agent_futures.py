@@ -274,9 +274,7 @@ def test_index_is_not_traded(make_agent):
 
 
 def test_single_stock_future_uses_theoretical_price(make_agent):
-    agent, market = make_agent(
-        config={"lam": 1, "future_lam_multiplier": 1}
-    )
+    agent, market = make_agent(config={"lam": 1, "future_lam_multiplier": 1})
 
     market.underlying = SimpleNamespace(
         instrument_class="stock",
@@ -291,4 +289,3 @@ def test_single_stock_future_uses_theoretical_price(make_agent):
     assert order is not None
     assert order.price == Price(125)
     market.calculate_theoretical_value.assert_called_once_with()
-
