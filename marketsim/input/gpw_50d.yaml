@@ -1,6 +1,6 @@
 seed: 67
 days: 50
-sim_time: 60
+sim_time: 10
 lob_plot_interval: 10000
 markets:
   pko.wa:
@@ -53,6 +53,21 @@ markets:
     currency: PLN
 
 agents:
+  relative_momentum:
+    agent_class: RelativeMomentumAgent
+    instrument_classes: [ stock ]
+    number: 20
+    config:
+      lookback_sessions: 252
+      turnover_sessions: 30
+      min_median_turnover: 250000
+      portfolio_size: 10
+      rebalance_sessions: 20
+      aggression: 0.003
+      order_validity_ticks: 3
+      base_currency: PLN
+      initial_cash:
+        PLN: 1000000
   arbitrageurs:
     agent_class: IndexFuturesArbitrageAgent
     number: 5

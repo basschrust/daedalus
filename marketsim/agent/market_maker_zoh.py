@@ -105,18 +105,22 @@ class MMZOHAgent(Agent):
                 )
 
             volumes = pd.to_numeric(history["volume"], errors="coerce")
-
             if (
                 volumes.isna().any()
                 or not (volumes >= 0).all()
                 or not np.isfinite(volumes.to_numpy(dtype=float)).all()
             ):
                 raise ValueError(f"Invalid historical volume for {market.name}")
-
             daily_volume = float(volumes.mean())
-
-            if not math.isfinite(daily_volume) or daily_volume <= 0:
+            if not math.isfinite(daily_volume):
                 raise ValueError(f"Invalid historical volume for {market.name}")
+            if daily_volume == 0:
+                self.volume_by_asset[asset_id] = 0
+                self.logger.warning(
+                    f"MM volume calibration: {market.name} has zero "
+                    "historical volume; no liquidity will be quoted"
+                )
+                continue
 
             rebalance_count = math.ceil(sim_time / self.rebalance_period)
 
@@ -168,6 +172,9 @@ class MMZOHAgent(Agent):
         for asset_id, market in self.markets.items():
             if not getattr(market, "is_tradable", True):
                 continue
+            # Do not quote markets with zero historical volume.
+            if self.volume_by_asset.get(asset_id, 0) <= 0:
+                continue
             orders = []
             # add orders only in rebalance periods:
             if self.should_rebalance(current_time):
@@ -190,23 +197,18 @@ class MMZOHAgent(Agent):
                 self.logger.info(f"Last traded price: {estimate}")
                 HALF = Decimal("0.5")
                 if market.instrument_class == "future":
-                    # Recalculate the theoretical futures price
-                    # from the current underlying index.
-                    estimate = Price(market.underlying.calculate_value())
-                    # Do not let stale order-book quotations
-                    # override the theoretical anchor.
+                    underlying = market.underlying
+                    if underlying.instrument_class == "index":
+                        estimate = market.calculate_theoretical_value()
+                    else:
+                        estimate = Price(underlying.last_traded_price)
+                    # Anchor futures quotes to their theoretical price.
                     st = estimate + HALF * self.omega
                     bt = estimate - HALF * self.omega
                 else:
                     estimate = market.last_traded_price
-                    st = max(
-                        estimate + HALF * self.omega,
-                        best_bid,
-                    )
-                    bt = min(
-                        estimate - HALF * self.omega,
-                        best_ask,
-                    )
+                    st = max(estimate + HALF * self.omega, best_bid)
+                    bt = min(estimate - HALF * self.omega, best_ask)
                 self.logger.info(f"Setting basic spread to: {bt}, {st}")
                 # volumes for this market:
                 buy_volume = self.volume_by_asset[asset_id]

@@ -41,8 +41,11 @@ def make_agent(tmp_path):
                 asset_id=101,
                 instrument_class=instrument_class,
                 underlying=SimpleNamespace(
+                    instrument_class="index",
                     calculate_value=MagicMock(return_value=Price(3100)),
+                    last_traded_price=Price(3100),
                 ),
+                calculate_theoretical_value=MagicMock(return_value=Price(3100)),
                 last_traded_price=Price(3000),
                 order_book=SimpleNamespace(
                     get_best_bid=MagicMock(return_value=Price(2999)),
@@ -268,3 +271,21 @@ def test_index_is_not_traded(make_agent):
     act(agent)
 
     market.add_orders.assert_not_called()
+
+
+def test_single_stock_future_uses_theoretical_price(make_agent):
+    agent, market = make_agent(config={"lam": 1, "future_lam_multiplier": 1})
+
+    market.underlying = SimpleNamespace(
+        instrument_class="stock",
+        last_traded_price=Price(125),
+    )
+    market.calculate_theoretical_value.return_value = Price(125)
+
+    act(agent, side=BUY, poisson=1)
+
+    order = submitted_order(market)
+
+    assert order is not None
+    assert order.price == Price(125)
+    market.calculate_theoretical_value.assert_called_once_with()

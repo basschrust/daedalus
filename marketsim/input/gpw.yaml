@@ -1,0 +1,15 @@
+# Full GPW market simulation
+
+days: 5
+sim_time: 10
+seed: 67
+
+lookback_sessions: 252
+minimum_history_sessions: 30
+
+agents_profile: gpw_50d.yaml
+
+margin_rate: 0.10
+
+market_realism:
+  enabled: true

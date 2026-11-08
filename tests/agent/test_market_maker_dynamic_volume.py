@@ -147,7 +147,6 @@ def test_missing_history_uses_fixed_volume(tmp_path, volumes):
 @pytest.mark.parametrize(
     "volumes",
     [
-        [0, 0, 0],
         [-100, -200],
         [100, float("nan")],
         [float("inf")],
@@ -161,6 +160,18 @@ def test_invalid_historical_volume_is_rejected(tmp_path, volumes):
         match="Invalid historical volume",
     ):
         make_mm([market], tmp_path)
+
+
+def test_zero_historical_volume_disables_quoting(tmp_path):
+    market = make_market(1, "MAN.WA", [0, 0, 0])
+
+    mm = make_mm([market], tmp_path)
+
+    assert mm.volume_by_asset[1] == 0
+
+    mm.take_action(current_time=0)
+
+    market.add_orders.assert_not_called()
 
 
 def test_small_volume_has_minimum_order_quantity(tmp_path):

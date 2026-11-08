@@ -14,12 +14,14 @@ from marketsim.agent import (
     MomentumAgent,
     NoiseAgent,
     OptionMMZOHAgent,
+    RelativeMomentumAgent,
     SpoofingAgent,
     WashTradingAgent,
     ZIAgentNotInformed,
 )
 from marketsim.agent.regime_trader import RegimeTraderAgent
 from marketsim.agent.washtrading import WashTradingPool
+from marketsim.analysis.report import MarketRealismReport
 from marketsim.database.repositories.factory import create_repository
 from marketsim.loggers.basic import terminal
 from marketsim.market import Future, FXRateProvider, Index, Option, Price, Security, Stock
@@ -49,6 +51,7 @@ class Simulator:
         historical_ohlcv_by_symbol: dict[str, pd.DataFrame] | None = None,
         simulation_dates: list[date] | None = None,
         plot_group_flows_enabled: bool = False,
+        market_realism_report: MarketRealismReport | None = None,
     ):
         self.logger = logger.bind()
         self.logger.info("Initializing simulation with parameters in market_structure.yaml ...")
@@ -108,6 +111,7 @@ class Simulator:
             market_sigma=0.55,
             stock_sigma=0.30,
         )
+        self.market_realism_report = market_realism_report
 
         self.fx_rate_provider = FXRateProvider()
         for day, rates in (fx_rates or {}).items():
@@ -423,6 +427,20 @@ class Simulator:
                 )
                 self.add_agents([agent])
 
+            if agent_group["agent_class"] == "RelativeMomentumAgent":
+                agent = RelativeMomentumAgent(
+                    markets=markets,
+                    configuration={
+                        **configuration,
+                        "rebalance_offset": i,
+                    },
+                    repository=self.repository,
+                    group=group_name,
+                    output_dir=self.output_dir,
+                    fx_rate_provider=self.fx_rate_provider,
+                )
+                self.add_agents([agent])
+
             if agent_group["agent_class"] == "RegimeTraderAgent":
                 agent = RegimeTraderAgent(
                     markets=markets,
@@ -433,6 +451,22 @@ class Simulator:
                 )
                 self.add_agents([agent])
             if agent_group["agent_class"] == "IndexFuturesArbitrageAgent":
+                futures = [
+                    market
+                    for market in self.markets.values()
+                    if (
+                        market.instrument_class == "future"
+                        and market.is_tradable
+                        and market.underlying.instrument_class == "index"
+                    )
+                ]
+                selected = {future.asset_id: future for future in futures}
+                for future in futures:
+                    for component in future.underlying.components.values():
+                        stock = component["security"]
+                        if stock.is_tradable:
+                            selected[stock.asset_id] = stock
+                markets = list(selected.values())
                 agent = IndexFuturesArbitrageAgent(
                     markets=markets,
                     configuration=configuration,
@@ -460,7 +494,11 @@ class Simulator:
             futures = [
                 market
                 for market in self.markets.values()
-                if market.instrument_class == "future" and market.is_tradable
+                if (
+                    market.instrument_class == "future"
+                    and market.is_tradable
+                    and market.underlying.instrument_class == "index"
+                )
             ]
 
             selected = {future.asset_id: future for future in futures}
@@ -485,6 +523,16 @@ class Simulator:
 
         markets = [market for market in markets if market.is_tradable]
 
+        if agent_group["agent_class"] == "MMZOHAgent":
+            eligible = []
+            for market in markets:
+                history = getattr(market, "historical_ohlcv", None)
+                if history is not None and not history.empty:
+                    daily_volume = pd.to_numeric(history["volume"], errors="coerce").mean()
+                    if pd.isna(daily_volume) or daily_volume <= 0:
+                        continue
+                eligible.append(market)
+            markets = eligible
         if not markets:
             return
 
@@ -694,6 +742,13 @@ class Simulator:
     def run(self) -> None:
         terminal.write("\nStarting simulation...\n")
 
+        if self.simulation_dates:
+            simulation_start = self.simulation_dates[0]
+            cutoff_date = simulation_start - pd.Timedelta(days=1)
+
+            terminal.write(f"Historical cut-off date: {cutoff_date:%Y-%m-%d}\n")
+            terminal.write(f"Simulation start date: {simulation_start:%Y-%m-%d}\n")
+
         for day in range(self.days):
             terminal.write(f"\nStarting day {str(day + 1)} out of {self.days}\n")
             self.sod(day=day)  # start of day
@@ -704,6 +759,8 @@ class Simulator:
                 self.show_progress_bar(step)
 
             self.eod(day=day)
+            if self.market_realism_report is not None:
+                self.market_realism_report.collect_day(self, day)
 
         terminal.write("\nSimulation complete.")
         terminal.write("\nPreparing summary...\n")
