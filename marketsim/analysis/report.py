@@ -82,9 +82,7 @@ class MarketRealismReport:
 
                 if "date" not in historical_df.columns:
                     historical_df = historical_df.reset_index()
-                    historical_df = historical_df.rename(
-                        columns={historical_df.columns[0]: "date"}
-                    )
+                    historical_df = historical_df.rename(columns={historical_df.columns[0]: "date"})
 
                 historical_series = MarketSeries(symbol, historical_df)
                 simulated_series = MarketSeries(symbol, pd.DataFrame(simulated))
