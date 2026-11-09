@@ -3,11 +3,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 from snowflake.connector.errors import DatabaseError
 
-from run.wig20 import main
+from run.simulation_main import main
 
 
 @pytest.fixture
-def mock_wig20_setup(tmp_path):
+def mock_wig20_setup():
     """Prepare a minimal WIG20 configuration without external dependencies."""
     settings = {
         "days": 3,
@@ -16,12 +16,10 @@ def mock_wig20_setup(tmp_path):
     }
 
     with (
-        patch("run.wig20.load_dotenv"),
-        patch("run.wig20.yaml.safe_load", return_value=settings),
-        patch("run.wig20.Path.open", MagicMock()),
-        patch("run.wig20.argparse.ArgumentParser.parse_args") as mock_args,
+        patch("run.simulation_main.load_dotenv"),
+        patch("run.simulation_main.yaml.safe_load", return_value=settings),
+        patch("run.simulation_main.Path.open", MagicMock()),
     ):
-        mock_args.return_value = MagicMock(prepare_only=False)
         yield
 
 
@@ -42,29 +40,24 @@ def mock_wig20_setup(tmp_path):
 )
 def test_snowflake_connection_failure(
     mock_wig20_setup,
-    capsys,
     exception,
 ):
-    """Connection failures should produce a friendly message, not a traceback."""
+    """Connection failures must prevent preparation and simulation."""
 
     with (
-        patch("run.wig20.connect", side_effect=exception) as mock_connect,
-        patch("run.wig20.prepare") as mock_prepare,
-        patch("run.wig20.Simulator") as mock_simulator,
+        patch(
+            "marketsim.scenarios.wig20.connect",
+            side_effect=exception,
+        ) as mock_connect,
+        patch("marketsim.scenarios.wig20.prepare") as mock_prepare,
+        patch("run.simulation_main.run_simulation") as mock_simulation,
     ):
-        with pytest.raises(SystemExit) as exc_info:
-            main()
-
-    assert exc_info.value.code == 1
-
-    output = capsys.readouterr()
-
-    assert "ERROR: Cannot connect to Snowflake." in output.out
-    assert "server may be unreachable" in output.out
-    assert "Details:" in output.out
-
-    assert output.err == ""
+        with pytest.raises(
+            RuntimeError,
+            match="Cannot connect to Ikaros Snowflake",
+        ):
+            main(["--dataset", "wig20", "--prepare-only"])
 
     mock_connect.assert_called_once()
     mock_prepare.assert_not_called()
-    mock_simulator.assert_not_called()
+    mock_simulation.assert_not_called()

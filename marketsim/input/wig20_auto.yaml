@@ -257,6 +257,58 @@ markets:
     expiration: 40
     multiplier: 20.0
     margin_rate: 0.1
+  ow20f274200:
+    symbol: OW20F274200
+    name: OW20F274200
+    short_name: OW20F274200
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4200.00'
+      option_side: CALL
+      option_type: European
+      expiration: 159
+      multiplier: 10.0
+  ow20r274000:
+    symbol: OW20R274000
+    name: OW20R274000
+    short_name: OW20R274000
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4000.00'
+      option_side: PUT
+      option_type: European
+      expiration: 159
+      multiplier: 10.0
+  ow20f274300:
+    symbol: OW20F274300
+    name: OW20F274300
+    short_name: OW20F274300
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4300.00'
+      option_side: CALL
+      option_type: European
+      expiration: 159
+      multiplier: 10.0
+  ow20f274400:
+    symbol: OW20F274400
+    name: OW20F274400
+    short_name: OW20F274400
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4400.00'
+      option_side: CALL
+      option_type: European
+      expiration: 159
+      multiplier: 10.0
 agents:
   relative_momentum:
     agent_class: RelativeMomentumAgent
@@ -425,6 +477,10 @@ historical_prices:
   - FW20Z2620
   - FW20H2720
   - FW20M2720
+  - OW20F274200
+  - OW20R274000
+  - OW20F274300
+  - OW20F274400
 start_date: '2026-11-07'
 non_trading_dates:
 - '2026-11-11'
