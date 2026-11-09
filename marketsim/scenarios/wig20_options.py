@@ -51,14 +51,14 @@ def select_options(
 
     contracts = query(
         conn,
-        """
+        sql="""
         SELECT * FROM DERIVATIVE_CONTRACTS
         WHERE UPPER(INSTRUMENT_TYPE) IN ('OPTION', 'INDEX_OPTION')
           AND UPPER(UNDERLYING_SYMBOL) = 'WIG20'
           AND EXPIRY_DATE > %s
         ORDER BY EXPIRY_DATE, CONTRACT_ID
     """,
-        (simulation_dates[-1],),
+        params=(cutoff,),
     )
     if contracts.empty:
         print("Warning: no WIG20 options survive the simulation horizon")

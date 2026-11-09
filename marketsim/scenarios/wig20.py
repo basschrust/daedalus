@@ -450,11 +450,10 @@ def prepare(conn, settings: dict, root: Path):
         key = symbol.lower()
         if key in base["markets"]:
             raise ValueError(f"Duplicate market: {symbol}")
-        expiry = pd.Timestamp(option["expiry_date"]).date()
         # Business-day approximation; holiday-aware expiry will be a later refinement.
-        expiry_day = max(
-            len(simulation_dates) + 1,
-            len(pd.bdate_range(simulation_dates[0], expiry, inclusive="left")),
+        expiry_day = futures_expiration_day(
+            option["expiry_date"],
+            simulation_dates,
         )
         base["markets"][key] = {
             "symbol": symbol,

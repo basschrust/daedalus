@@ -257,6 +257,214 @@ markets:
     expiration: 40
     multiplier: 20.0
     margin_rate: 0.1
+  ow20k264125:
+    symbol: OW20K264125
+    name: OW20K264125
+    short_name: OW20K264125
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4125.00'
+      option_side: CALL
+      option_type: European
+      expiration: 8
+      multiplier: 10.0
+  ow20w264125:
+    symbol: OW20W264125
+    name: OW20W264125
+    short_name: OW20W264125
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4125.00'
+      option_side: PUT
+      option_type: European
+      expiration: 8
+      multiplier: 10.0
+  ow20w264150:
+    symbol: OW20W264150
+    name: OW20W264150
+    short_name: OW20W264150
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4150.00'
+      option_side: PUT
+      option_type: European
+      expiration: 8
+      multiplier: 10.0
+  ow20k264150:
+    symbol: OW20K264150
+    name: OW20K264150
+    short_name: OW20K264150
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4150.00'
+      option_side: CALL
+      option_type: European
+      expiration: 8
+      multiplier: 10.0
+  ow20x264150:
+    symbol: OW20X264150
+    name: OW20X264150
+    short_name: OW20X264150
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4150.00'
+      option_side: PUT
+      option_type: European
+      expiration: 28
+      multiplier: 10.0
+  ow20l264150:
+    symbol: OW20L264150
+    name: OW20L264150
+    short_name: OW20L264150
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4150.00'
+      option_side: CALL
+      option_type: European
+      expiration: 28
+      multiplier: 10.0
+  ow20w264100:
+    symbol: OW20W264100
+    name: OW20W264100
+    short_name: OW20W264100
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4100.00'
+      option_side: PUT
+      option_type: European
+      expiration: 8
+      multiplier: 10.0
+  ow20x264100:
+    symbol: OW20X264100
+    name: OW20X264100
+    short_name: OW20X264100
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4100.00'
+      option_side: PUT
+      option_type: European
+      expiration: 28
+      multiplier: 10.0
+  ow20k264100:
+    symbol: OW20K264100
+    name: OW20K264100
+    short_name: OW20K264100
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4100.00'
+      option_side: CALL
+      option_type: European
+      expiration: 8
+      multiplier: 10.0
+  ow20k264175:
+    symbol: OW20K264175
+    name: OW20K264175
+    short_name: OW20K264175
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4175.00'
+      option_side: CALL
+      option_type: European
+      expiration: 8
+      multiplier: 10.0
+  ow20w264175:
+    symbol: OW20W264175
+    name: OW20W264175
+    short_name: OW20W264175
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4175.00'
+      option_side: PUT
+      option_type: European
+      expiration: 8
+      multiplier: 10.0
+  ow20w264075:
+    symbol: OW20W264075
+    name: OW20W264075
+    short_name: OW20W264075
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4075.00'
+      option_side: PUT
+      option_type: European
+      expiration: 8
+      multiplier: 10.0
+  ow20w264200:
+    symbol: OW20W264200
+    name: OW20W264200
+    short_name: OW20W264200
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4200.00'
+      option_side: PUT
+      option_type: European
+      expiration: 8
+      multiplier: 10.0
+  ow20k264200:
+    symbol: OW20K264200
+    name: OW20K264200
+    short_name: OW20K264200
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4200.00'
+      option_side: CALL
+      option_type: European
+      expiration: 8
+      multiplier: 10.0
+  ow20l264200:
+    symbol: OW20L264200
+    name: OW20L264200
+    short_name: OW20L264200
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4200.00'
+      option_side: CALL
+      option_type: European
+      expiration: 28
+      multiplier: 10.0
+  ow20x264200:
+    symbol: OW20X264200
+    name: OW20X264200
+    short_name: OW20X264200
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4200.00'
+      option_side: PUT
+      option_type: European
+      expiration: 28
+      multiplier: 10.0
   ow20f274200:
     symbol: OW20F274200
     name: OW20F274200
@@ -268,46 +476,46 @@ markets:
       strike: '4200.00'
       option_side: CALL
       option_type: European
-      expiration: 159
+      expiration: 40
       multiplier: 10.0
-  ow20r274000:
-    symbol: OW20R274000
-    name: OW20R274000
-    short_name: OW20R274000
+  ow20w264050:
+    symbol: OW20W264050
+    name: OW20W264050
+    short_name: OW20W264050
     instrument_class: option
     market_type: continuous
     derivatives_config:
       underlying: wig20
-      strike: '4000.00'
+      strike: '4050.00'
       option_side: PUT
       option_type: European
-      expiration: 159
+      expiration: 8
       multiplier: 10.0
-  ow20f274300:
-    symbol: OW20F274300
-    name: OW20F274300
-    short_name: OW20F274300
+  ow20x264050:
+    symbol: OW20X264050
+    name: OW20X264050
+    short_name: OW20X264050
     instrument_class: option
     market_type: continuous
     derivatives_config:
       underlying: wig20
-      strike: '4300.00'
-      option_side: CALL
+      strike: '4050.00'
+      option_side: PUT
       option_type: European
-      expiration: 159
+      expiration: 28
       multiplier: 10.0
-  ow20f274400:
-    symbol: OW20F274400
-    name: OW20F274400
-    short_name: OW20F274400
+  ow20w264225:
+    symbol: OW20W264225
+    name: OW20W264225
+    short_name: OW20W264225
     instrument_class: option
     market_type: continuous
     derivatives_config:
       underlying: wig20
-      strike: '4400.00'
-      option_side: CALL
+      strike: '4225.00'
+      option_side: PUT
       option_type: European
-      expiration: 159
+      expiration: 8
       multiplier: 10.0
 agents:
   relative_momentum:
@@ -467,6 +675,21 @@ agents:
       max_price_deviation: 0.08
       initial_cash:
         PLN: 10000000
+  option_market_makers:
+    agent_class: OptionMMZOHAgent
+    instrument_classes:
+    - option
+    number: 2
+    config:
+      rebalance_by: time
+      rebalance_period: 2
+      K: 4
+      xi: 0.1
+      omega: 0.2
+      volume: 10
+      q_max: 1000
+      initial_cash:
+        PLN: 10000000
 historical_prices:
   enabled: true
   path: market_data/wig20_auto.ohlcv.csv
@@ -477,10 +700,26 @@ historical_prices:
   - FW20Z2620
   - FW20H2720
   - FW20M2720
+  - OW20K264125
+  - OW20W264125
+  - OW20W264150
+  - OW20K264150
+  - OW20X264150
+  - OW20L264150
+  - OW20W264100
+  - OW20X264100
+  - OW20K264100
+  - OW20K264175
+  - OW20W264175
+  - OW20W264075
+  - OW20W264200
+  - OW20K264200
+  - OW20L264200
+  - OW20X264200
   - OW20F274200
-  - OW20R274000
-  - OW20F274300
-  - OW20F274400
+  - OW20W264050
+  - OW20X264050
+  - OW20W264225
 start_date: '2026-11-07'
 non_trading_dates:
 - '2026-11-11'

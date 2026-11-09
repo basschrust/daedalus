@@ -256,6 +256,8 @@ class OptionMMZOHAgent(Agent):
         # either as adjusting MM orders or by paying spread
         # simple delta hedge
         for asset_id, underlying_market in self.underlying_markets.items():
+            if not underlying_market.is_tradable:
+                continue
             delta_pos = self.greeks_agg[asset_id].get("delta")
             # check position and align, check minimum difference which leads to rebalance
 

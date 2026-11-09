@@ -200,6 +200,20 @@ agents:
       max_price_deviation: 0.08
       initial_cash:
         PLN: 10000000
+  option_market_makers:
+    agent_class: OptionMMZOHAgent
+    instrument_classes: [option]
+    number: 2
+    config:
+      rebalance_by: time
+      rebalance_period: 2
+      K: 4
+      xi: 0.10
+      omega: 0.20
+      volume: 10
+      q_max: 1000
+      initial_cash:
+        PLN: 10000000
 historical_prices:
   enabled: true
   path: market_data/wig20_auto.ohlcv.csv
