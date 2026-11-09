@@ -12,6 +12,7 @@ import pandas as pd
 import yaml
 
 from marketsim.market.historical_prices import load_simulation_dates
+from marketsim.scenarios.wig20_options import select_options
 
 OHLCV = ("open", "high", "low", "close", "volume")
 
@@ -389,17 +390,6 @@ def prepare(conn, settings: dict, root: Path):
 
         frames.append(frame[["symbol", "date", *OHLCV]])
 
-    # Save all 21 historical series
-    all_history = pd.concat(frames, ignore_index=True)
-
-    assert all_history["symbol"].nunique() == 21 + len(contracts)
-    assert len(all_history[all_history["symbol"] == "WIG20"]) > 0
-
-    all_history.to_csv(
-        data_dir / csv_name,
-        index=False,
-    )
-
     profile = settings.get("agents_profile", "gpw_50d.yaml")
 
     with (output / profile).open(encoding="utf-8") as stream:
@@ -424,10 +414,29 @@ def prepare(conn, settings: dict, root: Path):
             *contracts["symbol"].tolist(),
         ],
     )
-
     base["start_date"] = (cutoff + timedelta(days=1)).isoformat()
-
     simulation_dates = load_simulation_dates(base)
+
+    options = select_options(
+        conn,
+        cutoff,
+        simulation_dates,
+        index_level,
+        count=int(settings.get("options_count", 4)),
+        lookback_sessions=lookback,
+    )
+    for option in options:
+        data = option["history"].copy()
+        data["symbol"] = option["symbol"]
+        data["date"] = data["date"].dt.strftime("%Y-%m-%d")
+        frames.append(data[["symbol", "date", *OHLCV]])
+        base["historical_prices"]["allow_short_history"].append(option["symbol"])
+
+    all_history = pd.concat(frames, ignore_index=True)
+    expected = 21 + len(contracts) + len(options)
+    assert all_history["symbol"].nunique() == expected
+    all_history.to_csv(data_dir / csv_name, index=False)
+
     base["markets"] = build_markets(
         members,
         history,
@@ -435,6 +444,32 @@ def prepare(conn, settings: dict, root: Path):
         contracts=contracts,
         simulation_dates=simulation_dates,
     )
+
+    for option in options:
+        symbol = option["symbol"]
+        key = symbol.lower()
+        if key in base["markets"]:
+            raise ValueError(f"Duplicate market: {symbol}")
+        # Business-day approximation; holiday-aware expiry will be a later refinement.
+        expiry_day = futures_expiration_day(
+            option["expiry_date"],
+            simulation_dates,
+        )
+        base["markets"][key] = {
+            "symbol": symbol,
+            "name": symbol,
+            "short_name": symbol,
+            "instrument_class": "option",
+            "market_type": "continuous",
+            "derivatives_config": {
+                "underlying": "wig20",
+                "strike": str(option["strike"]),
+                "option_side": option["side"],
+                "option_type": "European",
+                "expiration": expiry_day,
+                "multiplier": option["multiplier"],
+            },
+        }
 
     with (output / yaml_name).open("w", encoding="utf-8") as stream:
         yaml.safe_dump(base, stream, sort_keys=False)

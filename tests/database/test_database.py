@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 import pandas as pd
 
 from marketsim.agent import Agent
@@ -373,3 +375,32 @@ def test_save_option_expiration(repository: Repository, option_call_before_expir
                     FROM option_expiration""").fetchdf()
 
     assert ret.shape == (0, 4)
+
+
+def test_save_portfolio_value_history_large_negative(repository):
+    df = pd.DataFrame(
+        {
+            "day": [0, 0, 0],
+            "time_tick": [1, 2, 3],
+            "agent_id": [1, 1, 1],
+            "portfolio_value": [
+                Decimal("-100.53"),
+                Decimal("1234567.89"),
+                Decimal("-987654.32"),
+            ],
+        }
+    )
+
+    repository.save_portfolio_value_history(df)
+
+    actual = repository.connection.execute("""
+        SELECT portfolio_value
+        FROM agent_portfolio_value_history
+        ORDER BY time_tick
+    """).fetchall()
+
+    assert [row[0] for row in actual] == [
+        -100.53,
+        1234567.89,
+        -987654.32,
+    ]

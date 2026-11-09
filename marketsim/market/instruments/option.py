@@ -58,9 +58,8 @@ class Option(Security):
 
         self.instrument_class = "option"
         self.underlying = underlying
-        self.strike = derivatives_config["strike"]
+        self.strike = Price(derivatives_config["strike"])
         self.expiration = parse_expiration(derivatives_config["expiration"])
-        # self.expiration = derivatives_config["expiration"]  # TODO: prepare mapper for this
         # so that we can give relative time or precise dates or just take it from option series
         # for now we set mostly as 248 (number of trading days per year)
         self.option_side = derivatives_config["option_side"]  # CALL/PUT

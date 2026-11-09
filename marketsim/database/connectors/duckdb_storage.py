@@ -542,14 +542,20 @@ class Repository:
         self.connection.unregister("eod_futures_value_df")
 
     def save_portfolio_value_history(self, portfolio_value_history_df: pd.DataFrame) -> None:
-        self.connection.register("portfolio_value_history_df", portfolio_value_history_df)
-        self.connection.execute("""
-                INSERT INTO agent_portfolio_value_history (day, time_tick, agent_id, portfolio_value)
-                SELECT day, time_tick, agent_id, portfolio_value
-                FROM portfolio_value_history_df
-        """)
+        df = portfolio_value_history_df.copy()
+        df["portfolio_value"] = df["portfolio_value"].astype("float64")
 
-        self.connection.unregister("portfolio_value_history_df")
+        self.connection.register("portfolio_value_history_df", df)
+        try:
+            self.connection.execute("""
+                INSERT INTO agent_portfolio_value_history
+                    (day, time_tick, agent_id, portfolio_value)
+                SELECT
+                    day, time_tick, agent_id, portfolio_value
+                FROM portfolio_value_history_df
+            """)
+        finally:
+            self.connection.unregister("portfolio_value_history_df")
 
     def save_eod_portfolio_value(self, eod_portfolio_value_df: pd.DataFrame) -> None:
         self.connection.register("eod_portfolio_value_df", eod_portfolio_value_df)
