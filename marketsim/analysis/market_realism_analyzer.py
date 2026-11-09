@@ -50,3 +50,30 @@ class MarketRealismAnalyzer:
 
     def save(self, path: str) -> None:
         self.compare().to_csv(path, index=False)
+
+    def scorecard(self) -> dict:
+        """Summarize simulated vs historical market behavior."""
+        metrics = self.compare().set_index("metric")
+
+        def ratio(metric: str) -> float:
+            historical = float(metrics.loc[metric, "historical"])
+            simulated = float(metrics.loc[metric, "simulated"])
+            if historical == 0:
+                return float("nan")
+            return simulated / historical
+
+        def difference(metric: str) -> float:
+            return float(metrics.loc[metric, "difference"])
+
+        return {
+            "symbol": self.historical.symbol,
+            "historical_days": len(self.historical.data),
+            "simulated_days": len(self.simulated.data),
+            "volatility_ratio": ratio("annualized_volatility"),
+            "volume_ratio": ratio("mean_volume"),
+            "turnover_ratio": ratio("mean_turnover"),
+            "volume_dispersion_ratio": ratio("volume_std"),
+            "return_autocorrelation_difference": difference("return_autocorrelation_1"),
+            "volatility_clustering_difference": difference("squared_return_autocorrelation_1"),
+            "price_volume_correlation_difference": difference("volume_abs_return_correlation"),
+        }

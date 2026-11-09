@@ -54,6 +54,7 @@ class MarketRealismReport:
 
         results = []
         diagnostics = []
+        scorecards = []
 
         for market in simulator.markets.values():
             if market.instrument_class != "stock":
@@ -82,13 +83,13 @@ class MarketRealismReport:
                 historical_series = MarketSeries(symbol, historical_df)
                 simulated_series = MarketSeries(symbol, pd.DataFrame(simulated))
 
-                comparison = MarketRealismAnalyzer(
+                analyzer = MarketRealismAnalyzer(
                     historical_series,
                     simulated_series,
-                ).compare()
+                )
 
-                results.append(comparison)
-
+                results.append(analyzer.compare())
+                scorecards.append(analyzer.scorecard())
                 diagnostics.append(
                     {
                         "symbol": symbol,
@@ -128,6 +129,25 @@ class MarketRealismReport:
 
         pd.DataFrame(diagnostics).to_csv(
             output_dir / "market_realism_diagnostics.csv",
+            index=False,
+        )
+
+        pd.DataFrame(
+            scorecards,
+            columns=[
+                "symbol",
+                "historical_days",
+                "simulated_days",
+                "volatility_ratio",
+                "volume_ratio",
+                "turnover_ratio",
+                "volume_dispersion_ratio",
+                "return_autocorrelation_difference",
+                "volatility_clustering_difference",
+                "price_volume_correlation_difference",
+            ],
+        ).to_csv(
+            output_dir / "market_realism_scorecard.csv",
             index=False,
         )
 
