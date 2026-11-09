@@ -1,67 +1,97 @@
-# Deadalus - based on PyMarketSim
+# Daedalus — agent-based financial market simulator
 
-Daedalus is a research-oriented sandbox (based on PyMarketSim) for building and evaluating agent-based limit order book markets. The package provides reusable components for modeling fundamentals, simulating heterogeneous trading agents, and instrumenting the resulting market dynamics so that you can prototype new strategies or reinforcement-learning environments with minimal boilerplate.
+Daedalus is a Python research sandbox for simulating financial markets with heterogeneous trading agents, limit order books, stocks, indices, futures, and options. It builds on PyMarketSim and supports both synthetic scenarios and historical market data from Ikaros.
 
-## Key capabilities
+## Quick start (Windows PowerShell)
 
-- **Limit order book microstructure.** Matching is handled by a four-heap order book that respects price-time priority and exposes utilities for monitoring mid-prices and execution statistics.
-- **Configurable market structure.** Place your desired market structure in the marketsim/input directory as a yaml file and run your own desired scenario
-- **Agent library.** Combine zero-intelligence, market making, informed, and noise agents or author your own policies by extending the base agent interface.
-- **Event-driven simulation loop.** A discrete event queue coordinates order arrivals and market clearing, letting you scale to multiple agents and assets while keeping control over the simulation clock.
+You can run a synthetic simulation without a Snowflake account.
 
-## Installation
-
-1. Create and activate a Python 3.10 virtual environment.
-2. Install the dependencies and package in editable mode:
-
-```bash
+```powershell
+git clone https://github.com/basschrust/daedalus.git
+cd daedalus
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 pip install -e .
-```
-
-This registers the `marketsim` package locally so you can import it from notebooks or scripts.
-
-## Quick start
-
-The snippet below runs a short simulation process with basic market structure (Market maker, noise traders, wash traders, momentum traders and spoofers). 
-It demonstrates how to instantiate the core components and iterate the simulator.
-
-```python
-git clone https://github.com/basschrust/pymarketsim.git
-cd pymarketsim
-
-py -3.10 -m venv .venv
-.\.venv\Scripts\activate
-
-python -m pip install --upgrade pip
-
-pip install -e .
-
 python -m run.simulation_main
 ```
-- **Simulation results** are stored in the directory **pymarketsim/marketsim/output/** - each simulation gets its own new directory run_YYYYMMDD_hhmm where you can inspect portfolio history of each agent, candlestick plots of each security (including options and their theoretical value) and flows of assets and cash between your defined agent groups.
-- To run one different market structures take a look into following directory: pymarketsim/marketsim/input and use one of the predefined structures or create your own, then run it as below:
-```python
-python -m run.simulation_main market_structure_WT_3_markets.yaml
 
-or
+The last command runs `marketsim/input/market_structure.yaml`. Each run creates its own directory under `marketsim/output/run_YYYYMMDD_HHMMSS/` with its configuration and simulation outputs. The available plots and database artifacts depend on the scenario.
 
-python -m run.simulation_main pletora_of_agent_types_1.yaml
+If PowerShell blocks activation, use `.\.venv\Scripts\python.exe` instead of `python` in the commands above.
+
+## Try another scenario
+
+Choose a YAML configuration from `marketsim/input/`:
+
+```powershell
+python -m run.simulation_main WT_3_markets_1000_2000_by_vol.yaml
 ```
 
+To run your own scenario, create a YAML configuration in `marketsim/input/` and pass its filename as the positional argument. Existing YAML-based commands remain supported.
 
-You can replace or augment simulation agents with your own implementations by subclassing `marketsim.agent.agent.Agent` and adding new section in the market structure defined in the yaml file used for your run.
+## Run real-market scenarios with Ikaros
 
-## Working with agents and securities (markets)
+The optional `--dataset` argument prepares a historical dataset from Ikaros in Snowflake, generates the simulation configuration, and runs it through the **same simulator** as the synthetic scenarios.
 
-- **Agents:** Agent policies live under `marketsim/agent`. They encapsulate order submission logic via a `take_action` method and maintain inventory through helper utilities like `update_position`.
-- **Securities:** The `Security` class manages the event queue, order book, and matching process. At each step it ingests orders from agents, clears the book, and updates mid-prices so you can compute downstream metrics.
+```powershell
+# WIG20 constituents, index, and configured futures
+python -m run.simulation_main --dataset wig20
 
-## Important note on reference price used in Deadalus
+# Full GPW scenario
+python -m run.simulation_main --dataset gpw
 
-Unlike original PyMarketSim framework where fundamental value shared among market participants is used as a reference value, in Deadalus, during continuous trading, the last traded price is used a reference one.
-It is planned to make it configurable in the future so each of the approaches can be simulated and tested.
+# Prepare the WIG20 input without running the simulation
+python -m run.simulation_main --dataset wig20 --prepare-only
+```
+
+These commands require access to the Ikaros Snowflake market-data tables and a configured `.env` file. The connection uses `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, and, for password authentication, `SNOWFLAKE_PASSWORD`. Optional settings include `SNOWFLAKE_WAREHOUSE` (default `DAEDALUS_WH`), `SNOWFLAKE_DATABASE` (default `DAEDALUS`), `SNOWFLAKE_SCHEMA` (default `MARKET_DATA`), `SNOWFLAKE_AUTHENTICATOR`, and `SNOWFLAKE_ROLE`. Never commit `.env` or credentials.
+
+Dataset settings live in `marketsim/input/wig20.yaml` and `marketsim/input/gpw.yaml`. Preparation creates `wig20_auto.yaml` or `gpw_auto.yaml`, respectively, in `marketsim/input/`. You can also run a previously generated configuration directly, without fetching the dataset again:
+
+```powershell
+python -m run.simulation_main wig20_auto.yaml
+```
+
+## Market realism reports
+
+When enabled in the scenario settings, Daedalus compares simulated stock prices and trading volumes with historical observations. Reports are saved under the run's `market_realism/` directory:
+
+- `market_realism_metrics.csv` — detailed historical versus simulated statistics.
+- `market_realism_scorecard.csv` — volatility, volume and turnover ratios, plus differences in correlations.
+- `market_realism_diagnostics.csv` — instruments processed and validation errors.
+
+For a custom YAML scenario, enable the report with:
+
+```yaml
+market_realism:
+  enabled: true
+```
+
+The report requires historical OHLCV and sufficient simulated observations. This version generates reports after the simulation; regenerating them from a saved run without simulation is planned separately.
+
+## Developer commands
+
+```powershell
+make test
+make lint-check
+make lint
+make format
+```
+
+The main application entry point is `python -m run.simulation_main`. Dataset-specific modules in `marketsim/scenarios/` prepare market inputs; the simulator itself is shared.
+
+## Core concepts
+
+- **Limit order books:** order matching and execution statistics.
+- **Trading agents:** noise, market making, momentum, and other configurable strategies.
+- **Financial instruments:** stocks, indices, futures, and options.
+- **Data backends:** DuckDB for local simulations and configurable Snowflake integration.
+- **Configuration:** YAML files under `marketsim/input/`, including reusable agent profiles.
+
+You can implement new trading policies by subclassing `marketsim.agent.agent.Agent` and referencing them from your simulation configuration.
 
 ## License
 
-PyMarketSim is distributed under the MIT License. See `LICENSE.txt` for details.
+See the repository's license file for the applicable terms.
