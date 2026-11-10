@@ -49,6 +49,9 @@ class NoiseAgent(Agent):
             "future_max_order_contracts": 5,
             "future_max_position_contracts": 20,
             "future_max_daily_contracts": 10,
+            "volume_activity_sensitivity": 0.40,
+            "volume_activity_min_multiplier": 0.35,
+            "volume_activity_max_multiplier": 2.5,
         }
         self.configuration = default_configuration | (
             configuration if configuration is not None else {}
@@ -85,6 +88,20 @@ class NoiseAgent(Agent):
             activity = self.lam
             if market.instrument_class == "future":
                 activity *= float(self.configuration["future_lam_multiplier"])
+            # The shared daily volume regime changes participation as well
+            # as order size. Order-size scaling remains in Agent.get_order_mean_volume.
+            regime = getattr(self, "volume_regime", None)
+            if regime is not None and market.instrument_class == "stock":
+                factor = regime.factor(self.current_day, asset_id)
+                sensitivity = float(self.configuration["volume_activity_sensitivity"])
+                lower = float(self.configuration["volume_activity_min_multiplier"])
+                upper = float(self.configuration["volume_activity_max_multiplier"])
+                if not math.isfinite(sensitivity) or sensitivity < 0:
+                    raise ValueError("volume_activity_sensitivity must be nonnegative")
+                if not (0 < lower <= upper and math.isfinite(upper)):
+                    raise ValueError("Invalid volume activity multiplier bounds")
+                activity *= min(upper, max(lower, factor**sensitivity))
+            activity = min(1.0, max(0.0, activity))
             if random.random() >= activity:
                 continue
 
