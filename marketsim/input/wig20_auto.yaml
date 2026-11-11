@@ -568,7 +568,12 @@ agents:
       max_price_deviation: 0.02
       volume_basis: notional
       initial_cash:
-        PLN: 1000000
+        PLN: 30000000
+      future_lam_multiplier: 1.5
+      future_mean_contracts: 75
+      future_max_order_contracts: 180
+      future_max_position_contracts: 1800
+      future_max_daily_contracts: 2500
   noise_medium:
     agent_class: NoiseAgent
     instrument_classes:
@@ -585,7 +590,12 @@ agents:
       max_price_deviation: 0.02
       volume_basis: notional
       initial_cash:
-        PLN: 1000000
+        PLN: 30000000
+      future_lam_multiplier: 1.8
+      future_mean_contracts: 100
+      future_max_order_contracts: 240
+      future_max_position_contracts: 2400
+      future_max_daily_contracts: 3500
   noise_wide:
     agent_class: NoiseAgent
     number: 8
@@ -599,23 +609,33 @@ agents:
       max_price_deviation: 0.02
       volume_basis: notional
       initial_cash:
-        PLN: 1000000
+        PLN: 30000000
+      future_lam_multiplier: 2.0
+      future_mean_contracts: 130
+      future_max_order_contracts: 300
+      future_max_position_contracts: 3000
+      future_max_daily_contracts: 4500
+    instrument_classes:
+    - stock
+    - future
   market_makers:
     agent_class: MMZOHAgent
     instrument_classes:
     - stock
     - future
-    number: 1
+    number: 3
     config:
       rebalance_by: time
       rebalance_period: 4
-      volume_fraction: 0.02
+      volume_fraction: 0.2
       historical_volatility_scale: 0.7
       max_price_deviation: 0.04
       K: 4
       xi: 0.1
       omega: 0.1
       q_max: 1000000
+      initial_cash:
+        PLN: 100000000
   momentum_fast:
     agent_class: MomentumAgent
     instrument_classes:

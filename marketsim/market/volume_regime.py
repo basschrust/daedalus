@@ -44,14 +44,21 @@ class VolumeRegime:
         self.stock_factors: dict[tuple[int, int], float] = {}
         self._market_z: dict[int, float] = {}
         self._stock_z: dict[tuple[int, int], float] = {}
+        self._market_history: dict[int, float] = {}
+        self._stock_history: dict[tuple[int, int], float] = {}
 
     def _market_state(self, day: int) -> float:
-        if day not in self.market_factors:
-            rho = self.market_persistence
-            z = 0.0
-            for _ in range(day + 1):
-                z = rho * z + math.sqrt(1 - rho * rho) * float(self.rng.standard_normal())
-            self.market_factors[day] = math.exp(self.market_sigma * z - 0.5 * self.market_sigma**2)
+        for d in range(day + 1):
+            if d not in self._market_z:
+                previous = self._market_z.get(d - 1, 0.0)
+                rho = self.market_persistence
+                self._market_z[d] = rho * previous + math.sqrt(1 - rho * rho) * float(
+                    self.rng.standard_normal()
+                )
+                self._market_history[d] = math.exp(
+                    self.market_sigma * self._market_z[d] - 0.5 * self.market_sigma**2
+                )
+        self.market_factors[day] = self._market_history[day]
         return self.market_factors[day]
 
     def _stock_state(self, day: int, asset_id: int) -> float:
@@ -63,9 +70,10 @@ class VolumeRegime:
                 self._stock_z[key] = rho * previous + math.sqrt(1 - rho * rho) * float(
                     self.rng.standard_normal()
                 )
-                self.stock_factors[key] = math.exp(
+                self._stock_history[key] = math.exp(
                     self.stock_sigma * self._stock_z[key] - 0.5 * self.stock_sigma**2
                 )
+        self.stock_factors[(day, asset_id)] = self._stock_history[(day, asset_id)]
         return self.stock_factors[(day, asset_id)]
 
     def factor(self, day: int, asset_id: int) -> float:

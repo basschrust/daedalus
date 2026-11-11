@@ -51,11 +51,11 @@ markets:
     market_type: continuous
     reference_price: 9.279999732971191
     currency: PLN
-
 agents:
   relative_momentum:
     agent_class: RelativeMomentumAgent
-    instrument_classes: [ stock ]
+    instrument_classes:
+    - stock
     number: 20
     config:
       lookback_sessions: 252
@@ -85,7 +85,9 @@ agents:
         PLN: 100000000
   noise_tight:
     agent_class: NoiseAgent
-    instrument_classes: [stock, future]
+    instrument_classes:
+    - stock
+    - future
     number: 7
     config:
       lam: 0.4
@@ -100,10 +102,17 @@ agents:
       max_price_deviation: 0.02
       volume_basis: notional
       initial_cash:
-        PLN: 1000000
+        PLN: 30000000
+      future_lam_multiplier: 1.5
+      future_mean_contracts: 75
+      future_max_order_contracts: 180
+      future_max_position_contracts: 1800
+      future_max_daily_contracts: 2500
   noise_medium:
     agent_class: NoiseAgent
-    instrument_classes: [stock, future]
+    instrument_classes:
+    - stock
+    - future
     number: 10
     config:
       lam: 0.3
@@ -115,7 +124,12 @@ agents:
       max_price_deviation: 0.02
       volume_basis: notional
       initial_cash:
-        PLN: 1000000
+        PLN: 30000000
+      future_lam_multiplier: 1.8
+      future_mean_contracts: 100
+      future_max_order_contracts: 240
+      future_max_position_contracts: 2400
+      future_max_daily_contracts: 3500
   noise_wide:
     agent_class: NoiseAgent
     number: 8
@@ -129,40 +143,37 @@ agents:
       max_price_deviation: 0.02
       volume_basis: notional
       initial_cash:
-        PLN: 1000000
-  futures_liquidity:
-    agent_class: NoiseAgent
-    instrument_classes: [future]
-    number: 40
-    config:
-      lam: 0.75
-      future_lam_multiplier: 1.0
-      future_mean_contracts: 150
-      future_max_order_contracts: 350
-      future_max_position_contracts: 4000
-      future_max_daily_contracts: 8000
-      mean_spread: 0.7
-      max_price_deviation: 0.005
-      validity_period: 2
-      initial_cash:
-        PLN: 100000000
+        PLN: 30000000
+      future_lam_multiplier: 2.0
+      future_mean_contracts: 130
+      future_max_order_contracts: 300
+      future_max_position_contracts: 3000
+      future_max_daily_contracts: 4500
+    instrument_classes:
+    - stock
+    - future
   market_makers:
     agent_class: MMZOHAgent
-    instrument_classes: [stock, future]
-    number: 1
+    instrument_classes:
+    - stock
+    - future
+    number: 3
     config:
       rebalance_by: time
       rebalance_period: 4
-      volume_fraction: 0.02
+      volume_fraction: 0.2
       historical_volatility_scale: 0.7
       max_price_deviation: 0.04
       K: 4
       xi: 0.1
       omega: 0.1
       q_max: 1000000
+      initial_cash:
+        PLN: 100000000
   momentum_fast:
     agent_class: MomentumAgent
-    instrument_classes: [stock]
+    instrument_classes:
+    - stock
     number: 2
     config:
       momentum_mode: intraday
@@ -179,7 +190,8 @@ agents:
         PLN: 10000000
   momentum_slow:
     agent_class: MomentumAgent
-    instrument_classes: [stock]
+    instrument_classes:
+    - stock
     number: 2
     config:
       momentum_mode: daily
@@ -199,7 +211,8 @@ agents:
     number: 6
   regime_traders:
     agent_class: RegimeTraderAgent
-    instrument_classes: [stock]
+    instrument_classes:
+    - stock
     number: 2
     config:
       lam: 0.55
@@ -218,14 +231,15 @@ agents:
         PLN: 10000000
   option_market_makers:
     agent_class: OptionMMZOHAgent
-    instrument_classes: [option]
+    instrument_classes:
+    - option
     number: 2
     config:
       rebalance_by: time
       rebalance_period: 2
       K: 4
-      xi: 0.10
-      omega: 0.20
+      xi: 0.1
+      omega: 0.2
       volume: 10
       q_max: 1000
       initial_cash:
@@ -235,13 +249,11 @@ historical_prices:
   path: market_data/wig20_auto.ohlcv.csv
   lookback_sessions: 250
   cutoff_date: '2026-10-27'
-
-start_date: "2026-10-28"
-
+start_date: '2026-10-28'
 non_trading_dates:
-  - "2026-11-11"
-  - "2026-12-24"
-  - "2026-12-25"
-  - "2026-12-31"
-  - "2027-01-01"
-  - "2027-01-06"
+- '2026-11-11'
+- '2026-12-24'
+- '2026-12-25'
+- '2026-12-31'
+- '2027-01-01'
+- '2027-01-06'
