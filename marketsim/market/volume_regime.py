@@ -46,16 +46,12 @@ class VolumeRegime:
         self._stock_z: dict[tuple[int, int], float] = {}
 
     def _market_state(self, day: int) -> float:
-        for d in range(day + 1):
-            if d not in self._market_z:
-                previous = self._market_z.get(d - 1, 0.0)
-                rho = self.market_persistence
-                self._market_z[d] = rho * previous + math.sqrt(1 - rho * rho) * float(
-                    self.rng.standard_normal()
-                )
-                self.market_factors[d] = math.exp(
-                    self.market_sigma * self._market_z[d] - 0.5 * self.market_sigma**2
-                )
+        if day not in self.market_factors:
+            rho = self.market_persistence
+            z = 0.0
+            for _ in range(day + 1):
+                z = rho * z + math.sqrt(1 - rho * rho) * float(self.rng.standard_normal())
+            self.market_factors[day] = math.exp(self.market_sigma * z - 0.5 * self.market_sigma**2)
         return self.market_factors[day]
 
     def _stock_state(self, day: int, asset_id: int) -> float:

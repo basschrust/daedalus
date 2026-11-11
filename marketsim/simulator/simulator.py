@@ -148,6 +148,10 @@ class Simulator:
                     for strike in strikes:
                         derivatives_config["strike"] = strike
                         market = Option(
+                            historical_ohlcv=self.historical_ohlcv_by_symbol.get(
+                                m_conf.get("symbol") or m_conf.get("ticker")
+                            ),
+                            simulation_dates=self.simulation_dates,
                             market_type=m_conf.get("market_type"),
                             name=m_conf.get("name"),
                             derivatives_config=derivatives_config,
@@ -170,6 +174,10 @@ class Simulator:
                 else:
                     # single strike
                     market = Option(
+                        historical_ohlcv=self.historical_ohlcv_by_symbol.get(
+                            m_conf.get("symbol") or m_conf.get("ticker")
+                        ),
+                        simulation_dates=self.simulation_dates,
                         market_type=m_conf.get("market_type"),
                         name=m_conf.get("name"),
                         derivatives_config=derivatives_config,

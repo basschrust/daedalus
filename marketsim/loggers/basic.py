@@ -21,6 +21,9 @@ logger.remove()
 def setup_logger(
     config, output_dir, subject: str = "market", subject_id: int | None = None
 ) -> None:
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+    if subject == "market":
+        (Path(output_dir) / "market_logs").mkdir(parents=True, exist_ok=True)
     if subject == "agent":
         if subject_id is None:
             raise ValueError("subject id is required for agent logger")
@@ -35,7 +38,7 @@ def setup_logger(
         if subject_id is None:
             raise ValueError("subject id is required for market logger")
         logger.add(
-            sink=output_dir / f"market_{subject_id}.log",
+            sink=Path(output_dir) / "market_logs" / f"market_{subject_id}.log",
             format="{elapsed} | {message}",
             level="DEBUG" if config.debug_logging else "INFO",
             filter=lambda record, market_id=subject_id: (
@@ -52,8 +55,9 @@ def setup_logger(
 
 
 def setup_subject_logger(output_dir: Path = Path("tmp")) -> None:
+    (Path(output_dir) / "market_logs").mkdir(parents=True, exist_ok=True)
     logger.add(
-        sink=output_dir / "market_{extra[market_id]}.log",
+        sink=Path(output_dir) / "market_logs" / "market_{extra[market_id]}.log",
         format="{elapsed} | {message}",
         level="DEBUG",
         filter=lambda record: "market_id" in record["extra"],
@@ -71,10 +75,10 @@ def setup_market_logger(*, market: Security, output_dir: Path | str = "tmp"):
     if output_dir == "tmp":
         return logger.bind(market_id=market.asset_id)
     output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    (output_dir / "market_logs").mkdir(parents=True, exist_ok=True)
 
     logger.add(
-        output_dir / f"market_{market.asset_id}_{market.short_name}.log",
+        output_dir / "market_logs" / f"market_{market.asset_id}_{market.short_name}.log",
         format="{elapsed} | {message}",
         level="DEBUG",
         filter=lambda record: record["extra"].get("market_id") == market.asset_id,

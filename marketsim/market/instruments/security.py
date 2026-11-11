@@ -486,7 +486,9 @@ class Security(ABC):
         df_candlestick.index.name = "time"
         self.logger.info(df_candlestick.head())
 
-        candlestick_filename = f"{self.output_dir}/candlestick_{str(self)}.png"
+        candlestick_filename = str(
+            Path(self.output_dir) / "candle_plots" / f"candlestick_{self}.png"
+        )
         plot_candlestick(df=df_candlestick, output_file=candlestick_filename, title=self.name)
 
     def show_summary(self):
@@ -500,7 +502,7 @@ class Security(ABC):
         # Get simulated daily OHLCV from repository
         eod_prices_df = self.repository.get_eod_prices(asset_id=self.asset_id)
 
-        candlestick_filename = Path(self.output_dir) / f"candlestick_{self}.png"
+        candlestick_filename = Path(self.output_dir) / "candle_plots" / f"candlestick_{self}.png"
 
         if self.historical_ohlcv is not None and self.simulation_dates is not None:
             plot_combined_candles(

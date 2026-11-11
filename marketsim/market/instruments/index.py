@@ -176,7 +176,7 @@ class Index(Security):
                 historical=history,
                 simulated=eod_prices_df,
                 simulation_dates=self.simulation_dates,
-                output_file=(Path(self.output_dir) / f"candlestick_{self}.png"),
+                output_file=(Path(self.output_dir) / "candle_plots" / f"candlestick_{self}.png"),
                 title=self.name,
             )
         else:

@@ -76,7 +76,9 @@ class Future(Security):
         df_candlestick.index.name = "time"
         self.logger.info(f"Future candlestick to plot: {df_candlestick.head()}")
 
-        candlestick_filename = f"{self.output_dir}/candlestick_{str(self)}.png"
+        candlestick_filename = str(
+            Path(self.output_dir) / "candle_plots" / f"candlestick_{self}.png"
+        )
         plot_candlestick_derivative(
             df=df_candlestick, output_file=candlestick_filename, title=self.name
         )

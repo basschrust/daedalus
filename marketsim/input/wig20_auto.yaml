@@ -1,6 +1,6 @@
 seed: 67
 days: 40
-sim_time: 40
+sim_time: 45
 lob_plot_interval: 10000
 markets:
   ale.wa:

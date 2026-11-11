@@ -130,6 +130,22 @@ agents:
       volume_basis: notional
       initial_cash:
         PLN: 1000000
+  futures_liquidity:
+    agent_class: NoiseAgent
+    instrument_classes: [future]
+    number: 40
+    config:
+      lam: 0.75
+      future_lam_multiplier: 1.0
+      future_mean_contracts: 150
+      future_max_order_contracts: 350
+      future_max_position_contracts: 4000
+      future_max_daily_contracts: 8000
+      mean_spread: 0.7
+      max_price_deviation: 0.005
+      validity_period: 2
+      initial_cash:
+        PLN: 100000000
   market_makers:
     agent_class: MMZOHAgent
     instrument_classes: [stock, future]

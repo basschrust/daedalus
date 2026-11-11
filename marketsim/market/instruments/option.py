@@ -54,6 +54,8 @@ class Option(Security):
         name: str | None = None,
         short_name: str | None = None,
         output_dir: Path | str = "tmp",
+        historical_ohlcv: pd.DataFrame | None = None,
+        simulation_dates=None,
     ) -> None:
 
         self.instrument_class = "option"
@@ -80,6 +82,8 @@ class Option(Security):
             repository=repository,
             short_name=self.short_name,
             output_dir=output_dir,
+            historical_ohlcv=historical_ohlcv,
+            simulation_dates=simulation_dates,
         )
 
     def calculate_greeks(self):
@@ -194,7 +198,9 @@ class Option(Security):
         df_candlestick.index.name = "time"
         self.logger.info(f"Option candlestick to plot: {df_candlestick.head()}")
 
-        candlestick_filename = f"{self.output_dir}/candlestick_{str(self)}.png"
+        candlestick_filename = str(
+            Path(self.output_dir) / "candle_plots" / f"candlestick_{self}.png"
+        )
         plot_candlestick_derivative(
             df=df_candlestick, output_file=candlestick_filename, title=self.name
         )
