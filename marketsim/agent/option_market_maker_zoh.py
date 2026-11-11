@@ -85,7 +85,6 @@ class OptionMMZOHAgent(InstrumentLimitMixin, Agent):
         self.cum_volume = 0
 
         self.volume = final_configuration["volume"]
-        self.q_max = final_configuration["q_max"]
 
         self.initialize_instrument_limits(self.option_markets, final_configuration)
         self.volume_by_asset = {}

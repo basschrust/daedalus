@@ -71,7 +71,6 @@ class MMZOHAgent(InstrumentLimitMixin, Agent):
         self.cum_volume = 0
 
         # self.volume = final_configuration["volume"]
-        self.q_max = final_configuration["q_max"]
 
         # calculating the volume for each asset by fraction of historical data:
         self.volume_fraction = Decimal(str(final_configuration.get("volume_fraction", "0.10")))

@@ -33,7 +33,25 @@ class InstrumentLimitMixin:
                 continue
             kind = market.instrument_class
             history = historical_volume(market)
-            max_inventory = int(config.get(f"{kind}_q_max", config.get("q_max", 1000)))
+            # q_max is only a backward-compatible global ceiling. The effective
+            # inventory limit is always stored per instrument in q_max_by_asset.
+            # Overrides accept market.name, market.symbol or string asset_id.
+            overrides = config.get("q_max_by_asset", {})
+            if not isinstance(overrides, dict):
+                raise ValueError("q_max_by_asset must be a mapping")
+            candidates = (
+                str(asset_id),
+                getattr(market, "symbol", None),
+                getattr(market, "name", None),
+            )
+            override = next(
+                (overrides[key] for key in candidates if key is not None and key in overrides), None
+            )
+            max_inventory = int(
+                override
+                if override is not None
+                else config.get(f"{kind}_q_max", config.get("q_max", 1000))
+            )
             inventory_fraction = float(
                 config.get(f"{kind}_inventory_fraction", config.get("inventory_fraction", 0.10))
             )
@@ -50,7 +68,13 @@ class InstrumentLimitMixin:
             elif history == 0:
                 inventory = daily = 0
             else:
-                inventory = min(max_inventory, max(1, int(history * inventory_fraction)))
+                # Explicit instrument overrides are hard limits, not merely caps
+                # on the historical-volume estimate.
+                inventory = (
+                    max_inventory
+                    if override is not None
+                    else min(max_inventory, max(1, int(history * inventory_fraction)))
+                )
                 daily = max(2 * int(config.get("K", 3)), int(history * daily_fraction))
             self.q_max_by_asset[asset_id] = inventory
             self.daily_volume_limit_by_asset[asset_id] = daily
