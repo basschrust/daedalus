@@ -26,6 +26,7 @@ from marketsim.database.repositories.factory import create_repository
 from marketsim.loggers.basic import terminal
 from marketsim.market import Future, FXRateProvider, Index, Option, Price, Security, Stock
 from marketsim.market.knowledge import HistoricalMarketData, MarketKnowledge
+from marketsim.market.parametric_var import ParametricVaR
 from marketsim.market.volume_regime import VolumeRegime
 from marketsim.plot.execution_volumes import plot_execution_volumes_by_asset
 from marketsim.plot.group_flows import plot_group_flows
@@ -52,6 +53,7 @@ class Simulator:
         simulation_dates: list[date] | None = None,
         plot_group_flows_enabled: bool = False,
         market_realism_report: MarketRealismReport | None = None,
+        risk_var: dict | None = None,
     ):
         self.logger = logger.bind()
         self.logger.info("Initializing simulation with parameters in market_structure.yaml ...")
@@ -343,6 +345,43 @@ class Simulator:
         if agents is not None:
             for a_key, agent_gr_def in agents.items():
                 self.create_agents(agent_group=agent_gr_def, group_name=a_key)
+
+        self.parametric_var = None
+        if risk_var and risk_var.get("enabled", False):
+            calibration_id = risk_var.get("calibration_id")
+            if not calibration_id:
+                raise ValueError("risk_var.calibration_id is required")
+            symbols = sorted(
+                {
+                    market.short_name.upper()
+                    for market in self.markets.values()
+                    if market.instrument_class == "stock"
+                }
+            )
+            source_connection = None
+            try:
+                if hasattr(self.repository, "localdb"):
+                    # Snowflake is used only to seed the local DuckDB calibration tables.
+                    from marketsim.scenarios.wig20 import connect
+
+                    # Existing local calibration can be reused without Snowflake.
+                    cached = self.repository.connection.execute(
+                        "SELECT count(*) FROM risk_l2_instrument_statistics "
+                        "WHERE calibration_id = ?",
+                        [calibration_id],
+                    ).fetchone()[0]
+                    if not cached:
+                        source_connection = connect()
+                self.parametric_var = ParametricVaR.load(
+                    repository=self.repository,
+                    calibration_id=calibration_id,
+                    symbols=symbols,
+                    confidence_level=float(risk_var.get("confidence_level", 0.99)),
+                    source_connection=source_connection,
+                )
+            finally:
+                if source_connection is not None:
+                    source_connection.close()
 
         # self.all_markets = self.markets
 
@@ -744,6 +783,10 @@ class Simulator:
         # markets first, then agents - so that the derivatives are already settled and cleared and exercised
         for agent_id, agent in self.agents.items():
             agent.eod()
+
+        if self.parametric_var is not None:
+            rows = [self.parametric_var.row_for_agent(agent, day) for agent in self.agents.values()]
+            self.repository.save_eod_agent_var_parametric(rows)
 
         self.logger.info(f"\nEnd-of-Day day: {day} procedure completed.")
 

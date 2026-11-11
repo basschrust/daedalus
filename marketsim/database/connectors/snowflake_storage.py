@@ -27,6 +27,18 @@ if TYPE_CHECKING:
 # Column names intentionally mirror the existing DuckDB tables.
 # Snowflake's NUMBER(38,0) corresponds to integer values; FLOAT to DuckDB DOUBLE.
 TABLES: dict[str, dict[str, str]] = {
+    "eod_agent_var_parametric": dict(
+        day="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
+        confidence_level="FLOAT",
+        horizon_days="NUMBER(38,0)",
+        var_amount="FLOAT",
+        portfolio_value="FLOAT",
+        base_currency="VARCHAR",
+        covered_exposure="FLOAT",
+        excluded_exposure="FLOAT",
+        calibration_id="VARCHAR",
+    ),
     "securities": dict(
         asset_id="NUMBER(38,0)",
         instrument_class="VARCHAR",
@@ -671,3 +683,7 @@ class SnowflakeRepository:
         except Exception:
             self._execute("ROLLBACK")
             raise
+
+    def save_eod_agent_var_parametric(self, rows):
+        if rows:
+            self._insert_frame("eod_agent_var_parametric", pd.DataFrame(rows))

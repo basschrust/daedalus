@@ -353,6 +353,10 @@ class Agent(ABC):
             * matched_order.order.order_type
         )
 
+        market = self.markets[matched_order.order.asset_id]
+        if market.instrument_class == "option":
+            cash *= Decimal(str(market.multiplier))
+
         # self.update_position(quantity=quantity, cash=cash, asset_id=matched_order.order.asset_id)
         asset_id = matched_order.order.asset_id
         self.update_position(
@@ -472,6 +476,8 @@ class Agent(ABC):
                 continue
 
             native_value = Decimal(quantity) * Decimal(str(market.last_traded_price))
+            if market.instrument_class == "option":
+                native_value *= Decimal(str(market.multiplier))
 
             total += self.fx_rate_provider.convert(
                 native_value,

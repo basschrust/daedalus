@@ -28,6 +28,14 @@ class Repository:
         self.prepare_tables()
 
     def prepare_tables(self) -> None:
+        self.connection.execute("""CREATE TABLE IF NOT EXISTS risk_l2_instrument_statistics (
+            calibration_id VARCHAR, symbol VARCHAR, mean_daily_return DOUBLE, daily_sigma DOUBLE)""")
+        self.connection.execute("""CREATE TABLE IF NOT EXISTS risk_l2_pair_statistics (
+            calibration_id VARCHAR, symbol_1 VARCHAR, symbol_2 VARCHAR, covariance_daily DOUBLE)""")
+        self.connection.execute("""CREATE TABLE IF NOT EXISTS eod_agent_var_parametric (
+            day INTEGER, agent_id INTEGER, confidence_level DOUBLE, horizon_days INTEGER,
+            var_amount DOUBLE, portfolio_value DOUBLE, base_currency VARCHAR,
+            covered_exposure DOUBLE, excluded_exposure DOUBLE, calibration_id VARCHAR)""")
         ###### static tables - per simulation  ################
 
         # securities
@@ -863,3 +871,26 @@ class Repository:
         except Exception:
             self.connection.execute("ROLLBACK")
             raise
+
+    def save_eod_agent_var_parametric(self, rows):
+        self.connection.executemany(
+            "INSERT INTO eod_agent_var_parametric VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [
+                tuple(
+                    row[k]
+                    for k in (
+                        "day",
+                        "agent_id",
+                        "confidence_level",
+                        "horizon_days",
+                        "var_amount",
+                        "portfolio_value",
+                        "base_currency",
+                        "covered_exposure",
+                        "excluded_exposure",
+                        "calibration_id",
+                    )
+                )
+                for row in rows
+            ],
+        ) if rows else None

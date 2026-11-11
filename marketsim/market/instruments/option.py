@@ -61,6 +61,9 @@ class Option(Security):
         self.instrument_class = "option"
         self.underlying = underlying
         self.strike = Price(derivatives_config["strike"])
+        self.multiplier = int(derivatives_config.get("multiplier", 1))
+        if self.multiplier <= 0:
+            raise ValueError("Option multiplier must be positive")
         self.expiration = parse_expiration(derivatives_config["expiration"])
         # so that we can give relative time or precise dates or just take it from option series
         # for now we set mostly as 248 (number of trading days per year)
@@ -301,10 +304,10 @@ class Option(Security):
                     if final_position != 0:
                         agent.update_position(
                             quantity=-final_position,
-                            cash=premium * final_position,
+                            cash=premium * final_position * self.multiplier,
                             asset_id=self.asset_id,
                         )
-                        agent.portfolio_value += premium * final_position
+                        agent.portfolio_value += premium * final_position * self.multiplier
                         # TODO: this should be done by an agent method, but yet record_valuation
                         # TODO: is working only for intraday trades
 

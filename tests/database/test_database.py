@@ -7,6 +7,9 @@ from marketsim.database.connectors.duckdb_storage import Repository
 from marketsim.market import Security
 
 EXPECTED_TABLES = {
+    "eod_agent_var_parametric",
+    "risk_l2_instrument_statistics",
+    "risk_l2_pair_statistics",
     "securities",
     "indices",
     "index_components",
