@@ -36,6 +36,17 @@ class Repository:
             day INTEGER, agent_id INTEGER, confidence_level DOUBLE, horizon_days INTEGER,
             var_amount DOUBLE, portfolio_value DOUBLE, base_currency VARCHAR,
             covered_exposure DOUBLE, excluded_exposure DOUBLE, calibration_id VARCHAR)""")
+        self.connection.execute("""CREATE TABLE IF NOT EXISTS eod_option_greeks (
+            day INTEGER, asset_id INTEGER, underlying_id INTEGER,
+            model STRING, delta DOUBLE, gamma DOUBLE, vega DOUBLE,
+            theta DOUBLE, rho DOUBLE, multiplier DOUBLE
+        )""")
+        self.connection.execute("""CREATE TABLE IF NOT EXISTS eod_agent_option_greeks (
+            day INTEGER, agent_id INTEGER, asset_id INTEGER, underlying_id INTEGER,
+            position INTEGER, delta DOUBLE, delta_equivalent DOUBLE,
+            multiplier DOUBLE
+        )""")
+
         ###### static tables - per simulation  ################
 
         # securities

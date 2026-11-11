@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 from marketsim.agent.agent import Agent
+from marketsim.agent.mm_instrument_limits import InstrumentLimitMixin
 from marketsim.market import FXRateProvider, Price
 from marketsim.market.fourheap.constants import BUY, SELL
 from marketsim.market.fourheap.order import Order
@@ -19,7 +20,7 @@ if TYPE_CHECKING:
     from marketsim.market.instruments.security import Security
 
 
-class MMZOHAgent(Agent):
+class MMZOHAgent(InstrumentLimitMixin, Agent):
     ### Market Maker Zero Order Hold Agent -
     # A MM which just takes into account last traded price and sets new order ladder
     # symmetrically on both sides of this last traded price in each rebalance period
@@ -137,6 +138,8 @@ class MMZOHAgent(Agent):
                 f"order_quantity={self.volume_by_asset[asset_id]}"
             )
 
+        self.initialize_instrument_limits(self.markets, final_configuration)
+
     def get_id(self) -> int:
         return self.agent_id
 
@@ -210,35 +213,14 @@ class MMZOHAgent(Agent):
                     st = max(estimate + HALF * self.omega, best_bid)
                     bt = min(estimate - HALF * self.omega, best_ask)
                 self.logger.info(f"Setting basic spread to: {bt}, {st}")
-                # volumes for this market:
-                buy_volume = self.volume_by_asset[asset_id]
-                sell_volume = self.volume_by_asset[asset_id]
-                # TODO: adjust the spread for position rebalancing
-                if abs(self.position[asset_id]) > self.q_max / 2:
-                    if self.position[asset_id] > 0:
-                        # the MM position is very long - needs to sell, so move the prices up
-                        st = st + HALF * self.omega
-                        bt = bt + HALF * self.omega
-                        if self.position[asset_id] > 3 / 4 * self.q_max:
-                            # if getting close to max we also limit the volume of buy orders:
-                            buy_volume = int(buy_volume / 2)
-                            if self.position[asset_id] > self.q_max:
-                                # if we exceeded the q_max then volume should be only symbolic
-                                buy_volume = 1
-                    else:
-                        # the MM position is very short - has to buy more, lower the prices
-                        st = st - HALF * self.omega
-                        bt = bt - HALF * self.omega
-                        if self.position[asset_id] < -3 / 4 * self.q_max:
-                            sell_volume = int(sell_volume / 2)
-                            if self.position[asset_id] < -self.q_max:
-                                sell_volume = 1
-
+                buy_volume, sell_volume = self.limited_quote_sizes(
+                    asset_id, self.volume_by_asset[asset_id], self.K
+                )
                 self.logger.info(f"Basic spread adjusted to: {bt}, {st}")
 
                 for k in range(self.K):
                     price_bid = Price(bt - (k + 1) * self.xi)
-                    if price_bid > 0:
+                    if price_bid > 0 and buy_volume > 0:
                         orders.append(
                             Order(
                                 price=price_bid,
@@ -250,6 +232,7 @@ class MMZOHAgent(Agent):
                                 asset_id=market.asset_id,
                             )
                         )
+                    if sell_volume > 0:
                         orders.append(
                             Order(
                                 price=Price(st + (k + 1) * self.xi),

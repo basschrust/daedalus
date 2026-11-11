@@ -27,6 +27,28 @@ if TYPE_CHECKING:
 # Column names intentionally mirror the existing DuckDB tables.
 # Snowflake's NUMBER(38,0) corresponds to integer values; FLOAT to DuckDB DOUBLE.
 TABLES: dict[str, dict[str, str]] = {
+    "eod_option_greeks": dict(
+        day="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
+        underlying_id="NUMBER(38,0)",
+        model="VARCHAR",
+        delta="FLOAT",
+        gamma="FLOAT",
+        vega="FLOAT",
+        theta="FLOAT",
+        rho="FLOAT",
+        multiplier="FLOAT",
+    ),
+    "eod_agent_option_greeks": dict(
+        day="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
+        underlying_id="NUMBER(38,0)",
+        position="NUMBER(38,0)",
+        delta="FLOAT",
+        delta_equivalent="FLOAT",
+        multiplier="FLOAT",
+    ),
     "eod_agent_var_parametric": dict(
         day="NUMBER(38,0)",
         agent_id="NUMBER(38,0)",
