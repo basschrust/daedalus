@@ -12,14 +12,14 @@ SELECT
     t.asset_id,
     COALESCE(a.group_name, 'UNGROUPED') AS agent_group,
     t.order_side,
-    LOWER(t.executed_mode) AS executed_mode,
+    CASE WHEN LOWER(COALESCE(t.executed_mode, '')) IN ('waited', 'arrived')
+         THEN LOWER(t.executed_mode) ELSE 'other' END AS executed_mode,
     SUM(t.executed_volume) AS volume
 FROM trades t
-JOIN agents a ON a.agent_id = t.agent_id
+LEFT JOIN agents a ON a.agent_id = t.agent_id
 WHERE t.order_side IN (1, -1)
-  AND LOWER(t.executed_mode) IN ('waited', 'arrived')
 GROUP BY t.asset_id, COALESCE(a.group_name, 'UNGROUPED'),
-         t.order_side, LOWER(t.executed_mode)
+         t.order_side, executed_mode
 ORDER BY t.asset_id, agent_group, t.order_side, executed_mode
 """
 
@@ -31,23 +31,25 @@ def plot_execution_volumes_by_asset(
     *,
     output_dir: str | Path,
     labels_map: dict[int, str] | None = None,
+    include_asset_ids: list[int] | None = None,
 ) -> list[Path]:
     """Write one stacked paired-bar chart per asset, across all simulation days.
 
     One bar per BUY/SELL for each agent group. Dark = waited, light = arrived.
     """
-    if volumes.empty:
+    if volumes.empty and not include_asset_ids:
         return []
     missing = REQUIRED_COLUMNS - set(volumes.columns)
     if missing:
         raise ValueError(f"Missing columns: {sorted(missing)}")
     df = volumes.copy()
     df["agent_group"] = df["agent_group"].fillna("UNGROUPED").astype(str)
-    df["executed_mode"] = df["executed_mode"].astype(str).str.lower()
+    df["executed_mode"] = df["executed_mode"].fillna("other").astype(str).str.lower()
     df["asset_id"] = pd.to_numeric(df["asset_id"], errors="raise").astype(int)
     df["order_side"] = pd.to_numeric(df["order_side"], errors="raise").astype(int)
     df["volume"] = pd.to_numeric(df["volume"], errors="raise")
-    bad = df[~df["order_side"].isin((1, -1)) | ~df["executed_mode"].isin(("waited", "arrived"))]
+    df.loc[~df["executed_mode"].isin(("waited", "arrived")), "executed_mode"] = "other"
+    bad = df[~df["order_side"].isin((1, -1))]
     if not bad.empty:
         raise ValueError("Unexpected order_side or executed_mode values")
     if (df["volume"] < 0).any():
@@ -64,9 +66,26 @@ def plot_execution_volumes_by_asset(
         (1, "arrived"): "#9AC8F5",
         (-1, "waited"): "#BA4B0B",
         (-1, "arrived"): "#F4B482",
+        (1, "other"): "#65758B",
+        (-1, "other"): "#A1A1AA",
     }
     result = []
-    for asset_id, asset in df.groupby("asset_id", sort=True):
+    asset_ids = sorted(set(df["asset_id"].tolist()) | set(include_asset_ids or []))
+    for asset_id in asset_ids:
+        asset = df[df["asset_id"] == asset_id]
+        if asset.empty:
+            asset = pd.DataFrame(
+                [
+                    {
+                        "asset_id": asset_id,
+                        "agent_group": "No executions",
+                        "order_side": 1,
+                        "executed_mode": "other",
+                        "volume": 0,
+                    }
+                ]
+            )
+
         groups = sorted(asset["agent_group"].unique())
         pivot = asset.pivot_table(
             index="agent_group",
@@ -80,7 +99,7 @@ def plot_execution_volumes_by_asset(
         fig, ax = plt.subplots(figsize=(max(8, 1.15 * len(groups) + 3), 5.5))
         for side, offset, side_name in ((1, -width / 2, "Buy"), (-1, width / 2, "Sell")):
             bottom = np.zeros(len(groups))
-            for mode in ("waited", "arrived"):
+            for mode in ("waited", "arrived", "other"):
                 values = (
                     pivot[(side, mode)].to_numpy(dtype=float)
                     if (side, mode) in pivot.columns
@@ -96,6 +115,16 @@ def plot_execution_volumes_by_asset(
                 )
                 bottom += values
         ax.set_xticks(x, groups, rotation=25, ha="right")
+        if asset["volume"].sum() == 0:
+            ax.text(
+                0.5,
+                0.72,
+                "No recorded executions",
+                ha="center",
+                va="center",
+                transform=ax.transAxes,
+            )
+            ax.set_ylim(0, 1)
         ax.set_ylabel("Executed volume (asset units)")
         ax.set_xlabel("Agent group")
         ax.set_title(f"{labels_map.get(int(asset_id), str(asset_id))} — executed volume by group")
