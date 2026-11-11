@@ -28,6 +28,7 @@ class InstrumentLimitMixin:
         self.q_max_by_asset = {}
         self.daily_volume_limit_by_asset = {}
         self.daily_executed_volume_by_asset = {}
+        self.blocked_quote_calls_by_asset = {}
         for asset_id, market in markets.items():
             if not getattr(market, "is_tradable", True):
                 continue
@@ -79,6 +80,7 @@ class InstrumentLimitMixin:
             self.q_max_by_asset[asset_id] = inventory
             self.daily_volume_limit_by_asset[asset_id] = daily
             self.daily_executed_volume_by_asset[asset_id] = 0
+            self.blocked_quote_calls_by_asset[asset_id] = 0
 
     def limited_quote_sizes(self, asset_id, desired, levels):
         """Conservative capacity: every level on either side could execute."""
@@ -99,6 +101,10 @@ class InstrumentLimitMixin:
         side_budget = available // 2
         buy = min(int(desired), max(0, (limit - position) // levels), side_budget // levels)
         sell = min(int(desired), max(0, (limit + position) // levels), side_budget // levels)
+        if buy <= 0 or sell <= 0:
+            self.blocked_quote_calls_by_asset[asset_id] = (
+                self.blocked_quote_calls_by_asset.get(asset_id, 0) + 1
+            )
         return max(0, buy), max(0, sell)
 
     def record_trade(self, matched_order):
@@ -117,3 +123,4 @@ class InstrumentLimitMixin:
         super().sod()
         for asset_id in self.daily_executed_volume_by_asset:
             self.daily_executed_volume_by_asset[asset_id] = 0
+            self.blocked_quote_calls_by_asset[asset_id] = 0

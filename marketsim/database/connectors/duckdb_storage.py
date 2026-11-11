@@ -28,6 +28,19 @@ class Repository:
         self.prepare_tables()
 
     def prepare_tables(self) -> None:
+        # Rename existing tables before CREATE TABLE, preserving historical rows.
+        existing = {row[0] for row in self.connection.execute("SHOW TABLES").fetchall()}
+        for old, new in (
+            ("agent_eod_positions", "eod_agent_positions"),
+            ("agent_eod_futures_position", "eod_agent_futures_position"),
+            ("agent_eod_futures_value", "eod_agent_futures_value"),
+            ("agent_eod_portfolio_value", "eod_agent_portfolio_value"),
+            ("agent_eod_cash", "eod_agent_cash"),
+        ):
+            if old in existing and new not in existing:
+                self.connection.execute(f'ALTER TABLE "{old}" RENAME TO "{new}"')
+            elif old in existing and new in existing:
+                raise RuntimeError(f"Ambiguous EOD table migration: both {old} and {new} exist")
         self.connection.execute("""CREATE TABLE IF NOT EXISTS risk_l2_instrument_statistics (
             calibration_id VARCHAR, symbol VARCHAR, mean_daily_return DOUBLE, daily_sigma DOUBLE)""")
         self.connection.execute("""CREATE TABLE IF NOT EXISTS risk_l2_pair_statistics (
@@ -45,6 +58,15 @@ class Repository:
             day INTEGER, agent_id INTEGER, asset_id INTEGER, underlying_id INTEGER,
             position INTEGER, delta DOUBLE, delta_equivalent DOUBLE,
             multiplier DOUBLE
+        )""")
+
+        self.connection.execute("""CREATE TABLE IF NOT EXISTS eod_instrument_liquidity (
+            day INTEGER, asset_id INTEGER, instrument_class VARCHAR,
+            historical_daily_volume DOUBLE, executed_volume BIGINT,
+            submitted_buy_volume BIGINT, submitted_sell_volume BIGINT,
+            mm_submitted_buy_volume BIGINT, mm_submitted_sell_volume BIGINT,
+            mm_executed_volume BIGINT, mm_inventory_limit BIGINT,
+            mm_daily_volume_limit BIGINT, mm_blocked_quote_calls BIGINT
         )""")
 
         ###### static tables - per simulation  ################
@@ -158,7 +180,7 @@ class Repository:
 
         # EoD position (portfolio) of each agent, lowercase columns please!
         self.connection.execute("""
-                    CREATE TABLE IF NOT EXISTS agent_eod_positions (
+                    CREATE TABLE IF NOT EXISTS eod_agent_positions (
                         day       INTEGER,
                         agent_id  INTEGER,
                         asset_id  INTEGER,
@@ -168,7 +190,7 @@ class Repository:
         # deleted column: position_value DOUBLE
 
         self.connection.execute("""
-                    CREATE TABLE IF NOT EXISTS agent_eod_futures_position (
+                    CREATE TABLE IF NOT EXISTS eod_agent_futures_position (
                         day       INTEGER,
                         agent_id  INTEGER,
                         asset_id  INTEGER,
@@ -177,7 +199,7 @@ class Repository:
                 """)
 
         self.connection.execute("""
-                CREATE TABLE IF NOT EXISTS agent_eod_futures_value (
+                CREATE TABLE IF NOT EXISTS eod_agent_futures_value (
                     day       INTEGER,
                     agent_id  INTEGER,
                     asset_id  INTEGER,
@@ -200,7 +222,7 @@ class Repository:
         """)
 
         self.connection.execute("""
-            CREATE TABLE IF NOT EXISTS agent_eod_portfolio_value (
+            CREATE TABLE IF NOT EXISTS eod_agent_portfolio_value (
                 day       INTEGER,
                 agent_id  INTEGER,
                 portfolio_value DOUBLE
@@ -219,7 +241,7 @@ class Repository:
         """)
 
         self.connection.execute("""
-            CREATE TABLE IF NOT EXISTS agent_eod_cash (
+            CREATE TABLE IF NOT EXISTS eod_agent_cash (
                 day       INTEGER,
                 agent_id  INTEGER,
                 cash DOUBLE,
@@ -523,11 +545,35 @@ class Repository:
 
         self.connection.unregister("futures_value_df")
 
+    def save_eod_instrument_liquidity(self, rows: list[dict]) -> None:
+        if not rows:
+            return
+        columns = (
+            "day",
+            "asset_id",
+            "instrument_class",
+            "historical_daily_volume",
+            "executed_volume",
+            "submitted_buy_volume",
+            "submitted_sell_volume",
+            "mm_submitted_buy_volume",
+            "mm_submitted_sell_volume",
+            "mm_executed_volume",
+            "mm_inventory_limit",
+            "mm_daily_volume_limit",
+            "mm_blocked_quote_calls",
+        )
+        self.connection.executemany(
+            f"INSERT INTO eod_instrument_liquidity ({', '.join(columns)}) "
+            f"VALUES ({', '.join('?' for _ in columns)})",
+            [tuple(row.get(column) for column in columns) for row in rows],
+        )
+
     def save_eod_position(self, eod_position_df: pd.DataFrame) -> None:
         self.connection.register("eod_position_df", eod_position_df)
 
         self.connection.execute("""
-            INSERT INTO agent_eod_positions (day, agent_id, asset_id, position)
+            INSERT INTO eod_agent_positions (day, agent_id, asset_id, position)
             SELECT day, agent_id, asset_id, position
             FROM eod_position_df
         """)
@@ -539,7 +585,7 @@ class Repository:
         self.connection.register("eod_position_df", eod_position_df)
 
         self.connection.execute("""
-            INSERT INTO agent_eod_futures_position (day, agent_id, asset_id, position)
+            INSERT INTO eod_agent_futures_position (day, agent_id, asset_id, position)
             SELECT day, agent_id, asset_id, position
             FROM eod_position_df
         """)
@@ -551,7 +597,7 @@ class Repository:
         self.connection.register("eod_futures_value_df", eod_futures_value_df)
 
         self.connection.execute("""
-            INSERT INTO agent_eod_futures_value (day, agent_id, asset_id,
+            INSERT INTO eod_agent_futures_value (day, agent_id, asset_id,
                                                     position, avg_initial_price, collateral, unsettled_pnl)
             SELECT day, agent_id, asset_id, position, avg_initial_price,
                 collateral, unsettled_pnl
@@ -579,7 +625,7 @@ class Repository:
     def save_eod_portfolio_value(self, eod_portfolio_value_df: pd.DataFrame) -> None:
         self.connection.register("eod_portfolio_value_df", eod_portfolio_value_df)
         self.connection.execute("""
-                INSERT INTO agent_eod_portfolio_value (day, agent_id, portfolio_value)
+                INSERT INTO eod_agent_portfolio_value (day, agent_id, portfolio_value)
                 SELECT day, agent_id, portfolio_value
                 FROM eod_portfolio_value_df
         """)
@@ -599,7 +645,7 @@ class Repository:
     def save_eod_cash(self, eod_cash_df: pd.DataFrame) -> None:
         self.connection.register("eod_cash_df", eod_cash_df)
         self.connection.execute("""
-            INSERT INTO agent_eod_cash (day, agent_id, cash, currency)
+            INSERT INTO eod_agent_cash (day, agent_id, cash, currency)
             SELECT day, agent_id, cash, currency
             FROM eod_cash_df
         """)
@@ -708,7 +754,7 @@ class Repository:
         return self.connection.execute(
             query="""
                 SELECT day, asset_id, position
-                FROM agent_eod_positions
+                FROM eod_agent_positions
                 WHERE agent_id = ?
             """,
             parameters=[agent_id],
@@ -718,7 +764,7 @@ class Repository:
         return self.connection.execute(
             query="""
                 SELECT day, asset_id, position
-                FROM agent_eod_futures_position
+                FROM eod_agent_futures_position
                 WHERE agent_id = ?
             """,
             parameters=[agent_id],
@@ -758,7 +804,7 @@ class Repository:
         return self.connection.execute(
             query="""
                 SELECT day, currency, cash
-                FROM agent_eod_cash
+                FROM eod_agent_cash
                 WHERE agent_id = ?
             """,
             parameters=[agent_id],
@@ -768,7 +814,7 @@ class Repository:
         return self.connection.execute(
             query="""
                 SELECT day, portfolio_value
-                FROM agent_eod_portfolio_value
+                FROM eod_agent_portfolio_value
                 WHERE agent_id = ?
             """,
             parameters=[agent_id],
