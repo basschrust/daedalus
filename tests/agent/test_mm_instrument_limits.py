@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 import pandas as pd
 
-from marketsim.agent.mm_instrument_limits import InstrumentLimitMixin
+from marketsim.agent.helpers.mm_instrument_limits import InstrumentLimitMixin
 
 
 class Dummy(InstrumentLimitMixin):

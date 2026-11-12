@@ -4,6 +4,7 @@ import math
 
 import numpy as np
 import pytest
+
 from marketsim.agent.helpers.liquidity_control import (
     LiquidityPolicy,
     daily_intensity,

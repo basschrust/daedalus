@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from marketsim.agent.agent import Agent
-from marketsim.agent.mm_instrument_limits import InstrumentLimitMixin, historical_volume
+from marketsim.agent.helpers.mm_instrument_limits import InstrumentLimitMixin, historical_volume
 from marketsim.market import FXRateProvider, Price, Security
 from marketsim.market.fourheap.constants import BUY, SELL
 from marketsim.market.fourheap.order import Order
