@@ -1,6 +1,6 @@
 seed: 67
-days: 40
-sim_time: 45
+days: 10
+sim_time: 25
 lob_plot_interval: 10000
 markets:
   ale.wa:
@@ -236,7 +236,7 @@ markets:
     short_name: FW20Z2620
     instrument_class: future
     underlying: wig20
-    expiration: 27
+    expiration: 10
     multiplier: 20.0
     margin_rate: 0.1
   fw20h2720:
@@ -245,7 +245,7 @@ markets:
     short_name: FW20H2720
     instrument_class: future
     underlying: wig20
-    expiration: 40
+    expiration: 10
     multiplier: 20.0
     margin_rate: 0.1
   fw20m2720:
@@ -254,7 +254,7 @@ markets:
     short_name: FW20M2720
     instrument_class: future
     underlying: wig20
-    expiration: 40
+    expiration: 10
     multiplier: 20.0
     margin_rate: 0.1
   ow20k264175:
@@ -320,7 +320,7 @@ markets:
       strike: '4150.00'
       option_side: PUT
       option_type: European
-      expiration: 27
+      expiration: 10
       multiplier: 10.0
   ow20k264200:
     symbol: OW20K264200
@@ -346,7 +346,7 @@ markets:
       strike: '4200.00'
       option_side: CALL
       option_type: European
-      expiration: 27
+      expiration: 10
       multiplier: 10.0
   ow20w264125:
     symbol: OW20W264125
@@ -398,7 +398,7 @@ markets:
       strike: '4100.00'
       option_side: PUT
       option_type: European
-      expiration: 27
+      expiration: 10
       multiplier: 10.0
   ow20o274100:
     symbol: OW20O274100
@@ -411,7 +411,7 @@ markets:
       strike: '4100.00'
       option_side: PUT
       option_type: European
-      expiration: 40
+      expiration: 10
       multiplier: 10.0
   ow20k264250:
     symbol: OW20K264250
@@ -437,7 +437,7 @@ markets:
       strike: '4250.00'
       option_side: CALL
       option_type: European
-      expiration: 27
+      expiration: 10
       multiplier: 10.0
   ow20w264075:
     symbol: OW20W264075
@@ -618,6 +618,7 @@ agents:
     instrument_classes:
     - stock
     - future
+    - option
   market_makers:
     agent_class: MMZOHAgent
     instrument_classes:

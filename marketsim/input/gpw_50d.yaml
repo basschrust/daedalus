@@ -152,6 +152,7 @@ agents:
     instrument_classes:
     - stock
     - future
+    - option
   market_makers:
     agent_class: MMZOHAgent
     instrument_classes:
@@ -261,3 +262,11 @@ risk_var:
   enabled: true
   calibration_id: 5a57f50d01e7f1020a08666d276788b7baa6c768e5b32126e6a4c5ea04ac848a
   confidence_level: 0.99
+risk_greeks:
+  enabled: true
+  calibration_id: 5a57f50d01e7f1020a08666d276788b7baa6c768e5b32126e6a4c5ea04ac848a
+  short_rates:
+    PLN: 0.04  # Example only
+  dividend_yields:
+    WIG20: 0.0
+

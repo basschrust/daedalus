@@ -29,6 +29,7 @@ from marketsim.market.knowledge import HistoricalMarketData, MarketKnowledge
 from marketsim.market.volume_regime import VolumeRegime
 from marketsim.plot.execution_volumes import plot_execution_volumes_by_asset
 from marketsim.plot.group_flows import plot_group_flows
+from marketsim.risk.eod_greeks import write_eod_greeks
 
 
 class Simulator:
@@ -52,6 +53,7 @@ class Simulator:
         simulation_dates: list[date] | None = None,
         plot_group_flows_enabled: bool = False,
         market_realism_report: MarketRealismReport | None = None,
+        risk_greeks: dict | None = None,
     ):
         self.logger = logger.bind()
         self.logger.info("Initializing simulation with parameters in market_structure.yaml ...")
@@ -80,6 +82,7 @@ class Simulator:
         self.r = r
         self.shock_var = shock_var  # change probability of fundamental (market consensus) value
         self.plot_group_flows_enabled = plot_group_flows_enabled
+        self.risk_greeks = risk_greeks or {}
 
         self.current_time = 0  # TODO: needed in Market, here probably not?
         self.markets = {}  # [] # each market serves single security, keys are asset_ids
@@ -737,6 +740,9 @@ class Simulator:
                 volume=market.trade_stats.get("volume_buy", 0)
                 + market.trade_stats.get("volume_sell", 0),
             )
+
+        if self.risk_greeks.get("enabled", False):
+            write_eod_greeks(self, day, self.risk_greeks)
 
         # markets first, then agents - so that the derivatives are already settled and cleared and exercised
         for agent_id, agent in self.agents.items():
