@@ -108,6 +108,9 @@ agents:
       future_max_order_contracts: 180
       future_max_position_contracts: 1800
       future_max_daily_contracts: 2500
+      stock_coverage_fraction: 0.30
+      min_noise_agents_per_stock: 3
+      coverage_seed: 67
   noise_medium:
     agent_class: NoiseAgent
     instrument_classes:
@@ -130,6 +133,9 @@ agents:
       future_max_order_contracts: 240
       future_max_position_contracts: 2400
       future_max_daily_contracts: 3500
+      stock_coverage_fraction: 0.30
+      min_noise_agents_per_stock: 3
+      coverage_seed: 67
   noise_wide:
     agent_class: NoiseAgent
     number: 8
@@ -149,6 +155,9 @@ agents:
       future_max_order_contracts: 300
       future_max_position_contracts: 3000
       future_max_daily_contracts: 4500
+      stock_coverage_fraction: 0.30
+      min_noise_agents_per_stock: 3
+      coverage_seed: 67
     instrument_classes:
     - stock
     - future

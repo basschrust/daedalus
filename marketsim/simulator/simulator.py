@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+import random
 from datetime import date
 from pathlib import Path
 
@@ -351,6 +353,15 @@ class Simulator:
     def add_agent_group(
         self, *, agent_group: dict, markets: list[Security], group_name: str
     ) -> None:
+        noise_assignments = None
+        if agent_group["agent_class"] == "NoiseAgent":
+            noise_assignments = self.assign_noise_stocks(
+                markets=markets,
+                agent_count=agent_group["number"],
+                configuration=agent_group.get("config", {}),
+                group_name=group_name,
+            )
+
         for i in range(agent_group["number"]):
             # let's make it in case/ series of ifs to avoid security breach (if used the class name as code directly)
             # ZI agents:
@@ -368,7 +379,7 @@ class Simulator:
             # Noise agents:
             if agent_group["agent_class"] == "NoiseAgent":
                 agent = NoiseAgent(
-                    markets=markets,
+                    markets=noise_assignments[i],
                     configuration=configuration,
                     repository=self.repository,
                     group=group_name,
@@ -780,3 +791,64 @@ class Simulator:
         terminal.write("\nPreparing summary...\n")
         self.end_sim()
         terminal.write("\nSummary complete.")
+
+    def assign_noise_stocks(
+        self,
+        markets: list[Security],
+        agent_count: int,
+        configuration: dict,
+        group_name: str,
+    ) -> list[list[Security]]:
+        """Assign balanced, reproducible stock subsets to noise agents."""
+
+        if agent_count <= 0:
+            return []
+
+        fraction = float(configuration.get("stock_coverage_fraction", 0.30))
+        minimum = int(configuration.get("min_noise_agents_per_stock", 3))
+        seed = int(configuration.get("coverage_seed", 67))
+
+        if not math.isfinite(fraction) or not 0 < fraction <= 1:
+            raise ValueError("stock_coverage_fraction must be in (0, 1]")
+        if minimum < 1:
+            raise ValueError("min_noise_agents_per_stock must be positive")
+
+        stocks = sorted(
+            (m for m in markets if m.instrument_class == "stock"),
+            key=lambda m: m.asset_id,
+        )
+        other_markets = [m for m in markets if m.instrument_class != "stock"]
+
+        if not stocks:
+            return [list(other_markets) for _ in range(agent_count)]
+
+        # At least one stock per agent. Increase coverage if needed
+        # to satisfy the minimum number of agents per stock.
+        count = min(
+            len(stocks),
+            max(
+                1,
+                math.ceil(len(stocks) * fraction),
+                math.ceil(len(stocks) * minimum / agent_count),
+            ),
+        )
+
+        if agent_count * count < len(stocks) * minimum:
+            raise ValueError("Not enough noise agents for the requested minimum stock coverage")
+
+        # Stable seed independent of Python's randomized hash().
+        group_seed = seed + sum((i + 1) * ord(char) for i, char in enumerate(group_name))
+        rng = random.Random(group_seed)
+
+        assignments = [[] for _ in range(agent_count)]
+        stock_order = list(stocks)
+        rng.shuffle(stock_order)
+
+        # Rotating assignments balance stock coverage to within one agent.
+        # Each agent receives exactly 'count' distinct stocks.
+        for slot in range(agent_count * count):
+            agent_index = slot // count
+            stock_index = slot % len(stocks)
+            assignments[agent_index].append(stock_order[stock_index])
+
+        return [selected + list(other_markets) for selected in assignments]
