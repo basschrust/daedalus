@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from marketsim.analysis.market_series import MarketSeries
+from marketsim.analysis.statistics import safe_correlation
 
 
 class VolumeAnalyzer:
@@ -20,10 +21,11 @@ class VolumeAnalyzer:
         )
 
         correlation = (
-            aligned["volume"].corr(aligned["absolute_return"])
+            safe_correlation(
+                aligned["volume"],
+                aligned["absolute_return"],
+            )
             if len(aligned) >= 3
-            and aligned["volume"].nunique() > 1
-            and aligned["absolute_return"].nunique() > 1
             else np.nan
         )
 

@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 from marketsim.analysis.market_series import MarketSeries
+from marketsim.analysis.statistics import safe_correlation
 
 
 @dataclass(frozen=True)
@@ -33,8 +34,14 @@ class VolatilityAnalyzer:
             "annualized_volatility": float(returns.std(ddof=1) * np.sqrt(252)),
             "skewness": float(returns.skew()),
             "excess_kurtosis": float(returns.kurt()),
-            "return_autocorrelation_1": float(returns.autocorr(lag=1)),
-            "squared_return_autocorrelation_1": float(returns.pow(2).autocorr(lag=1)),
+            "return_autocorrelation_1": safe_correlation(
+                returns.iloc[1:],
+                returns.shift(1).iloc[1:],
+            ),
+            "squared_return_autocorrelation_1": safe_correlation(
+                returns.pow(2).iloc[1:],
+                returns.pow(2).shift(1).iloc[1:],
+            ),
         }
 
     def fit_garch(
