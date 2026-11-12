@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 
+from marketsim.agent.stock_volume_calibration import calibrated_mean_order_size
 from marketsim.loggers.basic import setup_agent_logger
 from marketsim.market import FXRateProvider
 from marketsim.market.knowledge.market_knowledge import MarketKnowledge
@@ -867,20 +868,31 @@ class Agent(ABC):
             raise ValueError("volume_fraction must be in (0, 1]")
 
         market = self.markets[asset_id]
-        history = getattr(market, "historical_ohlcv", None)
+        if market.instrument_class == "stock":
+            regime = getattr(self, "volume_regime", None)
+            regime_factor = regime.factor(self.current_day, asset_id) if regime is not None else 1.0
 
+            return calibrated_mean_order_size(
+                historical_ohlcv=getattr(market, "historical_ohlcv", None),
+                fraction=fraction,
+                ticks_per_day=int(self.sim_time),
+                arrival_probability=float(cfg.get("lam", 1.0)),
+                fallback=float(fallback),
+                regime_factor=float(regime_factor),
+            )
+
+        market = self.markets[asset_id]
+        history = getattr(market, "historical_ohlcv", None)
         if history is None or history.empty or "volume" not in history:
             return float(fallback)
 
         volumes = pd.to_numeric(history["volume"], errors="coerce")
         volumes = volumes.dropna()
         volumes = volumes[(volumes >= 0) & volumes.map(math.isfinite)]
-
         if volumes.empty:
             return float(fallback)
 
         knowledge = self.get_market_knowledge(asset_id)
-
         if knowledge is None:
             return float(fallback)
 
