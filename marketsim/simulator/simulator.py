@@ -138,13 +138,12 @@ class Simulator:
         for m_key, m_conf in markets.items():
             instrument_class = m_conf.get("instrument_class", "stock")
             if instrument_class == "option":
-                # let's rock with first option here!
-                # terminal.write(str(m_conf))
-                # terminal.write(str(self.markets))
                 derivatives_config = m_conf.get("derivatives_config")
                 underlying = self.markets.get(
                     self.market_map.get(m_conf.get("derivatives_config").get("underlying"))
                 )
+                symbol = m_conf.get("symbol") or m_conf.get("ticker")
+                historical_ohlcv = self.historical_ohlcv_by_symbol.get(symbol)
                 strikes = m_conf.get("derivatives_config").get("strikes", [])
                 if strikes:
                     # series
@@ -158,6 +157,8 @@ class Simulator:
                             repository=self.repository,
                             short_name=m_conf.get("short_name"),
                             output_dir=self.output_dir,
+                            historical_ohlcv=historical_ohlcv,
+                            simulation_dates=self.simulation_dates,
                         )
                         self.market_map[m_key] = market.asset_id
                         self.markets[market.asset_id] = market
@@ -180,6 +181,8 @@ class Simulator:
                         repository=self.repository,
                         short_name=m_conf.get("short_name"),
                         output_dir=self.output_dir,
+                        historical_ohlcv=historical_ohlcv,
+                        simulation_dates=self.simulation_dates,
                     )
                     self.market_map[m_key] = market.asset_id
                     self.markets[market.asset_id] = market
