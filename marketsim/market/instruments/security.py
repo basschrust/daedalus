@@ -486,8 +486,8 @@ class Security(ABC):
         df_candlestick.index.name = "time"
         self.logger.info(df_candlestick.head())
 
-        candlestick_filename = f"{self.output_dir}/candlestick_{str(self)}.png"
-        plot_candlestick(df=df_candlestick, output_file=candlestick_filename, title=self.name)
+        candlestick_filename = Path(self.output_dir) / "candle_plots" / f"candlestick_{self}.png"
+        plot_candlestick(df=df_candlestick, output_file=str(candlestick_filename), title=self.name)
 
     def show_summary(self):
         self.logger.info(f"\n\nMarket {str(self)} summary:")
@@ -500,7 +500,7 @@ class Security(ABC):
         # Get simulated daily OHLCV from repository
         eod_prices_df = self.repository.get_eod_prices(asset_id=self.asset_id)
 
-        candlestick_filename = Path(self.output_dir) / f"candlestick_{self}.png"
+        candlestick_filename = Path(self.output_dir) / "candle_plots" / f"candlestick_{self}.png"
 
         if self.historical_ohlcv is not None and self.simulation_dates is not None:
             plot_combined_candles(
@@ -750,6 +750,56 @@ class Security(ABC):
                 }
             )
             self.repository.save_trades(trades_df=matched_orders_df)
+
+            # EOD liquidity diagnostics: all submitted orders (not just unmatched),
+            # actual executions, and per-market-maker limits.
+            from marketsim.agent.mm_instrument_limits import historical_volume
+
+            makers = [
+                agent
+                for agent in self.agents.values()
+                if self.asset_id in getattr(agent, "q_max_by_asset", {})
+            ]
+            maker_groups = {agent.group for agent in makers}
+            mm_buy = sum(
+                int(self.orders_by_agent_type.get(group, {}).get("volume_buy", 0))
+                for group in maker_groups
+            )
+            mm_sell = sum(
+                int(self.orders_by_agent_type.get(group, {}).get("volume_sell", 0))
+                for group in maker_groups
+            )
+            row = {
+                "day": self.current_day - 1,
+                "asset_id": self.asset_id,
+                "instrument_class": self.instrument_class,
+                "historical_daily_volume": historical_volume(self),
+                "executed_volume": int(self.traded_prices_df["volume"].sum()),
+                "submitted_buy_volume": sum(
+                    int(g["volume_buy"]) for g in self.orders_by_agent_type.values()
+                ),
+                "submitted_sell_volume": sum(
+                    int(g["volume_sell"]) for g in self.orders_by_agent_type.values()
+                ),
+                "mm_submitted_buy_volume": mm_buy,
+                "mm_submitted_sell_volume": mm_sell,
+                "mm_executed_volume": sum(
+                    int(agent.daily_executed_volume_by_asset.get(self.asset_id, 0))
+                    for agent in makers
+                ),
+                "mm_inventory_limit": sum(
+                    int(agent.q_max_by_asset[self.asset_id]) for agent in makers
+                ),
+                "mm_daily_volume_limit": sum(
+                    int(agent.daily_volume_limit_by_asset.get(self.asset_id, 0)) for agent in makers
+                ),
+                "mm_blocked_quote_calls": sum(
+                    int(agent.blocked_quote_calls_by_asset.get(self.asset_id, 0))
+                    for agent in makers
+                ),
+            }
+            self.repository.save_eod_instrument_liquidity([row])
+            self.logger.info(f"EOD liquidity diagnostics: {row}")
 
             if self.status != "active" and self.instrument_class == "stock":
                 # other instruments cleaned up in their subclasses.

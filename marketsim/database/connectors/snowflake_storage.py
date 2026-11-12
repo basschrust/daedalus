@@ -27,6 +27,55 @@ if TYPE_CHECKING:
 # Column names intentionally mirror the existing DuckDB tables.
 # Snowflake's NUMBER(38,0) corresponds to integer values; FLOAT to DuckDB DOUBLE.
 TABLES: dict[str, dict[str, str]] = {
+    "eod_option_greeks": dict(
+        day="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
+        underlying_id="NUMBER(38,0)",
+        model="VARCHAR",
+        delta="FLOAT",
+        gamma="FLOAT",
+        vega="FLOAT",
+        theta="FLOAT",
+        rho="FLOAT",
+        multiplier="FLOAT",
+    ),
+    "eod_agent_option_greeks": dict(
+        day="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
+        underlying_id="NUMBER(38,0)",
+        position="NUMBER(38,0)",
+        delta="FLOAT",
+        delta_equivalent="FLOAT",
+        multiplier="FLOAT",
+    ),
+    "eod_instrument_liquidity": dict(
+        day="NUMBER(38,0)",
+        asset_id="NUMBER(38,0)",
+        instrument_class="VARCHAR(40)",
+        historical_daily_volume="FLOAT",
+        executed_volume="NUMBER(38,0)",
+        submitted_buy_volume="NUMBER(38,0)",
+        submitted_sell_volume="NUMBER(38,0)",
+        mm_submitted_buy_volume="NUMBER(38,0)",
+        mm_submitted_sell_volume="NUMBER(38,0)",
+        mm_executed_volume="NUMBER(38,0)",
+        mm_inventory_limit="NUMBER(38,0)",
+        mm_daily_volume_limit="NUMBER(38,0)",
+        mm_blocked_quote_calls="NUMBER(38,0)",
+    ),
+    "eod_agent_var_parametric": dict(
+        day="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
+        confidence_level="FLOAT",
+        horizon_days="NUMBER(38,0)",
+        var_amount="FLOAT",
+        portfolio_value="FLOAT",
+        base_currency="VARCHAR",
+        covered_exposure="FLOAT",
+        excluded_exposure="FLOAT",
+        calibration_id="VARCHAR",
+    ),
     "securities": dict(
         asset_id="NUMBER(38,0)",
         instrument_class="VARCHAR",
@@ -89,19 +138,19 @@ TABLES: dict[str, dict[str, str]] = {
         unsettled_pnl="FLOAT",
         settlement_price="FLOAT",
     ),
-    "agent_eod_positions": dict(
+    "eod_agent_positions": dict(
         day="NUMBER(38,0)",
         agent_id="NUMBER(38,0)",
         asset_id="NUMBER(38,0)",
         position="NUMBER(38,0)",
     ),
-    "agent_eod_futures_position": dict(
+    "eod_agent_futures_position": dict(
         day="NUMBER(38,0)",
         agent_id="NUMBER(38,0)",
         asset_id="NUMBER(38,0)",
         position="NUMBER(38,0)",
     ),
-    "agent_eod_futures_value": dict(
+    "eod_agent_futures_value": dict(
         day="NUMBER(38,0)",
         agent_id="NUMBER(38,0)",
         asset_id="NUMBER(38,0)",
@@ -117,7 +166,7 @@ TABLES: dict[str, dict[str, str]] = {
         agent_id="NUMBER(38,0)",
         portfolio_value="FLOAT",
     ),
-    "agent_eod_portfolio_value": dict(
+    "eod_agent_portfolio_value": dict(
         day="NUMBER(38,0)", agent_id="NUMBER(38,0)", portfolio_value="FLOAT"
     ),
     "agent_cash_history": dict(
@@ -127,7 +176,7 @@ TABLES: dict[str, dict[str, str]] = {
         cash="FLOAT",
         currency="VARCHAR",
     ),
-    "agent_eod_cash": dict(
+    "eod_agent_cash": dict(
         day="NUMBER(38,0)", agent_id="NUMBER(38,0)", cash="FLOAT", currency="VARCHAR"
     ),
     "traded_prices": dict(
@@ -457,26 +506,30 @@ class SnowflakeRepository:
     def save_futures_value_history(self, futures_value_df: pd.DataFrame) -> None:
         self._insert_frame("agent_futures_value_history", futures_value_df)
 
+    def save_eod_instrument_liquidity(self, rows: list[dict]) -> None:
+        if rows:
+            self._insert_frame("eod_instrument_liquidity", pd.DataFrame(rows))
+
     def save_eod_position(self, eod_position_df: pd.DataFrame) -> None:
-        self._insert_frame("agent_eod_positions", eod_position_df)
+        self._insert_frame("eod_agent_positions", eod_position_df)
 
     def save_eod_futures_position(self, eod_position_df: pd.DataFrame) -> None:
-        self._insert_frame("agent_eod_futures_position", eod_position_df)
+        self._insert_frame("eod_agent_futures_position", eod_position_df)
 
     def save_eod_futures_value(self, eod_futures_value_df: pd.DataFrame) -> None:
-        self._insert_frame("agent_eod_futures_value", eod_futures_value_df)
+        self._insert_frame("eod_agent_futures_value", eod_futures_value_df)
 
     def save_portfolio_value_history(self, portfolio_value_history_df: pd.DataFrame) -> None:
         self._insert_frame("agent_portfolio_value_history", portfolio_value_history_df)
 
     def save_eod_portfolio_value(self, eod_portfolio_value_df: pd.DataFrame) -> None:
-        self._insert_frame("agent_eod_portfolio_value", eod_portfolio_value_df)
+        self._insert_frame("eod_agent_portfolio_value", eod_portfolio_value_df)
 
     def save_cash_history(self, cash_history_df: pd.DataFrame) -> None:
         self._insert_frame("agent_cash_history", cash_history_df)
 
     def save_eod_cash(self, eod_cash_df: pd.DataFrame) -> None:
-        self._insert_frame("agent_eod_cash", eod_cash_df)
+        self._insert_frame("eod_agent_cash", eod_cash_df)
 
     def save_traded_prices(self, traded_prices_df: pd.DataFrame) -> None:
         self._insert_frame("traded_prices", traded_prices_df)
@@ -671,3 +724,7 @@ class SnowflakeRepository:
         except Exception:
             self._execute("ROLLBACK")
             raise
+
+    def save_eod_agent_var_parametric(self, rows):
+        if rows:
+            self._insert_frame("eod_agent_var_parametric", pd.DataFrame(rows))

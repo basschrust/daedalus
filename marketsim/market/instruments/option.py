@@ -54,11 +54,16 @@ class Option(Security):
         name: str | None = None,
         short_name: str | None = None,
         output_dir: Path | str = "tmp",
+        historical_ohlcv: pd.DataFrame | None = None,
+        simulation_dates=None,
     ) -> None:
 
         self.instrument_class = "option"
         self.underlying = underlying
         self.strike = Price(derivatives_config["strike"])
+        self.multiplier = int(derivatives_config.get("multiplier", 1))
+        if self.multiplier <= 0:
+            raise ValueError("Option multiplier must be positive")
         self.expiration = parse_expiration(derivatives_config["expiration"])
         # so that we can give relative time or precise dates or just take it from option series
         # for now we set mostly as 248 (number of trading days per year)
@@ -80,6 +85,8 @@ class Option(Security):
             repository=repository,
             short_name=self.short_name,
             output_dir=output_dir,
+            historical_ohlcv=historical_ohlcv,
+            simulation_dates=simulation_dates,
         )
 
     def calculate_greeks(self):
@@ -194,7 +201,9 @@ class Option(Security):
         df_candlestick.index.name = "time"
         self.logger.info(f"Option candlestick to plot: {df_candlestick.head()}")
 
-        candlestick_filename = f"{self.output_dir}/candlestick_{str(self)}.png"
+        candlestick_filename = str(
+            Path(self.output_dir) / "candle_plots" / f"candlestick_{self}.png"
+        )
         plot_candlestick_derivative(
             df=df_candlestick, output_file=candlestick_filename, title=self.name
         )
@@ -295,10 +304,10 @@ class Option(Security):
                     if final_position != 0:
                         agent.update_position(
                             quantity=-final_position,
-                            cash=premium * final_position,
+                            cash=premium * final_position * self.multiplier,
                             asset_id=self.asset_id,
                         )
-                        agent.portfolio_value += premium * final_position
+                        agent.portfolio_value += premium * final_position * self.multiplier
                         # TODO: this should be done by an agent method, but yet record_valuation
                         # TODO: is working only for intraday trades
 

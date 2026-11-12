@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from marketsim.analysis.report import MarketRealismReport
 from marketsim.input.config import create_run_directory, load_config
 from marketsim.market.historical_prices import load_historical_prices, load_simulation_dates
+from marketsim.risk.calibration_sync import sync_greeks_calibration
 from marketsim.simulator import Simulator
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -89,6 +90,7 @@ def run_simulation(config_file: str, *, realism_enabled: bool = False) -> None:
 
     simulator = Simulator(**sim_kwargs)
     try:
+        sync_greeks_calibration(simulator, config)
         simulator.run()
         if realism_report is not None:
             report = realism_report.generate(simulator, output_dir)

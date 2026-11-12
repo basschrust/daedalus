@@ -1,39 +1,82 @@
+"""Shared persistent, correlated daily activity factors.
+
+Mean-one lognormal factors preserve the long-run volume level while increasing
+day-to-day dispersion. Market and stock components each follow a stationary
+Gaussian AR(1) process in log space.
+"""
+
+from __future__ import annotations
+
+import math
+
 import numpy as np
 
 
 class VolumeRegime:
-    """Correlated daily market and stock activity factors."""
-
     def __init__(
         self,
         *,
         seed: int = 67,
         market_sigma: float = 0.55,
         stock_sigma: float = 0.30,
+        market_persistence: float = 0.65,
+        stock_persistence: float = 0.35,
     ):
+        for name, value in (
+            ("market_sigma", market_sigma),
+            ("stock_sigma", stock_sigma),
+        ):
+            if not math.isfinite(value) or value < 0:
+                raise ValueError(f"{name} must be finite and nonnegative")
+        for name, value in (
+            ("market_persistence", market_persistence),
+            ("stock_persistence", stock_persistence),
+        ):
+            if not math.isfinite(value) or not -1 < value < 1:
+                raise ValueError(f"{name} must be between -1 and 1")
+
         self.rng = np.random.default_rng(seed)
-        self.market_sigma = market_sigma
-        self.stock_sigma = stock_sigma
+        self.market_sigma = float(market_sigma)
+        self.stock_sigma = float(stock_sigma)
+        self.market_persistence = float(market_persistence)
+        self.stock_persistence = float(stock_persistence)
+        self.market_factors: dict[int, float] = {}
+        self.stock_factors: dict[tuple[int, int], float] = {}
+        self._market_z: dict[int, float] = {}
+        self._stock_z: dict[tuple[int, int], float] = {}
+        self._market_history: dict[int, float] = {}
+        self._stock_history: dict[tuple[int, int], float] = {}
 
-        self.market_factors = {}
-        self.stock_factors = {}
+    def _market_state(self, day: int) -> float:
+        for d in range(day + 1):
+            if d not in self._market_z:
+                previous = self._market_z.get(d - 1, 0.0)
+                rho = self.market_persistence
+                self._market_z[d] = rho * previous + math.sqrt(1 - rho * rho) * float(
+                    self.rng.standard_normal()
+                )
+                self._market_history[d] = math.exp(
+                    self.market_sigma * self._market_z[d] - 0.5 * self.market_sigma**2
+                )
+        self.market_factors[day] = self._market_history[day]
+        return self.market_factors[day]
 
-    def _draw_factor(self, sigma):
-        # Mean-one lognormal distribution.
-        return float(
-            self.rng.lognormal(
-                mean=-0.5 * sigma**2,
-                sigma=sigma,
-            )
-        )
+    def _stock_state(self, day: int, asset_id: int) -> float:
+        for d in range(day + 1):
+            key = (d, asset_id)
+            if key not in self._stock_z:
+                previous = self._stock_z.get((d - 1, asset_id), 0.0)
+                rho = self.stock_persistence
+                self._stock_z[key] = rho * previous + math.sqrt(1 - rho * rho) * float(
+                    self.rng.standard_normal()
+                )
+                self._stock_history[key] = math.exp(
+                    self.stock_sigma * self._stock_z[key] - 0.5 * self.stock_sigma**2
+                )
+        self.stock_factors[(day, asset_id)] = self._stock_history[(day, asset_id)]
+        return self.stock_factors[(day, asset_id)]
 
     def factor(self, day: int, asset_id: int) -> float:
-        if day not in self.market_factors:
-            self.market_factors[day] = self._draw_factor(self.market_sigma)
-
-        key = (day, asset_id)
-
-        if key not in self.stock_factors:
-            self.stock_factors[key] = self._draw_factor(self.stock_sigma)
-
-        return self.market_factors[day] * self.stock_factors[key]
+        if not isinstance(day, int) or day < 0:
+            raise ValueError("day must be a nonnegative integer")
+        return self._market_state(day) * self._stock_state(day, asset_id)

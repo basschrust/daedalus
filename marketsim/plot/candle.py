@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import mplfinance as mpf
 import pandas as pd
@@ -91,6 +93,7 @@ def plot_candlestick(
     plt.tight_layout()
 
     if output_file:
+        Path(output_file).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(output_file, dpi=150)
 
     plt.close(fig)
@@ -180,6 +183,7 @@ def plot_candlestick_derivative(
     plt.tight_layout()
 
     if output_file:
+        Path(output_file).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(output_file, dpi=150)
 
     plt.close(fig)

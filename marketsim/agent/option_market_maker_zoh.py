@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import math
 from collections import defaultdict
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from marketsim.agent.agent import Agent
+from marketsim.agent.mm_instrument_limits import InstrumentLimitMixin, historical_volume
 from marketsim.market import FXRateProvider, Price, Security
 from marketsim.market.fourheap.constants import BUY, SELL
 from marketsim.market.fourheap.order import Order
@@ -15,7 +17,7 @@ if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
 
 
-class OptionMMZOHAgent(Agent):
+class OptionMMZOHAgent(InstrumentLimitMixin, Agent):
     ### Market Maker Zero Order Hold Agent for Options! -
     # A MM which just takes into account last traded price and sets new order ladder
     # symmetrically on both sides of this last traded price in each rebalance period
@@ -83,7 +85,23 @@ class OptionMMZOHAgent(Agent):
         self.cum_volume = 0
 
         self.volume = final_configuration["volume"]
-        self.q_max = final_configuration["q_max"]
+
+        self.initialize_instrument_limits(self.option_markets, final_configuration)
+        self.volume_by_asset = {}
+        for asset_id, market in self.option_markets.items():
+            daily = historical_volume(market)
+            if daily is None:
+                quantity = int(self.volume)
+            elif daily == 0:
+                quantity = 0
+            else:
+                fraction = float(final_configuration.get("volume_fraction", 0.10))
+                if not 0 < fraction <= 1:
+                    raise ValueError("Option MM volume_fraction must be in (0, 1]")
+                # 40 is the historical default simulation session length.
+                rebalances = math.ceil(40 / self.rebalance_period)
+                quantity = max(1, round(daily * fraction / (rebalances * 2 * self.K)))
+            self.volume_by_asset[asset_id] = quantity
 
     def get_id(self) -> int:
         return self.agent_id
@@ -138,8 +156,9 @@ class OptionMMZOHAgent(Agent):
                 st = max(estimate + HALF * self.omega, best_bid)
                 bt = min(estimate - HALF * self.omega, best_ask)
                 self.logger.info(f"Setting basic spread to: {bt}, {st}")
-                buy_volume = self.volume
-                sell_volume = self.volume
+                buy_volume, sell_volume = self.limited_quote_sizes(
+                    option_id, self.volume_by_asset[option_id], self.K
+                )
                 # TODO: adjust the spread for position rebalancing
                 # if abs(self.position) > self.q_max/2:
                 #     if self.position > 0:
@@ -165,7 +184,7 @@ class OptionMMZOHAgent(Agent):
 
                 for k in range(self.K):
                     price_bid = Price(bt - (k + 1) * self.xi)
-                    if price_bid > 0:
+                    if price_bid > 0 and buy_volume > 0:
                         orders.append(
                             Order(
                                 price=price_bid,
@@ -177,6 +196,7 @@ class OptionMMZOHAgent(Agent):
                                 asset_id=option_id,
                             )
                         )
+                    if sell_volume > 0:
                         orders.append(
                             Order(
                                 price=Price(st + (k + 1) * self.xi),

@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from marketsim.agent.agent import Agent
+from marketsim.agent.fundamental_signal import fundamental_reference
 from marketsim.market import FXRateProvider, Price
 from marketsim.market.fourheap.constants import BUY, SELL
 from marketsim.market.fourheap.order import Order
@@ -48,6 +49,9 @@ class NoiseAgent(Agent):
             "future_max_order_contracts": 5,
             "future_max_position_contracts": 20,
             "future_max_daily_contracts": 10,
+            "volume_activity_sensitivity": 0.40,
+            "volume_activity_min_multiplier": 0.35,
+            "volume_activity_max_multiplier": 2.5,
         }
         self.configuration = default_configuration | (
             configuration if configuration is not None else {}
@@ -61,13 +65,12 @@ class NoiseAgent(Agent):
             fx_rate_provider=fx_rate_provider,
         )
 
-        self.q_max = self.configuration["q_max"]  # check if doesn't collide with mean_volume
-        self.lam = self.configuration["lam"]  # activity parameter
+        self.q_max = self.configuration["q_max"]
+        self.lam = self.configuration["lam"]
         self.mean_volume = self.configuration["mean_volume"]
         self.mean_spread = self.configuration["mean_spread"]
-        # withdrawing old oders when placing new one:
         self.withdraw_old = self.configuration["withdraw_old"]
-        self.validity_period = self.configuration["validity_period"]  # validity period for orders
+        self.validity_period = self.configuration["validity_period"]
         self.future_daily_volume: dict[int, int] = {}
 
     def get_id(self) -> int:
@@ -78,16 +81,27 @@ class NoiseAgent(Agent):
 
     def take_action(self, current_time: int) -> None:
         for asset_id, market in self.markets.items():
-            # Indices are not directly tradable.
             if market.instrument_class == "index":
                 continue
 
             orders = []
-
-            # Decide whether the agent acts at this time step.
             activity = self.lam
             if market.instrument_class == "future":
                 activity *= float(self.configuration["future_lam_multiplier"])
+            # The shared daily volume regime changes participation as well
+            # as order size. Order-size scaling remains in Agent.get_order_mean_volume.
+            regime = getattr(self, "volume_regime", None)
+            if regime is not None and market.instrument_class == "stock":
+                factor = regime.factor(self.current_day, asset_id)
+                sensitivity = float(self.configuration["volume_activity_sensitivity"])
+                lower = float(self.configuration["volume_activity_min_multiplier"])
+                upper = float(self.configuration["volume_activity_max_multiplier"])
+                if not math.isfinite(sensitivity) or sensitivity < 0:
+                    raise ValueError("volume_activity_sensitivity must be nonnegative")
+                if not (0 < lower <= upper and math.isfinite(upper)):
+                    raise ValueError("Invalid volume activity multiplier bounds")
+                activity *= min(upper, max(lower, factor**sensitivity))
+            activity = min(1.0, max(0.0, activity))
             if random.random() >= activity:
                 continue
 
@@ -96,35 +110,20 @@ class NoiseAgent(Agent):
 
             side = random.choice([BUY, SELL])
 
-            # --------------------------------------------------
-            # 1. ORDER QUANTITY - HISTORICAL VOLUME
-            # --------------------------------------------------
             if market.instrument_class == "future":
                 mean_contracts = float(self.configuration["future_mean_contracts"])
                 max_order = int(self.configuration["future_max_order_contracts"])
-                quantity = min(
-                    int(np.random.poisson(mean_contracts)),
-                    max_order,
-                )
-                # Limit the absolute futures position.
+                quantity = min(int(np.random.poisson(mean_contracts)), max_order)
                 position = int(self.futures_position.get(asset_id, 0))
                 max_position = int(self.configuration["future_max_position_contracts"])
                 if side == BUY:
-                    quantity = min(
-                        quantity,
-                        max(0, max_position - position),
-                    )
+                    quantity = min(quantity, max(0, max_position - position))
                 else:
-                    quantity = min(
-                        quantity,
-                        max(0, max_position + position),
-                    )
+                    quantity = min(quantity, max(0, max_position + position))
                 daily_limit = int(self.configuration["future_max_daily_contracts"])
                 used = self.future_daily_volume.get(asset_id, 0)
-                remaining = max(0, daily_limit - used)
-                quantity = min(quantity, remaining)
+                quantity = min(quantity, max(0, daily_limit - used))
             else:
-                # all but futures instruments: TODO: check options :)
                 quantity = self.get_order_quantity(
                     asset_id,
                     fallback=self.mean_volume,
@@ -134,9 +133,6 @@ class NoiseAgent(Agent):
             if quantity <= 0:
                 continue
 
-            # --------------------------------------------------
-            # 2. REFERENCE PRICE - CURRENT ORDER BOOK
-            # --------------------------------------------------
             best_bid = market.order_book.get_best_bid()
             best_ask = market.order_book.get_best_ask()
 
@@ -146,9 +142,7 @@ class NoiseAgent(Agent):
             best_ask = (
                 float(best_ask) if best_ask is not None and math.isfinite(float(best_ask)) else None
             )
-
             last_price = float(market.last_traded_price)
-
             if not math.isfinite(last_price) or last_price <= 0:
                 continue
 
@@ -159,49 +153,26 @@ class NoiseAgent(Agent):
 
             if market.instrument_class == "future":
                 reference = float(market.calculate_theoretical_value())
+            else:
+                reference = fundamental_reference(self, market, reference)
 
             if not math.isfinite(reference) or reference <= 0:
                 continue
 
-            # --------------------------------------------------
-            # 3. PRICE DISPERSION - HISTORICAL VOLATILITY
-            # --------------------------------------------------
             offset_std = self.get_order_price_std(
                 asset_id,
                 fallback=float(self.mean_spread),
             )
-
-            # Draw a random price offset around the reference.
-            raw_offset = float(
-                np.random.normal(
-                    loc=0.0,
-                    scale=max(0.0, offset_std),
-                )
-            )
-
-            # --------------------------------------------------
-            # 4. LIMIT EXTREME PRICE DEVIATIONS
-            # --------------------------------------------------
+            raw_offset = float(np.random.normal(loc=0.0, scale=max(0.0, offset_std)))
             max_deviation = float(self.configuration.get("max_price_deviation", 0.02))
-
             if not math.isfinite(max_deviation) or max_deviation < 0:
                 raise ValueError("max_price_deviation must be finite and non-negative")
-
             max_offset = reference * max_deviation
-
-            offset = max(
-                -max_offset,
-                min(max_offset, raw_offset),
-            )
-
+            offset = max(-max_offset, min(max_offset, raw_offset))
             price = reference + offset
-
             if not math.isfinite(price) or price <= 0:
                 continue
 
-            # --------------------------------------------------
-            # 5. CREATE AND SUBMIT ORDER
-            # --------------------------------------------------
             order = Order(
                 price=Price(price),
                 quantity=quantity,
@@ -212,10 +183,8 @@ class NoiseAgent(Agent):
                 asset_id=market.asset_id,
                 valid_until=current_time + self.validity_period,
             )
-
             orders.append(order)
             market.add_orders(orders)
-
             if market.instrument_class == "future":
                 self.future_daily_volume[asset_id] = (
                     self.future_daily_volume.get(asset_id, 0) + quantity
