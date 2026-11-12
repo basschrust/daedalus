@@ -150,6 +150,28 @@ class Option(Security):
                     # TODO: check if this is called as of D (today) or as of D-1 (yesterday) during EoD
                     price_row["theoretical"] = put_option.get("price", 100)
 
+    def get_theoretical_history(self) -> pd.Series | None:
+        """Return simulated EOD theoretical values indexed by trading date."""
+
+        eod = self.eod_traded_prices_df
+        if eod is None or eod.empty or "theoretical" not in eod.columns:
+            return None
+
+        values = eod[["day", "theoretical"]].copy()
+        values["theoretical"] = pd.to_numeric(values["theoretical"], errors="coerce")
+        values = values.dropna(subset=["theoretical"])
+        if values.empty:
+            return None
+
+        dates = pd.DatetimeIndex(pd.to_datetime(self.simulation_dates))
+        day_numbers = values["day"].astype(int)
+
+        return pd.Series(
+            values["theoretical"].to_numpy(dtype=float),
+            index=dates.take(day_numbers.to_numpy()),
+            name="theoretical",
+        ).sort_index()
+
     def roll_traded_prices(self, current_time: int) -> None:
         yesterday = self.traded_prices[current_time - 1]
         self.traded_prices[current_time] = {
