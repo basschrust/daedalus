@@ -9,10 +9,11 @@ import numpy as np
 
 from marketsim.agent.agent import Agent
 from marketsim.agent.helpers.fundamental_signal import fundamental_reference
-from marketsim.market import FXRateProvider, Price
+from marketsim.market import FXRateProvider
 from marketsim.market.fourheap.constants import BUY, SELL
 from marketsim.market.fourheap.order import Order
 from marketsim.market.instruments.security import Security
+from marketsim.market.price import Price
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository

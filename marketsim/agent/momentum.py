@@ -9,9 +9,10 @@ import numpy as np
 import pandas as pd
 
 from marketsim.agent.agent import Agent
-from marketsim.market import FXRateProvider, Price
+from marketsim.market import FXRateProvider
 from marketsim.market.fourheap.constants import BUY, SELL
 from marketsim.market.fourheap.order import Order
+from marketsim.market.price import Price
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository

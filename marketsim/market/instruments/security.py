@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
 
     from marketsim.agent import Agent
+    from marketsim.agent.helpers.mm_instrument_limits import historical_volume
     from marketsim.market import Index
     from marketsim.market.fourheap import MatchedOrder, Order
 
@@ -753,7 +754,6 @@ class Security(ABC):
 
             # EOD liquidity diagnostics: all submitted orders (not just unmatched),
             # actual executions, and per-market-maker limits.
-            from marketsim.agent.mm_instrument_limits import historical_volume
 
             makers = [
                 agent
