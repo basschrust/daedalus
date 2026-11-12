@@ -694,6 +694,11 @@ agents:
       volume_fraction: 0.01
       historical_volatility_scale: 0.6
       max_price_deviation: 0.08
+      fundamental_price_discovery: true
+      fundamental_gap_threshold: 0.002
+      fundamental_gap_sensitivity: 25.0
+      fundamental_max_activity_multiplier: 3.0
+      fundamental_max_size_multiplier: 3.0
       initial_cash:
         PLN: 10000000
   option_market_makers:

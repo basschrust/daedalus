@@ -153,22 +153,27 @@ class Option(Security):
     def get_theoretical_history(self) -> pd.Series | None:
         """Return simulated EOD theoretical values indexed by trading date."""
 
-        eod = self.eod_traded_prices_df
+        if self.simulation_dates is None:
+            return None
+
+        eod = self.repository.get_eod_prices(asset_id=self.asset_id)
+
         if eod is None or eod.empty or "theoretical" not in eod.columns:
             return None
 
         values = eod[["day", "theoretical"]].copy()
         values["theoretical"] = pd.to_numeric(values["theoretical"], errors="coerce")
         values = values.dropna(subset=["theoretical"])
+
         if values.empty:
             return None
 
         dates = pd.DatetimeIndex(pd.to_datetime(self.simulation_dates))
-        day_numbers = values["day"].astype(int)
+        day_numbers = values["day"].astype(int).to_numpy()
 
         return pd.Series(
             values["theoretical"].to_numpy(dtype=float),
-            index=dates.take(day_numbers.to_numpy()),
+            index=dates.take(day_numbers),
             name="theoretical",
         ).sort_index()
 

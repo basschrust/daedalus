@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from marketsim.agent.agent import Agent
-from marketsim.agent.fundamental_signal import fundamental_reference
+from marketsim.agent.helpers.fundamental_signal import fundamental_reference
 from marketsim.market import FXRateProvider, Price
 from marketsim.market.fourheap.constants import BUY, SELL
 from marketsim.market.fourheap.order import Order
