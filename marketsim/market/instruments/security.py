@@ -14,6 +14,7 @@ import pandas as pd
 from marketsim.loggers.basic import setup_market_logger
 from marketsim.market.fourheap import FourHeap
 from marketsim.market.fourheap.event_queue import EventQueue
+from marketsim.market.historical_volume import historical_volume
 from marketsim.market.price import Price
 from marketsim.plot.candle import plot_candlestick
 from marketsim.plot.daedalus_plot_extensions import plot_combined_candles
@@ -28,7 +29,6 @@ if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
 
     from marketsim.agent import Agent
-    from marketsim.agent.helpers.mm_instrument_limits import historical_volume
     from marketsim.market import Index
     from marketsim.market.fourheap import MatchedOrder, Order
 
