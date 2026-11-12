@@ -151,31 +151,107 @@ class Option(Security):
                     price_row["theoretical"] = put_option.get("price", 100)
 
     def get_theoretical_history(self) -> pd.Series | None:
-        """Return simulated EOD theoretical values indexed by trading date."""
-
+        """Historical and simulated EOD Black-Scholes theoretical prices."""
         if self.simulation_dates is None:
             return None
 
+        simulation_dates = pd.DatetimeIndex(pd.to_datetime(self.simulation_dates)).normalize()
+
+        if simulation_dates.empty:
+            return None
+
+        # 1. Historical theoretical prices from underlying closing prices.
+        historical_values = {}
+
+        option_history = self.historical_ohlcv
+        underlying_history = getattr(self.underlying, "historical_ohlcv", None)
+
+        if (
+            isinstance(option_history, pd.DataFrame)
+            and not option_history.empty
+            and isinstance(underlying_history, pd.DataFrame)
+            and not underlying_history.empty
+        ):
+            option_dates = pd.DatetimeIndex(
+                pd.to_datetime(
+                    option_history["date"]
+                    if "date" in option_history.columns
+                    else option_history.index
+                )
+            ).normalize()
+
+            underlying = underlying_history.copy()
+            if "date" in underlying.columns:
+                underlying = underlying.set_index("date")
+
+            underlying.index = pd.DatetimeIndex(pd.to_datetime(underlying.index)).normalize()
+
+            underlying = underlying.sort_index()
+            historical_dates = (
+                option_dates[option_dates < simulation_dates[0]].sort_values().unique()
+            )
+
+            # One additional trading session into the past means
+            # one additional day until option expiration.
+            for i, dt in enumerate(historical_dates):
+                if dt not in underlying.index:
+                    continue
+
+                spot = pd.to_numeric(underlying.loc[dt, "close"], errors="coerce")
+
+                if pd.isna(spot) or float(spot) <= 0:
+                    continue
+
+                days_before_start = len(historical_dates) - i
+                remaining = self.expiration + days_before_start
+
+                model = (
+                    BSCall
+                    if self.option_side.upper() == "CALL"
+                    else BSPut
+                    if self.option_side.upper() == "PUT"
+                    else None
+                )
+                if model is None:
+                    raise ValueError(f"Unknown option side: {self.option_side}")
+
+                result = model(
+                    S=float(spot),
+                    K=float(self.strike),
+                    r=self.r,
+                    volatility=self.volatility,
+                    Time=remaining / 248.0,
+                    d=0.0,
+                )
+                historical_values[dt] = float(result["price"])
+
+        historical = pd.Series(historical_values, dtype=float, name="theoretical")
+
+        # 2. Existing simulated theoretical prices from repository.
         eod = self.repository.get_eod_prices(asset_id=self.asset_id)
 
-        if eod is None or eod.empty or "theoretical" not in eod.columns:
-            return None
+        simulated = pd.Series(dtype=float, name="theoretical")
 
-        values = eod[["day", "theoretical"]].copy()
-        values["theoretical"] = pd.to_numeric(values["theoretical"], errors="coerce")
-        values = values.dropna(subset=["theoretical"])
+        if eod is not None and not eod.empty and {"day", "theoretical"}.issubset(eod.columns):
+            values = eod[["day", "theoretical"]].copy()
+            values["theoretical"] = pd.to_numeric(values["theoretical"], errors="coerce")
+            values = values.dropna(subset=["theoretical"])
 
-        if values.empty:
-            return None
+            days = values["day"].astype(int).to_numpy()
 
-        dates = pd.DatetimeIndex(pd.to_datetime(self.simulation_dates))
-        day_numbers = values["day"].astype(int).to_numpy()
+            if ((days < 0) | (days >= len(simulation_dates))).any():
+                raise ValueError("Option EOD day outside simulation calendar")
 
-        return pd.Series(
-            values["theoretical"].to_numpy(dtype=float),
-            index=dates.take(day_numbers),
-            name="theoretical",
-        ).sort_index()
+            simulated = pd.Series(
+                values["theoretical"].to_numpy(dtype=float),
+                index=simulation_dates.take(days),
+                name="theoretical",
+            )
+
+        # 3. Return one continuous date-indexed series.
+        combined = pd.concat([historical, simulated]).sort_index()
+
+        return combined if not combined.empty else None
 
     def roll_traded_prices(self, current_time: int) -> None:
         yesterday = self.traded_prices[current_time - 1]
