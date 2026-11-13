@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+from arch import arch_model
 
 from marketsim.analysis.market_series import MarketSeries
 from marketsim.analysis.statistics import safe_correlation
@@ -48,10 +49,6 @@ class VolatilityAnalyzer:
         self,
         min_observations: int = 250,
     ) -> GarchResult:
-        try:
-            from arch import arch_model
-        except ImportError as exc:
-            raise ImportError("GARCH analysis requires the 'arch' package") from exc
 
         returns = self.series.returns
 

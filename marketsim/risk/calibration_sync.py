@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import math
 
+from marketsim.scenarios.wig20 import connect
+
 
 def _symbol(market):
     return str(getattr(market, "symbol", None) or getattr(market, "short_name", "")).upper()
@@ -36,8 +38,6 @@ def sync_greeks_calibration(simulator, config: dict) -> None:
         return
     if "duckdb" not in type(local).__module__.lower():
         raise TypeError("Unsupported repository connection for calibration sync")
-
-    from marketsim.scenarios.wig20 import connect
 
     remote = connect()
     try:
