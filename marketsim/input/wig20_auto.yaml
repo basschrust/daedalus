@@ -649,6 +649,20 @@ agents:
       q_max: 1000000
       initial_cash:
         PLN: 100000000
+  option_market_makers:
+    agent_class: OptionMMZOHAgent
+    number: 3
+    instrument_classes:
+    - option
+    markets: ALL
+    config:
+      K: 3
+      xi: 0.1
+      omega: 0.2
+      rebalance_period: 5
+      volume: 2
+      volume_fraction: 0.05
+      q_max: 300
   momentum_fast:
     agent_class: MomentumAgent
     instrument_classes:
@@ -711,21 +725,6 @@ agents:
       fundamental_gap_sensitivity: 25.0
       fundamental_max_activity_multiplier: 3.0
       fundamental_max_size_multiplier: 3.0
-      initial_cash:
-        PLN: 10000000
-  option_market_makers:
-    agent_class: OptionMMZOHAgent
-    instrument_classes:
-    - option
-    number: 2
-    config:
-      rebalance_by: time
-      rebalance_period: 2
-      K: 4
-      xi: 0.1
-      omega: 0.2
-      volume: 10
-      q_max: 1000
       initial_cash:
         PLN: 10000000
 historical_prices:

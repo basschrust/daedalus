@@ -57,6 +57,7 @@ class Security(ABC):
             self.short_name = short_name
         self.reference_price = Price(reference_price) if reference_price is not None else Price(100)
         self.last_traded_price = self.reference_price
+        self.orders_by_agent_type = {}
 
         self.agent_groups = set()
 
