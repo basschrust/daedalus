@@ -44,7 +44,7 @@ def plot_execution_volumes_by_asset(
         raise ValueError(f"Missing columns: {sorted(missing)}")
     df = volumes.copy()
     df["agent_group"] = df["agent_group"].fillna("UNGROUPED").astype(str)
-    df["executed_mode"] = df["executed_mode"].fillna("other").astype(str).str.lower()
+    df["executed_mode"] = df["executed_mode"].astype("string").str.lower()
     df["asset_id"] = pd.to_numeric(df["asset_id"], errors="raise").astype(int)
     df["order_side"] = pd.to_numeric(df["order_side"], errors="raise").astype(int)
     df["volume"] = pd.to_numeric(df["volume"], errors="raise")
