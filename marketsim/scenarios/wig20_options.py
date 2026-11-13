@@ -11,7 +11,7 @@ from decimal import Decimal
 
 import pandas as pd
 
-from marketsim.scenarios.wig20 import futures_history, query, to_price
+from marketsim.scenarios.wig20_data import futures_history, query, to_price
 
 
 def _field(row: pd.Series, *names: str):
