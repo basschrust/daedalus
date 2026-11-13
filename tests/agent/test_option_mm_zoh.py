@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from marketsim.agent.option_market_maker_zoh import OptionMMZOHAgent
 
+
 def test_option_mm_handles_empty_order_book(
     agent_option_mm: OptionMMZOHAgent,
 ):

@@ -48,7 +48,12 @@ def plot_execution_volumes_by_asset(
     df["asset_id"] = pd.to_numeric(df["asset_id"], errors="raise").astype(int)
     df["order_side"] = pd.to_numeric(df["order_side"], errors="raise").astype(int)
     df["volume"] = pd.to_numeric(df["volume"], errors="raise")
-    df.loc[~df["executed_mode"].isin(("waited", "arrived")), "executed_mode"] = "other"
+    invalid_modes = ~df["executed_mode"].isin(("waited", "arrived"))
+    if invalid_modes.any():
+        raise ValueError(
+            "Unexpected execution modes in execution_volumes: "
+            f"{df.loc[invalid_modes, 'executed_mode'].unique().tolist()}"
+        )
     bad = df[~df["order_side"].isin((1, -1))]
     if not bad.empty:
         raise ValueError("Unexpected order_side or executed_mode values")
@@ -66,8 +71,6 @@ def plot_execution_volumes_by_asset(
         (1, "arrived"): "#9AC8F5",
         (-1, "waited"): "#BA4B0B",
         (-1, "arrived"): "#F4B482",
-        (1, "other"): "#65758B",
-        (-1, "other"): "#A1A1AA",
     }
     result = []
     asset_ids = sorted(set(df["asset_id"].tolist()) | set(include_asset_ids or []))
@@ -99,7 +102,8 @@ def plot_execution_volumes_by_asset(
         fig, ax = plt.subplots(figsize=(max(8, 1.15 * len(groups) + 3), 5.5))
         for side, offset, side_name in ((1, -width / 2, "Buy"), (-1, width / 2, "Sell")):
             bottom = np.zeros(len(groups))
-            for mode in ("waited", "arrived", "other"):
+            for mode in ("waited", "arrived"):
+                # TODO: yet are those 2 modes, but what if sth special is introduced? in fixing phase?
                 values = (
                     pivot[(side, mode)].to_numpy(dtype=float)
                     if (side, mode) in pivot.columns

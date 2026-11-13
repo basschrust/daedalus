@@ -528,7 +528,8 @@ agents:
       turnover_sessions: 30
       min_median_turnover: 250000
       portfolio_size: 10
-      rebalance_sessions: 20
+      rebalance_sessions: 5
+      rebalance_offset: 0
       aggression: 0.003
       order_validity_ticks: 3
       base_currency: PLN
@@ -667,16 +668,16 @@ agents:
     agent_class: MomentumAgent
     instrument_classes:
     - stock
-    number: 2
+    number: 4
     config:
       momentum_mode: intraday
       period: 5
       threshold: 0.001
-      lam: 0.3
+      lam: 0.45
       mean_volume: 150
       q_max: 10000
       aggression: 0.0005
-      volume_fraction: 0.005
+      volume_fraction: 0.01
       historical_volatility_scale: 0.7
       max_price_deviation: 0.07
       initial_cash:
@@ -685,30 +686,30 @@ agents:
     agent_class: MomentumAgent
     instrument_classes:
     - stock
-    number: 2
+    number: 3
     config:
       momentum_mode: daily
       daily_lookback: 10
       threshold: 0.01
-      lam: 0.2
+      lam: 0.3
       mean_volume: 150
       q_max: 5000
       aggression: 0.0005
-      volume_fraction: 0.005
+      volume_fraction: 0.008
       historical_volatility_scale: 0.7
       max_price_deviation: 0.09
       initial_cash:
         PLN: 10000000
   hbl:
     agent_class: HBLAgent
-    number: 6
+    number: 2
   regime_traders:
     agent_class: RegimeTraderAgent
     instrument_classes:
     - stock
-    number: 2
+    number: 4
     config:
-      lam: 0.55
+      lam: 0.65
       mean_volume: 200
       regime_switch_probability: 0.02
       bullish_probability: 0.45
@@ -716,8 +717,8 @@ agents:
       aggression_ticks: 10
       tick_size: 0.01
       validity_period: 3
-      max_position: 20000
-      volume_fraction: 0.01
+      max_position: 35000
+      volume_fraction: 0.015
       historical_volatility_scale: 0.6
       max_price_deviation: 0.08
       fundamental_price_discovery: true
