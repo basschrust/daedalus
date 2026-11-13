@@ -14,13 +14,15 @@ from marketsim.analysis.report import MarketRealismReport
 from marketsim.input.config import create_run_directory, load_config
 from marketsim.market.historical_prices import load_historical_prices, load_simulation_dates
 from marketsim.risk.calibration_sync import sync_greeks_calibration
+from marketsim.scenarios.gpw import prepare as prepare_gpw
+from marketsim.scenarios.wig20 import connect, prepare as prepare_wig20
 from marketsim.simulator import Simulator
 
 ROOT = Path(__file__).resolve().parents[1]
 INPUT_DIR = ROOT / "marketsim" / "input"
 DATASETS = {
-    "wig20": ("wig20.yaml", "wig20_auto.yaml"),
-    "gpw": ("gpw.yaml", "gpw_auto.yaml"),
+    "wig20": ("wig20.yaml", "wig20_auto.yaml", prepare_wig20),
+    "gpw": ("gpw.yaml", "gpw_auto.yaml", prepare_gpw),
 }
 
 
@@ -31,17 +33,9 @@ def kwargs_for(func: Callable, config: dict) -> dict:
 
 def prepare_dataset(name: str) -> tuple[str, bool]:
     """Prepare a dataset in Ikaros/Snowflake and return its generated YAML name."""
-    settings_file, generated_file = DATASETS[name]
+    settings_file, generated_file, prepare = DATASETS[name]
     with (INPUT_DIR / settings_file).open(encoding="utf-8") as stream:
         settings = yaml.safe_load(stream)
-
-    # Import only when requested: ordinary YAML runs do not need Snowflake.
-    from marketsim.scenarios.wig20 import connect
-
-    if name == "wig20":
-        from marketsim.scenarios.wig20 import prepare
-    else:
-        from marketsim.scenarios.gpw import prepare
 
     try:
         connection = connect()

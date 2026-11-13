@@ -9,6 +9,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pandas as pd
+import snowflake.connector
 import yaml
 
 from marketsim.market.historical_prices import load_simulation_dates
@@ -32,8 +33,6 @@ def futures_expiration_day(expiry_date, simulation_dates):
 
 
 def connect():
-    import snowflake.connector
-
     kwargs = dict(
         account=os.environ["SNOWFLAKE_ACCOUNT"],
         user=os.environ["SNOWFLAKE_USER"],

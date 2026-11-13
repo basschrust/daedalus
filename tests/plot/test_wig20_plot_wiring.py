@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 
 from marketsim.market.instruments.option import Option
+from marketsim.plot.candle import plot_candlestick
 from marketsim.plot.daedalus_plot_extensions import combine_candles
 
 
@@ -45,8 +46,6 @@ def test_option_receives_historical_series(tmp_path):
 
 
 def test_candle_directory_created(tmp_path):
-    from marketsim.plot.candle import plot_candlestick
-
     df = pd.DataFrame({"open": [1], "high": [2], "low": [1], "close": [2], "volume": [4]})
     path = tmp_path / "candle_plots" / "candlestick_test.png"
     plot_candlestick(df, output_file=str(path))

@@ -46,7 +46,7 @@ def test_snowflake_connection_failure(
 
     with (
         patch(
-            "marketsim.scenarios.wig20.connect",
+            "run.simulation_main.connect",
             side_effect=exception,
         ) as mock_connect,
         patch("marketsim.scenarios.wig20.prepare") as mock_prepare,
