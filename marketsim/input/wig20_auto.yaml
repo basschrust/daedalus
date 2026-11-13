@@ -1,6 +1,6 @@
 seed: 67
-days: 10
-sim_time: 25
+days: 25
+sim_time: 55
 lob_plot_interval: 10000
 markets:
   ale.wa:
@@ -145,7 +145,7 @@ markets:
     symbol: PZU.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '73.68'
+    reference_price: '74.60'
     currency: PLN
   tpe.wa:
     name: TPE.WA
@@ -222,7 +222,7 @@ markets:
       base_price: '116.98'
     - security: pzu.wa
       weight: 0.0734
-      base_price: '73.68'
+      base_price: '74.60'
     - security: tpe.wa
       weight: 0.0179
       base_price: '9.04'
@@ -236,7 +236,7 @@ markets:
     short_name: FW20Z2620
     instrument_class: future
     underlying: wig20
-    expiration: 10
+    expiration: 25
     multiplier: 20.0
     margin_rate: 0.1
   fw20h2720:
@@ -245,7 +245,7 @@ markets:
     short_name: FW20H2720
     instrument_class: future
     underlying: wig20
-    expiration: 10
+    expiration: 25
     multiplier: 20.0
     margin_rate: 0.1
   fw20m2720:
@@ -254,7 +254,7 @@ markets:
     short_name: FW20M2720
     instrument_class: future
     underlying: wig20
-    expiration: 10
+    expiration: 25
     multiplier: 20.0
     margin_rate: 0.1
   ow20k264200:
@@ -294,7 +294,7 @@ markets:
       strike: '4200.00'
       option_side: CALL
       option_type: European
-      expiration: 10
+      expiration: 25
       multiplier: 10.0
   ow20k264225:
     symbol: OW20K264225
@@ -411,7 +411,7 @@ markets:
       strike: '4100.00'
       option_side: PUT
       option_type: European
-      expiration: 10
+      expiration: 25
       multiplier: 10.0
   ow20w264075:
     symbol: OW20W264075
@@ -502,7 +502,7 @@ markets:
       strike: '4400.00'
       option_side: CALL
       option_type: European
-      expiration: 10
+      expiration: 25
       multiplier: 10.0
   ow20f274400:
     symbol: OW20F274400
@@ -515,7 +515,7 @@ markets:
       strike: '4400.00'
       option_side: CALL
       option_type: European
-      expiration: 10
+      expiration: 25
       multiplier: 10.0
 agents:
   relative_momentum:
@@ -574,6 +574,10 @@ agents:
       future_max_order_contracts: 180
       future_max_position_contracts: 1800
       future_max_daily_contracts: 2500
+      stock_coverage_fraction: 0.3
+      min_noise_agents_per_stock: 3
+      stock_volume_coverage_scale: 1.0
+      coverage_seed: 67
   noise_medium:
     agent_class: NoiseAgent
     instrument_classes:
@@ -596,6 +600,10 @@ agents:
       future_max_order_contracts: 240
       future_max_position_contracts: 2400
       future_max_daily_contracts: 3500
+      stock_coverage_fraction: 0.3
+      min_noise_agents_per_stock: 3
+      stock_volume_coverage_scale: 1.0
+      coverage_seed: 67
   noise_wide:
     agent_class: NoiseAgent
     number: 8
@@ -615,6 +623,10 @@ agents:
       future_max_order_contracts: 300
       future_max_position_contracts: 3000
       future_max_daily_contracts: 4500
+      min_noise_agents_per_stock: 3
+      stock_coverage_fraction: 0.3
+      stock_volume_coverage_scale: 1.0
+      coverage_seed: 67
     instrument_classes:
     - stock
     - future

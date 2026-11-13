@@ -124,6 +124,25 @@ class NoiseAgent(Agent):
                 daily_limit = int(self.configuration["future_max_daily_contracts"])
                 used = self.future_daily_volume.get(asset_id, 0)
                 quantity = min(quantity, max(0, daily_limit - used))
+            elif market.instrument_class == "stock":
+                coverage = float(self.configuration.get("stock_coverage_fraction", 1.0))
+                scale = float(self.configuration.get("stock_volume_coverage_scale", 1.0))
+
+                if not 0 < coverage <= 1:
+                    raise ValueError("Invalid stock_coverage_fraction")
+                if not math.isfinite(scale) or scale <= 0:
+                    raise ValueError("Invalid stock_volume_coverage_scale")
+
+                mean = self.get_order_mean_volume(
+                    asset_id,
+                    fallback=self.mean_volume,
+                )
+                mean *= scale / coverage
+
+                quantity = min(
+                    int(np.random.poisson(mean)),
+                    int(self.q_max),
+                )
             else:
                 quantity = self.get_order_quantity(
                     asset_id,
