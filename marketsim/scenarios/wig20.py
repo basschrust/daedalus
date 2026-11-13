@@ -5,46 +5,20 @@ from __future__ import annotations
 import math
 import os
 from datetime import date, timedelta
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 from pathlib import Path
 
 import pandas as pd
+import snowflake.connector
 import yaml
 
 from marketsim.market.historical_prices import load_simulation_dates
+from marketsim.scenarios.wig20_data import futures_history, query, to_price
 from marketsim.scenarios.wig20_options import select_options
 
 OHLCV = ("open", "high", "low", "close", "volume")
 
 PRICE_QUANTUM = Decimal("0.01")
-
-
-def futures_history(conn, contract_id, cutoff, sessions=250):
-    frame = query(
-        conn,
-        """
-        SELECT TO_DATE("DATE") AS DATE,
-               "OPEN", "HIGH", "LOW", "CLOSE", "VOLUME"
-        FROM DERIVATIVE_PRICES
-        WHERE CONTRACT_ID = %s
-          AND TO_DATE("DATE") <= %s
-        ORDER BY TO_DATE("DATE") DESC
-        LIMIT %s
-        """,
-        (contract_id, cutoff, sessions),
-    )
-
-    if frame.empty:
-        raise ValueError(f"No historical prices for futures contract {contract_id}")
-
-    frame["date"] = pd.to_datetime(frame["date"])
-
-    for column in ("open", "high", "low", "close"):
-        frame[column] = frame[column].map(to_price)
-
-    frame["volume"] = pd.to_numeric(frame["volume"], errors="raise")
-
-    return frame.sort_values("date").reset_index(drop=True)
 
 
 def futures_expiration_day(expiry_date, simulation_dates):
@@ -58,25 +32,7 @@ def futures_expiration_day(expiry_date, simulation_dates):
     return len(simulation_dates)
 
 
-def to_price(value) -> Decimal:
-    """Convert source values to Daedalus price precision."""
-    if isinstance(value, Decimal):
-        result = value
-    else:
-        result = Decimal(str(value))
-
-    if not result.is_finite() or result <= 0:
-        raise ValueError(f"Invalid price: {value!r}")
-
-    return result.quantize(
-        PRICE_QUANTUM,
-        rounding=ROUND_HALF_UP,
-    )
-
-
 def connect():
-    import snowflake.connector
-
     kwargs = dict(
         account=os.environ["SNOWFLAKE_ACCOUNT"],
         user=os.environ["SNOWFLAKE_USER"],
@@ -94,13 +50,6 @@ def connect():
         kwargs["role"] = os.environ["SNOWFLAKE_ROLE"]
 
     return snowflake.connector.connect(**kwargs)
-
-
-def query(conn, sql, params=()):
-    with conn.cursor() as cur:
-        cur.execute(sql, params)
-        columns = [item[0].lower() for item in cur.description]
-        return pd.DataFrame(cur.fetchall(), columns=columns)
 
 
 def constituents(conn, as_of: date):

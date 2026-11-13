@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 
+from marketsim.market import Stock
 from marketsim.market.historical_prices import load_simulation_dates
 from marketsim.plot.daedalus_plot_extensions import combine_candles, plot_combined_candles
 
@@ -185,8 +186,6 @@ def test_plot_boundary_and_grey_background(tmp_path, historical, simulated, date
 
 
 def test_stock_receives_history(tmp_path, historical, dates):
-    from marketsim.market import Stock
-
     repo = MagicMock()
     stock = Stock(
         repository=repo,

@@ -10,9 +10,10 @@ import numpy as np
 import scipy as sp
 
 from marketsim.agent.agent import Agent
-from marketsim.market import FXRateProvider, Price
+from marketsim.market import FXRateProvider
 from marketsim.market.fourheap.constants import BUY, SELL
 from marketsim.market.fourheap.order import Order
+from marketsim.market.price import Price
 from marketsim.market.private_values.private_values import PrivateValues
 
 # from fastcubicspline import FCS

@@ -11,6 +11,8 @@ from decimal import Decimal
 
 import pandas as pd
 
+from marketsim.scenarios.wig20_data import futures_history, query, to_price
+
 
 def _field(row: pd.Series, *names: str):
     for name in names:
@@ -42,8 +44,6 @@ def select_options(
     INSTRUMENT_TYPE, UNDERLYING_SYMBOL, EXPIRY_DATE, MULTIPLIER,
     and strike/side fields (recognized aliases below).
     """
-    from marketsim.scenarios.wig20 import futures_history, query, to_price
-
     if count <= 0:
         return []
     if not simulation_dates:

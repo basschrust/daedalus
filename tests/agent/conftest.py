@@ -61,8 +61,21 @@ def agent_zi(security: Security, repository: Repository):
 
 
 @pytest.fixture
-def agent_option_mm(security: Security, option: Option, repository: Repository):
-    return OptionMMZOHAgent(markets=[security], repository=repository)
+def option(security: Security, repository: Repository):
+    return Option(
+        underlying=security,
+        repository=repository,
+        derivatives_config={
+            "strike": 100,
+            "expiration": 180,
+            "option_side": "PUT",
+        },
+    )
+
+
+@pytest.fixture
+def agent_option_mm(security: Security, repository: Repository, option: Option):
+    return OptionMMZOHAgent(markets=[security, option], repository=repository)
 
 
 @pytest.fixture

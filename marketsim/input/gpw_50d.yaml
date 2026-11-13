@@ -55,14 +55,15 @@ agents:
   relative_momentum:
     agent_class: RelativeMomentumAgent
     instrument_classes:
-    - stock
+      - stock
     number: 20
     config:
       lookback_sessions: 252
       turnover_sessions: 30
       min_median_turnover: 250000
       portfolio_size: 10
-      rebalance_sessions: 20
+      rebalance_sessions: 5
+      rebalance_offset: 0
       aggression: 0.003
       order_validity_ticks: 3
       base_currency: PLN
@@ -90,11 +91,11 @@ agents:
     - future
     number: 7
     config:
-      lam: 0.4
+      lam: 0.42
       mean_volume: 150
       mean_spread: 0.7
       validity_period: 3
-      volume_fraction: 0.003
+      volume_fraction: 0.004
       use_historical_volatility: true
       historical_volatility_scale: 0.15
       volume_lookback: 20
@@ -108,6 +109,10 @@ agents:
       future_max_order_contracts: 180
       future_max_position_contracts: 1800
       future_max_daily_contracts: 2500
+      stock_coverage_fraction: 0.30
+      min_noise_agents_per_stock: 3
+      stock_volume_coverage_scale: 1.0
+      coverage_seed: 67
   noise_medium:
     agent_class: NoiseAgent
     instrument_classes:
@@ -130,6 +135,10 @@ agents:
       future_max_order_contracts: 240
       future_max_position_contracts: 2400
       future_max_daily_contracts: 3500
+      stock_coverage_fraction: 0.30
+      min_noise_agents_per_stock: 3
+      stock_volume_coverage_scale: 1.0
+      coverage_seed: 67
   noise_wide:
     agent_class: NoiseAgent
     number: 8
@@ -149,6 +158,10 @@ agents:
       future_max_order_contracts: 300
       future_max_position_contracts: 3000
       future_max_daily_contracts: 4500
+      min_noise_agents_per_stock: 3
+      stock_coverage_fraction: 0.30
+      stock_volume_coverage_scale: 1.0
+      coverage_seed: 67
     instrument_classes:
     - stock
     - future
@@ -171,20 +184,34 @@ agents:
       q_max: 1000000
       initial_cash:
         PLN: 100000000
+  option_market_makers:
+    agent_class: OptionMMZOHAgent
+    number: 3
+    instrument_classes:
+      - option
+    markets: ALL
+    config:
+      K: 3
+      xi: 0.1
+      omega: 0.2
+      rebalance_period: 5
+      volume: 2
+      volume_fraction: 0.05
+      q_max: 300
   momentum_fast:
     agent_class: MomentumAgent
     instrument_classes:
     - stock
-    number: 2
+    number: 4
     config:
       momentum_mode: intraday
       period: 5
       threshold: 0.001
-      lam: 0.3
+      lam: 0.45
       mean_volume: 150
       q_max: 10000
       aggression: 0.0005
-      volume_fraction: 0.005
+      volume_fraction: 0.01
       historical_volatility_scale: 0.7
       max_price_deviation: 0.07
       initial_cash:
@@ -193,30 +220,30 @@ agents:
     agent_class: MomentumAgent
     instrument_classes:
     - stock
-    number: 2
+    number: 3
     config:
       momentum_mode: daily
       daily_lookback: 10
       threshold: 0.01
-      lam: 0.2
+      lam: 0.3
       mean_volume: 150
       q_max: 5000
       aggression: 0.0005
-      volume_fraction: 0.005
+      volume_fraction: 0.008
       historical_volatility_scale: 0.7
       max_price_deviation: 0.09
       initial_cash:
         PLN: 10000000
   hbl:
     agent_class: HBLAgent
-    number: 6
+    number: 2
   regime_traders:
     agent_class: RegimeTraderAgent
     instrument_classes:
     - stock
-    number: 2
+    number: 4
     config:
-      lam: 0.55
+      lam: 0.65
       mean_volume: 200
       regime_switch_probability: 0.02
       bullish_probability: 0.45
@@ -224,25 +251,15 @@ agents:
       aggression_ticks: 10
       tick_size: 0.01
       validity_period: 3
-      max_position: 20000
-      volume_fraction: 0.01
+      max_position: 35000
+      volume_fraction: 0.015
       historical_volatility_scale: 0.6
       max_price_deviation: 0.08
-      initial_cash:
-        PLN: 10000000
-  option_market_makers:
-    agent_class: OptionMMZOHAgent
-    instrument_classes:
-    - option
-    number: 2
-    config:
-      rebalance_by: time
-      rebalance_period: 2
-      K: 4
-      xi: 0.1
-      omega: 0.2
-      volume: 10
-      q_max: 1000
+      fundamental_price_discovery: true
+      fundamental_gap_threshold: 0.002
+      fundamental_gap_sensitivity: 25.0
+      fundamental_max_activity_multiplier: 3.0
+      fundamental_max_size_multiplier: 3.0
       initial_cash:
         PLN: 10000000
 historical_prices:

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from marketsim.agent.agent import Agent
-from marketsim.agent.mm_instrument_limits import InstrumentLimitMixin, historical_volume
+from marketsim.agent.helpers.mm_instrument_limits import InstrumentLimitMixin, historical_volume
 from marketsim.market import FXRateProvider, Price, Security
 from marketsim.market.fourheap.constants import BUY, SELL
 from marketsim.market.fourheap.order import Order
@@ -87,20 +87,21 @@ class OptionMMZOHAgent(InstrumentLimitMixin, Agent):
         self.volume = final_configuration["volume"]
 
         self.initialize_instrument_limits(self.option_markets, final_configuration)
+
         self.volume_by_asset = {}
         for asset_id, market in self.option_markets.items():
             daily = historical_volume(market)
-            if daily is None:
-                quantity = int(self.volume)
-            elif daily == 0:
-                quantity = 0
+            if daily is None or daily <= 0:
+                quantity = int(final_configuration["volume"])
             else:
                 fraction = float(final_configuration.get("volume_fraction", 0.10))
                 if not 0 < fraction <= 1:
-                    raise ValueError("Option MM volume_fraction must be in (0, 1]")
-                # 40 is the historical default simulation session length.
+                    raise ValueError("Invalid option MM volume_fraction")
                 rebalances = math.ceil(40 / self.rebalance_period)
-                quantity = max(1, round(daily * fraction / (rebalances * 2 * self.K)))
+                quantity = max(
+                    1,
+                    round(daily * fraction / (rebalances * 2 * self.K)),
+                )
             self.volume_by_asset[asset_id] = quantity
 
     def get_id(self) -> int:
@@ -153,8 +154,13 @@ class OptionMMZOHAgent(InstrumentLimitMixin, Agent):
 
                 self.logger.info(f"Last traded price: {estimate}")
                 HALF = Decimal("0.5")
-                st = max(estimate + HALF * self.omega, best_bid)
-                bt = min(estimate - HALF * self.omega, best_ask)
+                st = estimate + HALF * self.omega
+                bt = estimate - HALF * self.omega
+                if best_bid is not None and math.isfinite(float(best_bid)):
+                    st = max(st, Price(best_bid))
+                if best_ask is not None and math.isfinite(float(best_ask)):
+                    bt = min(bt, Price(best_ask))
+
                 self.logger.info(f"Setting basic spread to: {bt}, {st}")
                 buy_volume, sell_volume = self.limited_quote_sizes(
                     option_id, self.volume_by_asset[option_id], self.K
