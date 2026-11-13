@@ -954,7 +954,6 @@ class Agent(ABC):
         fallback: float,
         max_quantity: int | None = None,
     ) -> int:
-        """Sample an order quantity in instrument-native units."""
         market = self.markets[asset_id]
 
         mean = self.get_order_mean_volume(
@@ -965,17 +964,16 @@ class Agent(ABC):
         if not math.isfinite(mean) or mean <= 0:
             mean = float(fallback)
 
-        # Convert stock-equivalent units to futures contracts
-        # only when the quantity is not already in contracts.
+        # Instrument-specific adjustments are delegated to subclasses.
+        mean *= self.get_order_volume_multiplier(asset_id)
+
         if (
             market.instrument_class == "future"
             and self.configuration.get("volume_basis", "historical") == "notional"
         ):
             multiplier = float(market.multiplier)
-
             if not math.isfinite(multiplier) or multiplier <= 0:
                 raise ValueError("Invalid futures contract multiplier")
-
             mean /= multiplier
 
         if mean <= 0:
@@ -987,3 +985,6 @@ class Agent(ABC):
             quantity = min(quantity, int(max_quantity))
 
         return max(0, quantity)
+
+    def get_order_volume_multiplier(self, asset_id: int) -> float:
+        return 1.0
