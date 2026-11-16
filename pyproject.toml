@@ -26,6 +26,7 @@ dependencies = [
     "torch>=2.2",
     "duckdb>=1.5.5",
     "python-dotenv>=1.0",
+    "arch>=7.0",
 ]
 
 [project.optional-dependencies]

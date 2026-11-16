@@ -63,7 +63,10 @@ class RelativeMomentumAgent(Agent):
         self.rebalance_sessions = int(config["rebalance_sessions"])
         if self.rebalance_sessions < 1:
             raise ValueError("rebalance_sessions must be positive")
-        self.rebalance_offset = int(config["rebalance_offset"])
+        # dispersing offset across all agents in the group:
+        self.rebalance_offset = (
+            int(config["rebalance_offset"]) + self.agent_id
+        ) % self.rebalance_sessions
         if not 0 <= self.rebalance_offset < self.rebalance_sessions:
             raise ValueError("rebalance_offset must be between 0 and rebalance_sessions - 1")
         self._simulated_bars: dict[int, list[dict]] = {}

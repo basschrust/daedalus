@@ -4,13 +4,14 @@ import math
 from datetime import date, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
 
 from marketsim.agent.relative_momentum_agent import RelativeMomentumAgent
 from marketsim.agent.strategies.relative_momentum import MomentumSettings
+from marketsim.market.price import Price
 
 
 def _agent():
@@ -33,8 +34,6 @@ def _agent():
 
 
 def _market():
-    from marketsim.market import Price
-
     start = date(2026, 11, 4)
     hist = pd.DataFrame(
         {
@@ -131,8 +130,6 @@ def test_rebalance_falls_back_to_last_price_for_invalid_bid():
     agent.markets = {1: market}
 
     # No selected instruments => sell existing position.
-    from unittest.mock import patch
-
     with patch(
         "marketsim.agent.relative_momentum_agent.equal_weight_targets",
         return_value={"ABC": 0.0},

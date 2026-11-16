@@ -376,8 +376,6 @@ def test_combined_hedge_nets_overlapping_futures(
 
     # The fixture uses one constituent stock.
     # Add another future with identical index exposure.
-    from types import SimpleNamespace
-
     second_future = SimpleNamespace(
         asset_id=102,
         instrument_class="future",
@@ -397,8 +395,6 @@ def test_combined_hedge_submits_one_stock_order(
     make_agent,
 ):
     agent, future, stock = make_agent(position=-2)
-
-    from types import SimpleNamespace
 
     second_future = SimpleNamespace(
         asset_id=102,

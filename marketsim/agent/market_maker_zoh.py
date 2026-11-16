@@ -9,10 +9,11 @@ import numpy as np
 import pandas as pd
 
 from marketsim.agent.agent import Agent
-from marketsim.agent.mm_instrument_limits import InstrumentLimitMixin
-from marketsim.market import FXRateProvider, Price
+from marketsim.agent.helpers.mm_instrument_limits import InstrumentLimitMixin
+from marketsim.market import FXRateProvider
 from marketsim.market.fourheap.constants import BUY, SELL
 from marketsim.market.fourheap.order import Order
+from marketsim.market.price import Price
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
@@ -45,6 +46,9 @@ class MMZOHAgent(InstrumentLimitMixin, Agent):
             "q_max": 1000,
             "rebalance_by": "time",
             "rebalance_volume": 70,
+            "amplitude_lookback_days": 20,
+            "amplitude_spread_scale": 0.05,
+            "amplitude_volume_scale": 10.0,
         }
         final_configuration = default_configuration | (
             configuration if configuration is not None else {}
@@ -198,6 +202,25 @@ class MMZOHAgent(InstrumentLimitMixin, Agent):
                 estimate = market.last_traded_price
                 self.logger.info(f"Last traded price: {estimate}")
                 HALF = Decimal("0.5")
+                spread = self.omega
+                desired_volume = self.volume_by_asset[asset_id]
+
+                if market.instrument_class == "stock":
+                    amplitude = self.get_recent_amplitude(market)
+                    spread += Decimal(
+                        str(
+                            float(estimate)
+                            * amplitude
+                            * float(self.configuration["amplitude_spread_scale"])
+                        )
+                    )
+                    volume_factor = 1.0 / (
+                        1.0 + amplitude * float(self.configuration["amplitude_volume_scale"])
+                    )
+                    desired_volume = max(
+                        1,
+                        round(desired_volume * volume_factor),
+                    )
                 if market.instrument_class == "future":
                     underlying = market.underlying
                     if underlying.instrument_class == "index":
@@ -205,16 +228,14 @@ class MMZOHAgent(InstrumentLimitMixin, Agent):
                     else:
                         estimate = Price(underlying.last_traded_price)
                     # Anchor futures quotes to their theoretical price.
-                    st = estimate + HALF * self.omega
-                    bt = estimate - HALF * self.omega
+                    st = estimate + HALF * spread
+                    bt = estimate - HALF * spread
                 else:
                     estimate = market.last_traded_price
-                    st = max(estimate + HALF * self.omega, best_bid)
-                    bt = min(estimate - HALF * self.omega, best_ask)
+                    st = max(estimate + HALF * spread, best_bid)
+                    bt = min(estimate - HALF * spread, best_ask)
                 self.logger.info(f"Setting basic spread to: {bt}, {st}")
-                buy_volume, sell_volume = self.limited_quote_sizes(
-                    asset_id, self.volume_by_asset[asset_id], self.K
-                )
+                buy_volume, sell_volume = self.limited_quote_sizes(asset_id, desired_volume, self.K)
                 self.logger.info(f"Basic spread adjusted to: {bt}, {st}")
 
                 for k in range(self.K):
@@ -252,3 +273,29 @@ class MMZOHAgent(InstrumentLimitMixin, Agent):
 
     def __str__(self):
         return f"MM_ZOH{self.agent_id}"
+
+    def get_recent_amplitude(self, market) -> float:
+        """Median relative daily high-low range for recent sessions."""
+        history = getattr(market, "historical_ohlcv", None)
+
+        if not isinstance(history, pd.DataFrame) or history.empty:
+            return 0.0
+
+        required = {"high", "low", "close"}
+        if not required.issubset(history.columns):
+            return 0.0
+
+        lookback = int(self.configuration["amplitude_lookback_days"])
+        if lookback <= 0:
+            raise ValueError("amplitude_lookback_days must be positive")
+
+        recent = history.sort_index().tail(lookback)
+
+        high = pd.to_numeric(recent["high"], errors="coerce")
+        low = pd.to_numeric(recent["low"], errors="coerce")
+        close = pd.to_numeric(recent["close"], errors="coerce")
+
+        amplitude = ((high - low) / close.where(close > 0)).replace([np.inf, -np.inf], np.nan)
+        amplitude = amplitude[(amplitude >= 0) & amplitude.notna()]
+
+        return float(amplitude.median()) if not amplitude.empty else 0.0

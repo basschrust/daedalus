@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 
 from marketsim.agent.agent import Agent
 from marketsim.agent.helpers.index_arbitrage_portfolio import index_hedge_quantities
-from marketsim.market import Price
 from marketsim.market.fourheap.constants import BUY, SELL
 from marketsim.market.fourheap.order import Order
+from marketsim.market.price import Price
 
 if TYPE_CHECKING:
     from marketsim.market.instruments.security import Security

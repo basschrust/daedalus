@@ -8,11 +8,12 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from marketsim.agent.agent import Agent
-from marketsim.agent.fundamental_signal import fundamental_reference
-from marketsim.market import FXRateProvider, Price
+from marketsim.agent.helpers.fundamental_signal import fundamental_reference
+from marketsim.market import FXRateProvider
 from marketsim.market.fourheap.constants import BUY, SELL
 from marketsim.market.fourheap.order import Order
 from marketsim.market.instruments.security import Security
+from marketsim.market.price import Price
 
 if TYPE_CHECKING:
     from database.connectors.duckdb_storage import Repository
@@ -204,3 +205,20 @@ class NoiseAgent(Agent):
     def sod(self):
         super().sod()
         self.future_daily_volume.clear()
+
+    def get_order_volume_multiplier(self, asset_id: int) -> float:
+        market = self.markets[asset_id]
+
+        if market.instrument_class != "stock":
+            return 1.0
+
+        coverage = float(self.configuration.get("stock_coverage_fraction", 1.0))
+        scale = float(self.configuration.get("stock_volume_coverage_scale", 1.0))
+
+        if not math.isfinite(coverage) or not 0 < coverage <= 1:
+            raise ValueError("Invalid stock_coverage_fraction")
+
+        if not math.isfinite(scale) or scale <= 0:
+            raise ValueError("Invalid stock_volume_coverage_scale")
+
+        return scale / coverage
