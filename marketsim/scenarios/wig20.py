@@ -11,6 +11,7 @@ from pathlib import Path
 import pandas as pd
 import snowflake.connector
 import yaml
+from snowflake.connector import SnowflakeConnection
 
 from marketsim.market.historical_prices import load_simulation_dates
 from marketsim.scenarios.wig20_data import futures_history, query, to_price
@@ -143,7 +144,7 @@ def stock_history(
     return frame.sort_values("date").reset_index(drop=True)
 
 
-def fetch_index_close(conn, cutoff: date) -> float:
+def fetch_index_close(conn: SnowflakeConnection, cutoff: date) -> float:
     """Load the official WIG20 EoD close from Ikaros."""
 
     frame = query(
@@ -172,32 +173,24 @@ def fetch_index_close(conn, cutoff: date) -> float:
     return value
 
 
-def resolve(conn, sessions=250):
+def resolve(conn: SnowflakeConnection, sessions: int = 250):
     """Resolve the latest complete stock and index snapshot."""
 
     if sessions < 2:
         raise ValueError("At least two lookback sessions required")
-
     diagnostics = []
-
     # Exclude today, since today's ingest may be partial.
     max_date = date.today() - timedelta(days=1)
-
     for cutoff in candidate_dates(conn, max_date):
         try:
             members = constituents(conn, cutoff)
-
             history = {
                 symbol: stock_history(conn, symbol, cutoff, sessions) for symbol in members.symbol
             }
-
             calendars = {tuple(frame.date.dt.date) for frame in history.values()}
-
             if len(calendars) != 1:
                 raise ValueError("Stock trading calendars do not match")
-
             index_level = fetch_index_close(conn, cutoff)
-
             return cutoff, members, history, index_level
 
         except ValueError as exc:

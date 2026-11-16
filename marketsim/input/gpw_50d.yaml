@@ -89,9 +89,9 @@ agents:
     instrument_classes:
     - stock
     - future
-    number: 7
+    number: 9
     config:
-      lam: 0.42
+      lam: 0.45
       mean_volume: 150
       mean_spread: 0.7
       validity_period: 3
@@ -118,7 +118,7 @@ agents:
     instrument_classes:
     - stock
     - future
-    number: 10
+    number: 15
     config:
       lam: 0.3
       mean_volume: 200
@@ -176,7 +176,7 @@ agents:
       rebalance_by: time
       rebalance_period: 4
       volume_fraction: 0.2
-      historical_volatility_scale: 0.7
+      historical_volatility_scale: 0.9
       max_price_deviation: 0.04
       K: 4
       xi: 0.1
@@ -189,11 +189,12 @@ agents:
     number: 3
     instrument_classes:
       - option
+      - stock
     markets: ALL
     config:
       K: 3
       xi: 0.1
-      omega: 0.2
+      omega: 0.1
       rebalance_period: 5
       volume: 2
       volume_fraction: 0.05
