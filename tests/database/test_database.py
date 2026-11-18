@@ -11,6 +11,8 @@ EXPECTED_TABLES = {
     "eod_agent_option_greeks",
     "eod_instrument_liquidity",
     "eod_agent_var_parametric",
+    "eod_agent_var_historical",
+    "eod_agent_var_montecarlo",
     "risk_l2_instrument_statistics",
     "risk_l2_pair_statistics",
     "securities",

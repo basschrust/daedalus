@@ -5,6 +5,7 @@ Snowflake tests create and drop their own schema; use a dedicated test role/data
 """
 
 import os
+from contextlib import closing
 from decimal import Decimal
 from uuid import uuid4
 
@@ -138,3 +139,72 @@ def test_no_data_for_unknown_agent(repository):
     actual = repository.get_eod_cash(agent_id=999999)
     assert actual.empty
     assert set(actual.columns) == {"day", "currency", "cash"}
+
+
+VAR_RESULT_COLUMNS = (
+    "day",
+    "agent_id",
+    "confidence_level",
+    "horizon_days",
+    "var_amount",
+    "portfolio_value",
+    "base_currency",
+    "covered_exposure",
+    "excluded_exposure",
+    "calibration_id",
+)
+
+
+@pytest.mark.parametrize("method", ["historical", "montecarlo"])
+def test_new_var_tables_schema_and_roundtrip(repository, method):
+    table = f"eod_agent_var_{method}"
+    quoted_table = table.upper()
+    writer = getattr(repository, f"save_eod_agent_var_{method}")
+    sample = [
+        dict(
+            day=3,
+            agent_id=17,
+            confidence_level=0.95,
+            horizon_days=1,
+            var_amount=125.50,
+            portfolio_value=10_000.0,
+            base_currency="PLN",
+            covered_exposure=9_200.0,
+            excluded_exposure=800.0,
+            calibration_id="cal_3",
+        ),
+        dict(
+            day=3,
+            agent_id=17,
+            confidence_level=0.99,
+            horizon_days=10,
+            var_amount=385.25,
+            portfolio_value=10_000.0,
+            base_currency="PLN",
+            covered_exposure=9_200.0,
+            excluded_exposure=800.0,
+            calibration_id="cal_3",
+        ),
+    ]
+    with closing(repository.connection.cursor()) as cur:
+        cur.execute(f'SELECT * FROM "{quoted_table}" WHERE 1 = 0')
+        assert tuple(col[0].lower() for col in cur.description) == VAR_RESULT_COLUMNS
+
+    writer([])
+    writer(sample)
+    with closing(repository.connection.cursor()) as cur:
+        cur.execute(
+            f'SELECT "DAY", "AGENT_ID", "CONFIDENCE_LEVEL", "HORIZON_DAYS", '
+            f'"VAR_AMOUNT", "BASE_CURRENCY", "CALIBRATION_ID" '
+            f'FROM "{quoted_table}" ORDER BY "CONFIDENCE_LEVEL"'
+        )
+        rows = cur.fetchall()
+
+    assert len(rows) == 2
+    assert [int(row[0]) for row in rows] == [3, 3]
+    assert [int(row[1]) for row in rows] == [17, 17]
+    assert [float(row[2]) for row in rows] == pytest.approx([0.95, 0.99])
+    assert [int(row[3]) for row in rows] == [1, 10]
+    assert [float(row[4]) for row in rows] == pytest.approx([125.50, 385.25])
+    assert [row[5] for row in rows] == ["PLN", "PLN"]
+    assert [row[6] for row in rows] == ["cal_3", "cal_3"]

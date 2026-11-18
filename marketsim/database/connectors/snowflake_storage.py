@@ -76,6 +76,30 @@ TABLES: dict[str, dict[str, str]] = {
         excluded_exposure="FLOAT",
         calibration_id="VARCHAR",
     ),
+    "eod_agent_var_historical": dict(
+        day="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
+        confidence_level="FLOAT",
+        horizon_days="NUMBER(38,0)",
+        var_amount="FLOAT",
+        portfolio_value="FLOAT",
+        base_currency="VARCHAR",
+        covered_exposure="FLOAT",
+        excluded_exposure="FLOAT",
+        calibration_id="VARCHAR",
+    ),
+    "eod_agent_var_montecarlo": dict(
+        day="NUMBER(38,0)",
+        agent_id="NUMBER(38,0)",
+        confidence_level="FLOAT",
+        horizon_days="NUMBER(38,0)",
+        var_amount="FLOAT",
+        portfolio_value="FLOAT",
+        base_currency="VARCHAR",
+        covered_exposure="FLOAT",
+        excluded_exposure="FLOAT",
+        calibration_id="VARCHAR",
+    ),
     "securities": dict(
         asset_id="NUMBER(38,0)",
         instrument_class="VARCHAR",
@@ -728,3 +752,11 @@ class SnowflakeRepository:
     def save_eod_agent_var_parametric(self, rows):
         if rows:
             self._insert_frame("eod_agent_var_parametric", pd.DataFrame(rows))
+
+    def save_eod_agent_var_historical(self, rows: list[dict]) -> None:
+        if rows:
+            self._insert_frame("eod_agent_var_historical", pd.DataFrame(rows))
+
+    def save_eod_agent_var_montecarlo(self, rows: list[dict]) -> None:
+        if rows:
+            self._insert_frame("eod_agent_var_montecarlo", pd.DataFrame(rows))

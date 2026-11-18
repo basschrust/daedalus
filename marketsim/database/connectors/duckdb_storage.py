@@ -49,6 +49,14 @@ class Repository:
             day INTEGER, agent_id INTEGER, confidence_level DOUBLE, horizon_days INTEGER,
             var_amount DOUBLE, portfolio_value DOUBLE, base_currency VARCHAR,
             covered_exposure DOUBLE, excluded_exposure DOUBLE, calibration_id VARCHAR)""")
+        self.connection.execute("""CREATE TABLE IF NOT EXISTS eod_agent_var_historical (
+            day INTEGER, agent_id INTEGER, confidence_level DOUBLE, horizon_days INTEGER,
+            var_amount DOUBLE, portfolio_value DOUBLE, base_currency VARCHAR,
+            covered_exposure DOUBLE, excluded_exposure DOUBLE, calibration_id VARCHAR)""")
+        self.connection.execute("""CREATE TABLE IF NOT EXISTS eod_agent_var_montecarlo (
+            day INTEGER, agent_id INTEGER, confidence_level DOUBLE, horizon_days INTEGER,
+            var_amount DOUBLE, portfolio_value DOUBLE, base_currency VARCHAR,
+            covered_exposure DOUBLE, excluded_exposure DOUBLE, calibration_id VARCHAR)""")
         self.connection.execute("""CREATE TABLE IF NOT EXISTS eod_option_greeks (
             day INTEGER, asset_id INTEGER, underlying_id INTEGER,
             model STRING, delta DOUBLE, gamma DOUBLE, vega DOUBLE,
@@ -951,3 +959,30 @@ class Repository:
                 for row in rows
             ],
         ) if rows else None
+
+    def _save_eod_agent_var_rows(self, table: str, rows: list[dict]) -> None:
+        if not rows:
+            return
+        columns = (
+            "day",
+            "agent_id",
+            "confidence_level",
+            "horizon_days",
+            "var_amount",
+            "portfolio_value",
+            "base_currency",
+            "covered_exposure",
+            "excluded_exposure",
+            "calibration_id",
+        )
+        placeholders = ", ".join("?" for _ in columns)
+        self.connection.executemany(
+            f'INSERT INTO "{table}" ({", ".join(columns)}) VALUES ({placeholders})',
+            [tuple(row[column] for column in columns) for row in rows],
+        )
+
+    def save_eod_agent_var_historical(self, rows: list[dict]) -> None:
+        self._save_eod_agent_var_rows("eod_agent_var_historical", rows)
+
+    def save_eod_agent_var_montecarlo(self, rows: list[dict]) -> None:
+        self._save_eod_agent_var_rows("eod_agent_var_montecarlo", rows)
