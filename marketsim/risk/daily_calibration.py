@@ -18,15 +18,6 @@ import pandas as pd
 from marketsim.simulator.simulator import Simulator
 
 
-def _is_snowflake(connection: object) -> bool:
-    module = type(connection).__module__.lower()
-    if "snowflake" in module:
-        return True
-    if "duckdb" in module:
-        return False
-    raise TypeError(f"Unsupported risk-calibration database: {type(connection)!r}")
-
-
 def _symbol(market: object) -> str:
     return str(getattr(market, "symbol", None) or getattr(market, "short_name", "")).strip().upper()
 
@@ -52,9 +43,7 @@ class DailyRiskCalibration:
         if not simulator.simulation_dates:
             raise ValueError("Daily risk calibration requires simulation_dates")
 
-        self.connection = simulator.repository.connection
-        self.snowflake = _is_snowflake(self.connection)
-        self.placeholder = "%s" if self.snowflake else "?"
+        self.repository = simulator.repository
         self.lookback_sessions = lookback_sessions
         self.next_day = 0
 
@@ -102,33 +91,8 @@ class DailyRiskCalibration:
         if len(historical_ends) != 1:
             raise ValueError(f"Unaligned Ikaros risk-factor cutoffs: {sorted(historical_ends)}")
 
-        self._ensure_tables()
+        self.repository.ensure_risk_calibration_tables()
         self.latest_calibration_id = self._calibrate(day=-1, source="IKAROS")
-
-    def _execute(self, cursor: object, sql: str, params: tuple[object, ...] = ()) -> None:
-        cursor.execute(sql, params)
-
-    def _ensure_tables(self) -> None:
-        cursor = self.connection.cursor()
-        try:
-            cursor.execute(
-                "CREATE TABLE IF NOT EXISTS risk_l2_instrument_statistics ("
-                "calibration_id VARCHAR, symbol VARCHAR, "
-                "mean_daily_return DOUBLE, daily_sigma DOUBLE)"
-            )
-            cursor.execute(
-                "CREATE TABLE IF NOT EXISTS risk_l2_pair_statistics ("
-                "calibration_id VARCHAR, symbol_1 VARCHAR, "
-                "symbol_2 VARCHAR, covariance_daily DOUBLE)"
-            )
-            cursor.execute(
-                "CREATE TABLE IF NOT EXISTS risk_calibration_history ("
-                "day INTEGER, calibration_id VARCHAR, as_of_date DATE, "
-                "first_session DATE, observations INTEGER, "
-                "lookback_sessions INTEGER, source VARCHAR)"
-            )
-        finally:
-            cursor.close()
 
     def _calibrate(self, *, day: int, source: str) -> str:
         symbols = sorted(self.series)
@@ -191,59 +155,17 @@ class DailyRiskCalibration:
             for j in range(i + 1, len(symbols))
         ]
 
-        cursor = self.connection.cursor()
-        try:
-            self._execute(
-                cursor,
-                f"SELECT day FROM risk_calibration_history "
-                f"WHERE calibration_id = {self.placeholder}",
-                (calibration_id,),
-            )
-            existing = cursor.fetchall()
-            if existing:
-                if len(existing) != 1:
-                    raise ValueError(f"Duplicate calibration metadata: {calibration_id}")
-                # Different simulation days can legitimately have identical
-                # prices and the same rolling window; reuse the same statistics.
-                return calibration_id
-
-            cursor.execute("BEGIN TRANSACTION")
-            try:
-                cursor.executemany(
-                    "INSERT INTO risk_l2_instrument_statistics "
-                    f"(calibration_id, symbol, mean_daily_return, daily_sigma) "
-                    f"VALUES ({', '.join([self.placeholder] * 4)})",
-                    instrument_rows,
-                )
-                if pair_rows:
-                    cursor.executemany(
-                        "INSERT INTO risk_l2_pair_statistics "
-                        f"(calibration_id, symbol_1, symbol_2, covariance_daily) "
-                        f"VALUES ({', '.join([self.placeholder] * 4)})",
-                        pair_rows,
-                    )
-                self._execute(
-                    cursor,
-                    "INSERT INTO risk_calibration_history "
-                    "(day, calibration_id, as_of_date, first_session, "
-                    "observations, lookback_sessions, source) "
-                    f"VALUES ({', '.join([self.placeholder] * 7)})",
-                    (
-                        day,
-                        calibration_id,
-                        sessions[-1],
-                        sessions[0],
-                        len(sessions) - 1,
-                        self.lookback_sessions,
-                        source,
-                    ),
-                )
-                cursor.execute("COMMIT")
-            except Exception:
-                cursor.execute("ROLLBACK")
-                raise
-        finally:
-            cursor.close()
+        self.repository.publish_risk_calibration(
+            calibration_id,
+            instrument_rows,
+            pair_rows,
+            day=day,
+            as_of_date=sessions[-1],
+            first_session=sessions[0],
+            observations=len(sessions) - 1,
+            lookback_sessions=self.lookback_sessions,
+            source=source,
+        )
         return calibration_id
 
     def append_eod(self, simulator: Simulator, day: int) -> str:

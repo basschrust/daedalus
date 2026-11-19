@@ -25,95 +25,11 @@ class ParametricVaR:
         cls, *, repository, calibration_id, symbols, confidence_level=0.99, source_connection=None
     ):
         """Read Snowflake L2 or copy its calibration once to DuckDB local tables."""
-        if hasattr(repository, "localdb"):
-            db = repository.connection
-            count = db.execute(
-                "SELECT count(*) FROM risk_l2_instrument_statistics WHERE calibration_id = ?",
-                [calibration_id],
-            ).fetchone()[0]
-            if count == 0:
-                if source_connection is None:
-                    raise ValueError(
-                        "DuckDB risk calibration absent; Snowflake init connection required"
-                    )
-                with source_connection.cursor() as cur:
-                    cur.execute(
-                        "SELECT SYMBOL, MEAN_DAILY_RETURN, DAILY_SIGMA "
-                        "FROM DAEDALUS.MART.L2_INSTRUMENT_STATISTICS WHERE CALIBRATION_ID = %s",
-                        (calibration_id,),
-                    )
-                    instruments = cur.fetchall()
-                    cur.execute(
-                        "SELECT SYMBOL_1, SYMBOL_2, COVARIANCE_DAILY "
-                        "FROM DAEDALUS.MART.L2_PAIR_STATISTICS WHERE CALIBRATION_ID = %s",
-                        (calibration_id,),
-                    )
-                    pairs = cur.fetchall()
-                if not instruments:
-                    raise ValueError(f"Missing calibration {calibration_id}")
-                db.execute("BEGIN TRANSACTION")
-                try:
-                    db.executemany(
-                        "INSERT INTO risk_l2_instrument_statistics VALUES (?, ?, ?, ?)",
-                        [(calibration_id, *row) for row in instruments],
-                    )
-                    if pairs:
-                        db.executemany(
-                            "INSERT INTO risk_l2_pair_statistics VALUES (?, ?, ?, ?)",
-                            [(calibration_id, *row) for row in pairs],
-                        )
-                    db.execute("COMMIT")
-                except Exception:
-                    db.execute("ROLLBACK")
-                    raise
-            instrument_rows = db.execute(
-                "SELECT symbol, mean_daily_return, daily_sigma FROM risk_l2_instrument_statistics "
-                "WHERE calibration_id = ?",
-                [calibration_id],
-            ).fetchall()
-            pair_rows = db.execute(
-                "SELECT symbol_1, symbol_2, covariance_daily FROM risk_l2_pair_statistics "
-                "WHERE calibration_id = ?",
-                [calibration_id],
-            ).fetchall()
-        else:
-            with repository.connection.cursor() as cur:
-                cur.execute(
-                    "SELECT SYMBOL, MEAN_DAILY_RETURN, DAILY_SIGMA "
-                    "FROM DAEDALUS.MART.L2_INSTRUMENT_STATISTICS WHERE CALIBRATION_ID = %s",
-                    (calibration_id,),
-                )
-                instrument_rows = cur.fetchall()
-                cur.execute(
-                    "SELECT SYMBOL_1, SYMBOL_2, COVARIANCE_DAILY "
-                    "FROM DAEDALUS.MART.L2_PAIR_STATISTICS WHERE CALIBRATION_ID = %s",
-                    (calibration_id,),
-                )
-                pair_rows = cur.fetchall()
-
-        # Reuse the existing strict covariance validation and ordering logic.
-        class Cursor:
-            def __init__(self):
-                self.calls = 0
-
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *args):
-                return None
-
-            def execute(self, *args):
-                self.calls += 1
-
-            def fetchall(self):
-                return instrument_rows if self.calls == 1 else pair_rows
-
-        class Connection:
-            def cursor(self):
-                return Cursor()
-
-        regime = FundamentalReturnRegime.from_snowflake(
-            Connection(), calibration_id, symbols=symbols
+        instrument_rows, pair_rows = repository.load_parametric_calibration(
+            calibration_id, source_connection=source_connection
+        )
+        regime = FundamentalReturnRegime.from_statistics_rows(
+            calibration_id, instrument_rows, pair_rows, symbols=symbols
         )
         return cls(calibration_id, regime, confidence_level)
 

@@ -40,32 +40,23 @@ def test_invalid_index_level():
 def test_index_close_uses_index_prices(monkeypatch):
     observed = {}
 
-    def fake_query(conn, sql, params):
-        observed["sql"] = sql
-        observed["params"] = params
-
+    def fake_fetch(conn, cutoff):
+        observed["cutoff"] = cutoff
         return pd.DataFrame({"index_close": [3125.5]})
 
-    monkeypatch.setattr(wig20, "query", fake_query)
-
+    monkeypatch.setattr(wig20.ikaros_queries, "fetch_wig20_index_close", fake_fetch)
     result = fetch_index_close(None, date(2026, 10, 28))
-
     assert result == 3125.5
-    assert "INDEX_PRICES" in observed["sql"]
-    assert observed["params"] == ("WIG20", date(2026, 10, 28))
+    assert observed["cutoff"] == date(2026, 10, 28)
 
 
 def test_index_close_missing_fails(monkeypatch):
     monkeypatch.setattr(
-        wig20,
-        "query",
+        wig20.ikaros_queries,
+        "fetch_wig20_index_close",
         lambda *args: pd.DataFrame(columns=["index_close"]),
     )
-
-    with pytest.raises(
-        ValueError,
-        match="INDEX_PRICES",
-    ):
+    with pytest.raises(ValueError, match="INDEX_PRICES"):
         fetch_index_close(None, date(2026, 10, 28))
 
 

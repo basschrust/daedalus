@@ -9,26 +9,9 @@ def load_historical_ohlcv(
     lookback_days: int = 365,
 ) -> dict[str, pd.DataFrame]:
 
-    query = f"""
-        SELECT
-            SYMBOL,
-            DATE,
-            OPEN,
-            HIGH,
-            LOW,
-            CLOSE,
-            VOLUME
-        FROM {table}
-        WHERE DATE <= DATEADD(day, 0, %s)
-          AND DATE > DATEADD(day, -%s, %s)
-        ORDER BY SYMBOL, DATE
-    """
+    from marketsim.database.ikaros_queries import fetch_legacy_historical_ohlcv
 
-    df = pd.read_sql(
-        query,
-        connection,
-        params=(cutoff_date, lookback_days, cutoff_date),
-    )
+    df = fetch_legacy_historical_ohlcv(connection, table, cutoff_date, lookback_days)
 
     df.columns = df.columns.str.lower()
     df["date"] = pd.to_datetime(df["date"])

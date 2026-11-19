@@ -11,7 +11,7 @@ from decimal import Decimal
 
 import pandas as pd
 
-from marketsim.scenarios.wig20_data import futures_history, query, to_price
+from marketsim.database import ikaros_queries
 
 
 def _field(row: pd.Series, *names: str):
@@ -44,22 +44,14 @@ def select_options(
     INSTRUMENT_TYPE, UNDERLYING_SYMBOL, EXPIRY_DATE, MULTIPLIER,
     and strike/side fields (recognized aliases below).
     """
+    from marketsim.scenarios.wig20_data import futures_history, to_price
+
     if count <= 0:
         return []
     if not simulation_dates:
         raise ValueError("Option selection requires simulation dates")
 
-    contracts = query(
-        conn,
-        sql="""
-        SELECT * FROM DERIVATIVE_CONTRACTS
-        WHERE UPPER(INSTRUMENT_TYPE) IN ('OPTION', 'INDEX_OPTION')
-          AND UPPER(UNDERLYING_SYMBOL) = 'WIG20'
-          AND EXPIRY_DATE > %s
-        ORDER BY EXPIRY_DATE, CONTRACT_ID
-    """,
-        params=(cutoff,),
-    )
+    contracts = ikaros_queries.fetch_wig20_option_contracts(conn, cutoff)
     if contracts.empty:
         print("Warning: no WIG20 options survive the simulation horizon")
         return []

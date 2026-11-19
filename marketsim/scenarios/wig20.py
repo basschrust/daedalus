@@ -3,23 +3,18 @@
 from __future__ import annotations
 
 import math
-import os
 from datetime import date, timedelta
-from decimal import Decimal
 from pathlib import Path
 
 import pandas as pd
-import snowflake.connector
 import yaml
-from snowflake.connector import SnowflakeConnection
 
+from marketsim.database import ikaros_queries
 from marketsim.market.historical_prices import load_simulation_dates
-from marketsim.scenarios.wig20_data import futures_history, query, to_price
+from marketsim.scenarios.wig20_data import futures_history, to_price
 from marketsim.scenarios.wig20_options import select_options
 
 OHLCV = ("open", "high", "low", "close", "volume")
-
-PRICE_QUANTUM = Decimal("0.01")
 
 
 def futures_expiration_day(expiry_date, simulation_dates):
@@ -33,40 +28,8 @@ def futures_expiration_day(expiry_date, simulation_dates):
     return len(simulation_dates)
 
 
-def connect():
-    kwargs = dict(
-        account=os.environ["SNOWFLAKE_ACCOUNT"],
-        user=os.environ["SNOWFLAKE_USER"],
-        warehouse=os.getenv("SNOWFLAKE_WAREHOUSE", "DAEDALUS_WH"),
-        database=os.getenv("SNOWFLAKE_DATABASE", "DAEDALUS"),
-        schema=os.getenv("SNOWFLAKE_SCHEMA", "MARKET_DATA"),
-        authenticator=os.getenv("SNOWFLAKE_AUTHENTICATOR", "snowflake"),
-        enable_server_session_keep_alive_auto_detection=False,
-    )
-
-    if kwargs["authenticator"] == "snowflake":
-        kwargs["password"] = os.environ["SNOWFLAKE_PASSWORD"]
-
-    if os.getenv("SNOWFLAKE_ROLE"):
-        kwargs["role"] = os.environ["SNOWFLAKE_ROLE"]
-
-    return snowflake.connector.connect(**kwargs)
-
-
 def constituents(conn, as_of: date):
-    frame = query(
-        conn,
-        """
-        SELECT SECURITY_SYMBOL AS SYMBOL, WEIGHT,
-               VALID_FROM, VALID_TO, SOURCE
-        FROM INDEX_CONSTITUENTS
-        WHERE INDEX_SYMBOL = 'WIG20'
-          AND VALID_FROM <= %s
-          AND (VALID_TO IS NULL OR VALID_TO >= %s)
-        ORDER BY SECURITY_SYMBOL
-    """,
-        (as_of, as_of),
-    )
+    frame = ikaros_queries.fetch_wig20_constituents(conn, as_of)
 
     if len(frame) != 20 or frame.symbol.isna().any() or frame.symbol.duplicated().any():
         raise ValueError(f"WIG20 on {as_of}: expected 20 unique constituents; got {len(frame)}")
@@ -81,17 +44,7 @@ def constituents(conn, as_of: date):
 
 def candidate_dates(conn, max_date: date):
     """Get possible cutoff dates from the stock price table."""
-    frame = query(
-        conn,
-        """
-        SELECT DISTINCT TO_DATE("DATE") AS SESSION_DATE
-        FROM PRICES
-        WHERE TO_DATE("DATE") <= %s
-        ORDER BY SESSION_DATE DESC
-        LIMIT 90
-    """,
-        (max_date,),
-    )
+    frame = ikaros_queries.fetch_candidate_dates(conn, max_date)
 
     return frame.session_date.tolist()
 
@@ -102,19 +55,7 @@ def stock_history(
     cutoff: date,
     sessions: int,
 ):
-    frame = query(
-        conn,
-        """
-        SELECT TO_DATE("DATE") AS DATE,
-               "OPEN", "HIGH", "LOW", "CLOSE", "VOLUME"
-        FROM PRICES
-        WHERE "SYMBOL" = %s
-          AND TO_DATE("DATE") <= %s
-        ORDER BY TO_DATE("DATE") DESC
-        LIMIT %s
-    """,
-        (symbol, cutoff, sessions),
-    )
+    frame = ikaros_queries.fetch_wig20_stock_history(conn, symbol, cutoff, sessions)
 
     if len(frame) != sessions:
         raise ValueError(f"{symbol}: only {len(frame)} of {sessions} historical sessions")
@@ -144,19 +85,10 @@ def stock_history(
     return frame.sort_values("date").reset_index(drop=True)
 
 
-def fetch_index_close(conn: SnowflakeConnection, cutoff: date) -> float:
+def fetch_index_close(conn, cutoff: date) -> float:
     """Load the official WIG20 EoD close from Ikaros."""
 
-    frame = query(
-        conn,
-        """
-        SELECT "CLOSE" AS INDEX_CLOSE
-        FROM INDEX_PRICES
-        WHERE "INDEX_SYMBOL" = %s
-          AND TO_DATE("DATE") = %s
-    """,
-        ("WIG20", cutoff),
-    )
+    frame = ikaros_queries.fetch_wig20_index_close(conn, cutoff)
 
     if len(frame) != 1:
         raise ValueError(
@@ -173,24 +105,32 @@ def fetch_index_close(conn: SnowflakeConnection, cutoff: date) -> float:
     return value
 
 
-def resolve(conn: SnowflakeConnection, sessions: int = 250):
+def resolve(conn, sessions=250):
     """Resolve the latest complete stock and index snapshot."""
 
     if sessions < 2:
         raise ValueError("At least two lookback sessions required")
+
     diagnostics = []
+
     # Exclude today, since today's ingest may be partial.
     max_date = date.today() - timedelta(days=1)
+
     for cutoff in candidate_dates(conn, max_date):
         try:
             members = constituents(conn, cutoff)
+
             history = {
                 symbol: stock_history(conn, symbol, cutoff, sessions) for symbol in members.symbol
             }
+
             calendars = {tuple(frame.date.dt.date) for frame in history.values()}
+
             if len(calendars) != 1:
                 raise ValueError("Stock trading calendars do not match")
+
             index_level = fetch_index_close(conn, cutoff)
+
             return cutoff, members, history, index_level
 
         except ValueError as exc:
@@ -420,19 +360,7 @@ def prepare(conn, settings: dict, root: Path):
 
 
 def index_history(conn, cutoff, sessions=250):
-    frame = query(
-        conn,
-        """
-        SELECT TO_DATE("DATE") AS DATE,
-               "OPEN", "HIGH", "LOW", "CLOSE"
-        FROM INDEX_PRICES
-        WHERE "INDEX_SYMBOL" = %s
-          AND TO_DATE("DATE") <= %s
-        ORDER BY TO_DATE("DATE") DESC
-        LIMIT %s
-    """,
-        ("WIG20", cutoff, sessions),
-    )
+    frame = ikaros_queries.fetch_wig20_index_history(conn, cutoff, sessions)
 
     if frame.empty:
         raise ValueError("WIG20: no historical index observations available")
@@ -454,20 +382,7 @@ def index_history(conn, cutoff, sessions=250):
 
 
 def futures_contracts(conn, cutoff, count=3):
-    frame = query(
-        conn,
-        """
-        SELECT CONTRACT_ID, SYMBOL,
-               UNDERLYING_SYMBOL, EXPIRY_DATE,
-               MULTIPLIER
-        FROM DERIVATIVE_CONTRACTS
-        WHERE INSTRUMENT_TYPE = 'FUTURE'
-          AND UNDERLYING_SYMBOL = 'WIG20'
-          AND EXPIRY_DATE > %s
-        ORDER BY EXPIRY_DATE, CONTRACT_ID
-    """,
-        (cutoff,),
-    )
+    frame = ikaros_queries.fetch_wig20_futures_contracts(conn, cutoff)
 
     frame = frame.drop_duplicates(subset=["contract_id"]).head(count)
 

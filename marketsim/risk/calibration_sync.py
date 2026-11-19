@@ -7,8 +7,6 @@ from __future__ import annotations
 
 import math
 
-from marketsim.scenarios.wig20 import connect
-
 
 def _symbol(market):
     return str(getattr(market, "symbol", None) or getattr(market, "short_name", "")).upper()
@@ -31,26 +29,9 @@ def sync_greeks_calibration(simulator, config: dict) -> None:
     if "" in required:
         raise ValueError("Option underlying has no symbol/short_name")
 
-    local = simulator.repository.connection
-    # Snowflake-backed simulations query L2 directly in eod_greeks; only
-    # local DuckDB requires the synchronization.
-    if "snowflake" in type(local).__module__.lower():
+    if not simulator.repository.needs_local_greek_calibration():
         return
-    if "duckdb" not in type(local).__module__.lower():
-        raise TypeError("Unsupported repository connection for calibration sync")
-
-    remote = connect()
-    try:
-        with remote.cursor() as cursor:
-            cursor.execute(
-                "SELECT SYMBOL, MEAN_DAILY_RETURN, DAILY_SIGMA "
-                "FROM DAEDALUS.MART.L2_INSTRUMENT_STATISTICS "
-                "WHERE CALIBRATION_ID = %s",
-                (calibration_id,),
-            )
-            rows = cursor.fetchall()
-    finally:
-        remote.close()
+    rows = simulator.repository.fetch_source_greek_calibration(calibration_id)
 
     clean = {}
     for symbol, mean, sigma in rows:
@@ -70,23 +51,7 @@ def sync_greeks_calibration(simulator, config: dict) -> None:
     if not clean:
         raise ValueError(f"Calibration {calibration_id} has no L2 statistics in Snowflake")
 
-    local.execute("BEGIN TRANSACTION")
-    try:
-        # The run database is a local snapshot. Replace only the selected
-        # calibration, never unrelated calibration IDs.
-        local.execute(
-            "DELETE FROM risk_l2_instrument_statistics WHERE calibration_id = ?",
-            [calibration_id],
-        )
-        local.executemany(
-            "INSERT INTO risk_l2_instrument_statistics "
-            "(calibration_id, symbol, mean_daily_return, daily_sigma) VALUES (?, ?, ?, ?)",
-            [(calibration_id, sym, mean, sigma) for sym, (mean, sigma) in sorted(clean.items())],
-        )
-        local.execute("COMMIT")
-    except Exception:
-        local.execute("ROLLBACK")
-        raise
+    simulator.repository.import_greek_calibration(calibration_id, clean)
     print(
         f"Synchronized L2 calibration {calibration_id}: "
         f"{len(clean)} instruments; required option underlyings: {sorted(required)}"

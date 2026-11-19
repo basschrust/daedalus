@@ -8,6 +8,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from marketsim.database.risk_queries import (
+    ensure_daily_calibration_tables,
+    publish_daily_calibration,
+)
 from marketsim.risk.daily_calibration import DailyRiskCalibration
 
 
@@ -17,7 +21,17 @@ def _simulator(conn):
     wig20 = SimpleNamespace(instrument_class="index", short_name="WIG20", last_traded_price=2030.0)
     option = SimpleNamespace(instrument_class="option", short_name="OW20", last_traded_price=5.0)
     return SimpleNamespace(
-        repository=SimpleNamespace(connection=conn),
+        repository=SimpleNamespace(
+            connection=conn,
+            ensure_risk_calibration_tables=lambda: ensure_daily_calibration_tables(
+                SimpleNamespace(connection=conn)
+            ),
+            publish_risk_calibration=lambda calibration_id, instruments, pairs, **details: (
+                publish_daily_calibration(
+                    SimpleNamespace(connection=conn), calibration_id, instruments, pairs, **details
+                )
+            ),
+        ),
         markets={1: pzu, 2: wig20, 3: option},
         historical_ohlcv_by_symbol={
             "PZU.WA": pd.DataFrame({"close": [100, 101, 103, 104]}, index=dates),
