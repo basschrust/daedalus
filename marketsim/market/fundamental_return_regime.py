@@ -90,26 +90,31 @@ class FundamentalReturnRegime:
 
     @classmethod
     def from_snowflake(cls, conn, calibration_id: str, *, symbols: Sequence[str], seed: int = 67):
-        """Load an exact calibration; requires SELECT on DAEDALUS.MART L2 tables."""
+        """Load an exact historical calibration through the database source adapter."""
         canonical = [str(s).upper() for s in symbols]
         if not calibration_id or not canonical or len(set(canonical)) != len(canonical):
             raise ValueError("Provide calibration_id and unique stock symbols")
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT SYMBOL, MEAN_DAILY_RETURN, DAILY_SIGMA "
-                "FROM DAEDALUS.MART.L2_INSTRUMENT_STATISTICS "
-                "WHERE CALIBRATION_ID = %s",
-                (calibration_id,),
-            )
-            instrument_rows = cursor.fetchall()
-            cursor.execute(
-                "SELECT SYMBOL_1, SYMBOL_2, COVARIANCE_DAILY "
-                "FROM DAEDALUS.MART.L2_PAIR_STATISTICS "
-                "WHERE CALIBRATION_ID = %s",
-                (calibration_id,),
-            )
-            pair_rows = cursor.fetchall()
+        from marketsim.database.ikaros_queries import fetch_source_regime_statistics
 
+        instrument_rows, pair_rows = fetch_source_regime_statistics(conn, calibration_id)
+        return cls.from_statistics_rows(
+            calibration_id, instrument_rows, pair_rows, symbols=canonical, seed=seed
+        )
+
+    @classmethod
+    def from_statistics_rows(
+        cls,
+        calibration_id: str,
+        instrument_rows,
+        pair_rows,
+        *,
+        symbols: Sequence[str],
+        seed: int = 67,
+    ):
+        """Construct a regime from calibrated values, without database access."""
+        canonical = [str(s).upper() for s in symbols]
+        if not calibration_id or not canonical or len(set(canonical)) != len(canonical):
+            raise ValueError("Provide calibration_id and unique stock symbols")
         wanted = set(canonical)
         instruments = {}
         for symbol, mean, sigma in instrument_rows:

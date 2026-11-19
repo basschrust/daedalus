@@ -8,13 +8,13 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
+from marketsim.database import ikaros_queries
 from marketsim.market.historical_prices import load_simulation_dates
 from marketsim.scenarios.gpw_universe import discover_derivatives, discover_stocks
 from marketsim.scenarios.wig20 import (
     candidate_dates,
     constituents,
     futures_expiration_day,
-    query,
     to_price,
 )
 
@@ -31,35 +31,7 @@ def load_stock_history(
     if not symbols:
         return {}
 
-    # Snowflake parameter placeholders for the selected symbols.
-    placeholders = ", ".join(["%s"] * len(symbols))
-
-    frame = query(
-        conn,
-        f"""
-        SELECT SYMBOL, DATE, OPEN, HIGH, LOW, CLOSE, VOLUME
-        FROM (
-            SELECT
-                "SYMBOL" AS SYMBOL,
-                TO_DATE("DATE") AS DATE,
-                "OPEN" AS OPEN,
-                "HIGH" AS HIGH,
-                "LOW" AS LOW,
-                "CLOSE" AS CLOSE,
-                "VOLUME" AS VOLUME,
-                ROW_NUMBER() OVER (
-                    PARTITION BY "SYMBOL"
-                    ORDER BY TO_DATE("DATE") DESC
-                ) AS RN
-            FROM PRICES
-            WHERE "SYMBOL" IN ({placeholders})
-              AND TO_DATE("DATE") <= %s
-        )
-        WHERE RN <= %s
-        ORDER BY SYMBOL, DATE
-        """,
-        (*symbols, cutoff, sessions),
-    )
+    frame = ikaros_queries.fetch_gpw_stock_histories(conn, symbols, cutoff, sessions)
 
     history = {}
 
@@ -96,19 +68,7 @@ def load_stock_history(
 
 
 def load_index_history(conn, symbol: str, cutoff: date, sessions: int) -> pd.DataFrame:
-    frame = query(
-        conn,
-        """
-        SELECT TO_DATE("DATE") AS DATE,
-               "OPEN", "HIGH", "LOW", "CLOSE"
-        FROM INDEX_PRICES
-        WHERE INDEX_SYMBOL = %s
-          AND TO_DATE("DATE") <= %s
-        ORDER BY TO_DATE("DATE") DESC
-        LIMIT %s
-        """,
-        (symbol, cutoff, sessions),
-    )
+    frame = ikaros_queries.fetch_gpw_index_history(conn, symbol, cutoff, sessions)
 
     if frame.empty:
         raise ValueError(f"No historical index prices for {symbol}")
@@ -239,7 +199,7 @@ def build_options(
 
     # Read the actual metadata columns rather than assuming
     # that the discovery query includes strike and option side.
-    metadata = query(conn, "SELECT * FROM DERIVATIVE_CONTRACTS WHERE 1 = 0")
+    metadata = pd.DataFrame(columns=sorted(ikaros_queries.fetch_option_metadata_columns(conn)))
     columns = set(metadata.columns)
 
     strike_column = next(
@@ -270,20 +230,8 @@ def build_options(
         return markets, rejected
 
     contract_ids = option_rows.contract_id.tolist()
-    placeholders = ", ".join(["%s"] * len(contract_ids))
-
     details = (
-        query(
-            conn,
-            f"""
-        SELECT CONTRACT_ID,
-               "{strike_column.upper()}" AS STRIKE,
-               "{side_column.upper()}" AS SIDE
-        FROM DERIVATIVE_CONTRACTS
-        WHERE CONTRACT_ID IN ({placeholders})
-        """,
-            tuple(contract_ids),
-        )
+        ikaros_queries.fetch_option_contract_details(conn, contract_ids, strike_column, side_column)
         .drop_duplicates("contract_id")
         .set_index("contract_id")
     )
@@ -370,19 +318,7 @@ def load_derivative_history(
     selected = derivatives.loc[derivatives.symbol.astype(str).str.upper().isin(symbols)]
 
     for row in selected.itertuples(index=False):
-        frame = query(
-            conn,
-            """
-            SELECT TO_DATE("DATE") AS DATE,
-                   "OPEN", "HIGH", "LOW", "CLOSE", "VOLUME"
-            FROM DERIVATIVE_PRICES
-            WHERE CONTRACT_ID = %s
-              AND TO_DATE("DATE") <= %s
-            ORDER BY TO_DATE("DATE") DESC
-            LIMIT %s
-            """,
-            (row.contract_id, cutoff, sessions),
-        )
+        frame = ikaros_queries.fetch_derivative_history(conn, row.contract_id, cutoff, sessions)
 
         if frame.empty:
             continue

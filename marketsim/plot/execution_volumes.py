@@ -1,4 +1,7 @@
-"""Execution volumes by asset, agent group, side and execution mode."""
+"""Execution volumes by asset, agent group, side and execution mode.
+
+SQL data retrieval belongs exclusively to marketsim.database.
+"""
 
 import re
 from pathlib import Path
@@ -6,22 +9,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
-EXECUTION_VOLUME_SQL = """
-SELECT
-    t.asset_id,
-    COALESCE(a.group_name, 'UNGROUPED') AS agent_group,
-    t.order_side,
-    CASE WHEN LOWER(COALESCE(t.executed_mode, '')) IN ('waited', 'arrived')
-         THEN LOWER(t.executed_mode) ELSE 'other' END AS executed_mode,
-    SUM(t.executed_volume) AS volume
-FROM trades t
-LEFT JOIN agents a ON a.agent_id = t.agent_id
-WHERE t.order_side IN (1, -1)
-GROUP BY t.asset_id, COALESCE(a.group_name, 'UNGROUPED'),
-         t.order_side, executed_mode
-ORDER BY t.asset_id, agent_group, t.order_side, executed_mode
-"""
 
 REQUIRED_COLUMNS = {"asset_id", "agent_group", "order_side", "executed_mode", "volume"}
 
@@ -88,7 +75,6 @@ def plot_execution_volumes_by_asset(
                     }
                 ]
             )
-
         groups = sorted(asset["agent_group"].unique())
         pivot = asset.pivot_table(
             index="agent_group",
@@ -103,7 +89,6 @@ def plot_execution_volumes_by_asset(
         for side, offset, side_name in ((1, -width / 2, "Buy"), (-1, width / 2, "Sell")):
             bottom = np.zeros(len(groups))
             for mode in ("waited", "arrived"):
-                # TODO: yet are those 2 modes, but what if sth special is introduced? in fixing phase?
                 values = (
                     pivot[(side, mode)].to_numpy(dtype=float)
                     if (side, mode) in pivot.columns
@@ -136,13 +121,8 @@ def plot_execution_volumes_by_asset(
         ax.set_axisbelow(True)
         ax.legend(ncol=2)
         fig.tight_layout()
-        # calculating nice & safe file name:
         asset_name = str(labels_map.get(int(asset_id), f"asset_{asset_id}"))
-        safe_name = re.sub(
-            r"[^A-Za-z0-9._-]+",
-            "_",
-            asset_name,
-        ).strip("._")
+        safe_name = re.sub(r"[^A-Za-z0-9._-]+", "_", asset_name).strip("._")
         path = output_dir / f"market_{asset_id}_{safe_name}_execution_volumes.png"
         fig.savefig(path, dpi=150)
         plt.close(fig)

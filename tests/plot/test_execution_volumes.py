@@ -1,7 +1,8 @@
 import pandas as pd
 import pytest
 
-from marketsim.plot.execution_volumes import EXECUTION_VOLUME_SQL, plot_execution_volumes_by_asset
+from marketsim.database.queries.execution_volumes import EXECUTION_VOLUME_SQL
+from marketsim.plot.execution_volumes import plot_execution_volumes_by_asset
 
 
 def test_sql_aggregates_by_group_side_and_mode():

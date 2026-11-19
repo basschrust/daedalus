@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING
 import duckdb
 import pandas as pd
 
+from marketsim.database.queries.execution_volumes import EXECUTION_VOLUME_SQL
 from marketsim.database.queries.group_flows import (
     EOD_GROUP_FLOW_INSERT_SQL,
     GROUP_FLOW_INSERT_SQL,
 )
-from marketsim.plot.execution_volumes import EXECUTION_VOLUME_SQL
 
 if TYPE_CHECKING:
     from marketsim.agent import Agent
@@ -46,6 +46,14 @@ class Repository:
         self.connection.execute("""CREATE TABLE IF NOT EXISTS risk_l2_pair_statistics (
             calibration_id VARCHAR, symbol_1 VARCHAR, symbol_2 VARCHAR, covariance_daily DOUBLE)""")
         self.connection.execute("""CREATE TABLE IF NOT EXISTS eod_agent_var_parametric (
+            day INTEGER, agent_id INTEGER, confidence_level DOUBLE, horizon_days INTEGER,
+            var_amount DOUBLE, portfolio_value DOUBLE, base_currency VARCHAR,
+            covered_exposure DOUBLE, excluded_exposure DOUBLE, calibration_id VARCHAR)""")
+        self.connection.execute("""CREATE TABLE IF NOT EXISTS eod_agent_var_historical (
+            day INTEGER, agent_id INTEGER, confidence_level DOUBLE, horizon_days INTEGER,
+            var_amount DOUBLE, portfolio_value DOUBLE, base_currency VARCHAR,
+            covered_exposure DOUBLE, excluded_exposure DOUBLE, calibration_id VARCHAR)""")
+        self.connection.execute("""CREATE TABLE IF NOT EXISTS eod_agent_var_montecarlo (
             day INTEGER, agent_id INTEGER, confidence_level DOUBLE, horizon_days INTEGER,
             var_amount DOUBLE, portfolio_value DOUBLE, base_currency VARCHAR,
             covered_exposure DOUBLE, excluded_exposure DOUBLE, calibration_id VARCHAR)""")
@@ -951,3 +959,81 @@ class Repository:
                 for row in rows
             ],
         ) if rows else None
+
+    def _save_eod_agent_var_rows(self, table: str, rows: list[dict]) -> None:
+        if not rows:
+            return
+        columns = (
+            "day",
+            "agent_id",
+            "confidence_level",
+            "horizon_days",
+            "var_amount",
+            "portfolio_value",
+            "base_currency",
+            "covered_exposure",
+            "excluded_exposure",
+            "calibration_id",
+        )
+        placeholders = ", ".join("?" for _ in columns)
+        self.connection.executemany(
+            f'INSERT INTO "{table}" ({", ".join(columns)}) VALUES ({placeholders})',
+            [tuple(row[column] for column in columns) for row in rows],
+        )
+
+    def save_eod_agent_var_historical(self, rows: list[dict]) -> None:
+        self._save_eod_agent_var_rows("eod_agent_var_historical", rows)
+
+    def save_eod_agent_var_montecarlo(self, rows: list[dict]) -> None:
+        self._save_eod_agent_var_rows("eod_agent_var_montecarlo", rows)
+
+    # Named risk operations: SQL and backend details live under marketsim/database.
+    def ensure_risk_calibration_tables(self) -> None:
+        from marketsim.database.risk_queries import ensure_daily_calibration_tables
+
+        ensure_daily_calibration_tables(self)
+
+    def publish_risk_calibration(self, calibration_id, instruments, pairs, **details) -> None:
+        from marketsim.database.risk_queries import publish_daily_calibration
+
+        publish_daily_calibration(self, calibration_id, instruments, pairs, **details)
+
+    def load_parametric_calibration(self, calibration_id, *, source_connection=None):
+        from marketsim.database.risk_queries import load_parametric_statistics
+
+        return load_parametric_statistics(self, calibration_id, source_connection=source_connection)
+
+    def needs_local_greek_calibration(self) -> bool:
+        from marketsim.database.risk_queries import uses_local_greek_calibration
+
+        return uses_local_greek_calibration(self)
+
+    def fetch_source_greek_calibration(self, calibration_id):
+        from marketsim.database.risk_queries import fetch_source_greek_statistics
+
+        return fetch_source_greek_statistics(calibration_id)
+
+    def import_greek_calibration(self, calibration_id, data) -> bool:
+        from marketsim.database.risk_queries import import_greek_calibration
+
+        return import_greek_calibration(self, calibration_id, data)
+
+    def load_greek_sigmas(self, calibration_id):
+        from marketsim.database.risk_queries import load_greek_sigmas
+
+        return load_greek_sigmas(self, calibration_id)
+
+    def ensure_greek_tables(self) -> None:
+        from marketsim.database.risk_queries import ensure_greek_tables
+
+        ensure_greek_tables(self)
+
+    def save_greek_inputs(self, calibration_id, rates, dividends, sigmas) -> None:
+        from marketsim.database.risk_queries import persist_greek_inputs
+
+        persist_greek_inputs(self, calibration_id, rates, dividends, sigmas)
+
+    def save_eod_greek_results(self, day, calibration_id, options, agents) -> None:
+        from marketsim.database.risk_queries import persist_eod_greek_results
+
+        persist_eod_greek_results(self, day, calibration_id, options, agents)
