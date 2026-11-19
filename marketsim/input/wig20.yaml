@@ -13,3 +13,12 @@ options_count: 20
 
 market_realism:
   enabled: true
+
+risk_var:
+  enabled: true
+  lookback_sessions: 250
+  confidence_levels: [0.95, 0.99]
+  horizons_days: [1, 5, 10]
+  historical_min_scenarios: 30
+  montecarlo_scenarios: 20 # later 20000 :)
+  montecarlo_seed: 67

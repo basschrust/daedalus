@@ -274,26 +274,26 @@ class DailyRiskCalibration:
 
 
 class DailyCalibratedSimulator(Simulator):
-    """Simulator with EoD rolling calibration when ``risk_var.enabled`` is true.
-
-    Keep calibration out of the market microstructure loop. Once markets and
-    agents finish an EoD, their closing prices become input to the next
-    risk-model snapshot. The existing Greek calculation remains unchanged
-    until it is explicitly wired to use the new calibration IDs.
-    """
+    """Run risk calibration and all three EoD VaRs with immutable daily IDs."""
 
     def __init__(self, *, risk_var: dict | None = None, **kwargs) -> None:
         super().__init__(**kwargs)
-        config = risk_var or {}
+        self.risk_var = risk_var or {}
         self.daily_risk_calibration: DailyRiskCalibration | None = None
         self.current_risk_calibration_id: str | None = None
-        if config.get("enabled", False):
-            lookback = int(config.get("lookback_sessions", 250))
+        if self.risk_var.get("enabled", False):
+            lookback = int(self.risk_var.get("lookback_sessions", 250))
             self.daily_risk_calibration = DailyRiskCalibration(self, lookback_sessions=lookback)
             self.current_risk_calibration_id = self.daily_risk_calibration.latest_calibration_id
 
     def eod(self, day: int) -> None:
+        # Market and agent EoD must finish first: the new calibration contains
+        # today's closing prices, and risk uses the already-settled positions.
         super().eod(day)
-        if self.daily_risk_calibration is not None:
-            self.current_risk_calibration_id = self.daily_risk_calibration.append_eod(self, day)
-            self.logger.info(f"Risk calibration EoD {day}: {self.current_risk_calibration_id}")
+        if self.daily_risk_calibration is None:
+            return
+        from marketsim.risk.eod_var import write_eod_var
+
+        self.current_risk_calibration_id = self.daily_risk_calibration.append_eod(self, day)
+        write_eod_var(self, day, self.daily_risk_calibration, self.risk_var)
+        self.logger.info(f"Risk model and all VaRs EoD {day}: {self.current_risk_calibration_id}")
