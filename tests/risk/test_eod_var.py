@@ -6,7 +6,8 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from marketsim.risk.eod_var import EodVaR, _option_price
+from marketsim.market.valuation_libs.BlackScholes import BSCall, BSPut
+from marketsim.risk.eod_var import EodVaR
 
 
 def calibration(count=80):
@@ -133,15 +134,35 @@ def test_early_expiry_uses_path_at_expiration():
 
 
 def test_option_price_at_expiration_and_zero_volatility():
-    assert _option_price(
-        110, strike=100, volatility=0.0, rate=0.0, years=0.0, call=True
-    ) == pytest.approx(10)
-    assert _option_price(
-        110, strike=100, volatility=0.0, rate=0.0, years=0.0, call=False
-    ) == pytest.approx(0)
-    assert _option_price(
-        110, strike=100, volatility=0.0, rate=0.0, years=1.0, call=True
-    ) == pytest.approx(10)
+    for model, expected in ((BSCall, 10), (BSPut, 0)):
+        assert model(S=110, K=100, r=0, volatility=0, Time=0)["price"] == pytest.approx(expected)
+    assert BSCall(S=110, K=100, r=0, volatility=0, Time=1)["price"] == pytest.approx(10)
+
+
+def test_option_delta_comes_from_black_scholes_model():
+    model = engine()
+    index = market("index", "WIG20", 4200.0)
+    option = market(
+        "option",
+        "OPT",
+        120,
+        underlying=index,
+        multiplier=10,
+        strike=4300,
+        expiration=12,
+        option_side="PUT",
+        option_type="European",
+    )
+    positions, _, _ = model._portfolio(agent({1: option}, {1: 4}), day=0, horizon=5)
+    expected = BSPut(
+        S=4200.0,
+        K=4300.0,
+        r=0.04,
+        volatility=model.sigmas[model.index["WIG20"]],
+        Time=12 / 252,
+    )["delta"]
+    assert positions[0].exposure == pytest.approx(4 * 10 * 4200 * expected)
+    assert expected < 0
 
 
 def test_invalid_configuration_and_missing_dividend_fail_explicitly():

@@ -12,12 +12,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from hashlib import sha256
-from math import ceil, exp, isfinite, log, sqrt
+from math import ceil, isfinite, sqrt
 from statistics import NormalDist
 from typing import TYPE_CHECKING
 
 import numpy as np
-from scipy.special import ndtr
+
+from marketsim.market.valuation_libs.BlackScholes import BSCall, BSPut
 
 if TYPE_CHECKING:
     from marketsim.agent.agent import Agent
@@ -37,48 +38,6 @@ def _positive(name: str, value: object) -> float:
 
 def _factor(market: object) -> str:
     return str(getattr(market, "symbol", None) or getattr(market, "short_name", "")).upper()
-
-
-def _option_price(
-    spot: np.ndarray | float,
-    *,
-    strike: float,
-    volatility: float,
-    rate: float,
-    years: float,
-    call: bool,
-) -> np.ndarray:
-    """European Black--Scholes price, including expiry and deterministic sigma=0."""
-    s = np.asarray(spot, dtype=float)
-    if years < 0:
-        raise ValueError("Negative remaining option tenor")
-    if years == 0:
-        return np.maximum(s - strike, 0) if call else np.maximum(strike - s, 0)
-    discount = exp(-rate * years)
-    if volatility == 0:
-        forward_discounted = s - strike * discount
-        return np.maximum(forward_discounted, 0) if call else np.maximum(-forward_discounted, 0)
-    vol_term = volatility * sqrt(years)
-    d1 = (np.log(s / strike) + (rate + 0.5 * volatility**2) * years) / vol_term
-    d2 = d1 - vol_term
-    if call:
-        return s * ndtr(d1) - strike * discount * ndtr(d2)
-    return strike * discount * ndtr(-d2) - s * ndtr(-d1)
-
-
-def _option_delta(
-    *, spot: float, strike: float, sigma: float, rate: float, years: float, call: bool
-) -> float:
-    if years == 0:
-        if spot == strike:
-            return 0.5 if call else -0.5
-        return float(spot > strike) if call else -float(spot < strike)
-    if sigma == 0:
-        forward_itm = spot > strike * exp(-rate * years)
-        return float(forward_itm) if call else -float(not forward_itm)
-    d1 = (log(spot / strike) + (rate + 0.5 * sigma * sigma) * years) / (sigma * sqrt(years))
-    cdf = NormalDist().cdf(d1)
-    return cdf if call else cdf - 1.0
 
 
 @dataclass(frozen=True)
@@ -217,13 +176,16 @@ class EodVaR:
                     raise ValueError("Invalid calibrated option parameters")
                 strike = _positive("strike", market.strike)
                 call = side == "CALL"
-                delta = _option_delta(
-                    spot=spot,
-                    strike=strike,
-                    sigma=sigma,
-                    rate=rate,
-                    years=remaining / TRADING_DAYS,
-                    call=call,
+                model = BSCall if call else BSPut
+                delta = float(
+                    model(
+                        S=spot,
+                        K=strike,
+                        r=rate,
+                        volatility=sigma,
+                        Time=remaining / TRADING_DAYS,
+                        d=0.0,
+                    )["delta"]
                 )
                 mark = float(market.last_traded_price)
                 if not isfinite(mark) or mark < 0:
@@ -330,22 +292,23 @@ class EodVaR:
             if position.kind in {"spot", "future"}:
                 result += position.units * position.spot * (change - 1)
             elif position.kind == "option":
-                current = _option_price(
-                    position.spot,
-                    strike=position.strike,
+                model = BSCall if position.call else BSPut
+                current = model(
+                    S=position.spot,
+                    K=position.strike,
+                    r=position.rate,
                     volatility=position.sigma,
-                    rate=position.rate,
-                    years=position.maturity / TRADING_DAYS,
-                    call=position.call,
-                )
-                new_price = _option_price(
-                    position.spot * change,
-                    strike=position.strike,
+                    Time=position.maturity / TRADING_DAYS,
+                    d=0.0,
+                )["price"]
+                new_price = model(
+                    S=position.spot * change,
+                    K=position.strike,
+                    r=position.rate,
                     volatility=position.sigma,
-                    rate=position.rate,
-                    years=(position.maturity - stop) / TRADING_DAYS,
-                    call=position.call,
-                )
+                    Time=(position.maturity - stop) / TRADING_DAYS,
+                    d=0.0,
+                )["price"]
                 result += position.units * (new_price - current)
             else:
                 raise ValueError(f"Unknown position kind: {position.kind}")
@@ -361,22 +324,23 @@ class EodVaR:
         drift = sum(e * self.mean[idx] * d for e, idx, d in zip(exposures, indexes, durations))
         for p, d in zip(positions, durations):
             if p.kind == "option":
-                old = _option_price(
-                    p.spot,
-                    strike=p.strike,
+                model = BSCall if p.call else BSPut
+                old = model(
+                    S=p.spot,
+                    K=p.strike,
+                    r=p.rate,
                     volatility=p.sigma,
-                    rate=p.rate,
-                    years=p.maturity / TRADING_DAYS,
-                    call=p.call,
-                )
-                new = _option_price(
-                    p.spot,
-                    strike=p.strike,
+                    Time=p.maturity / TRADING_DAYS,
+                    d=0.0,
+                )["price"]
+                new = model(
+                    S=p.spot,
+                    K=p.strike,
+                    r=p.rate,
                     volatility=p.sigma,
-                    rate=p.rate,
-                    years=(p.maturity - d) / TRADING_DAYS,
-                    call=p.call,
-                )
+                    Time=(p.maturity - d) / TRADING_DAYS,
+                    d=0.0,
+                )["price"]
                 drift += float(p.units * (new - old))
         variance = 0.0
         total_absolute = 0.0
