@@ -341,7 +341,10 @@ class EodVaR:
                     Time=(p.maturity - d) / TRADING_DAYS,
                     d=0.0,
                 )["price"]
-                drift += float(p.units * (new - old))
+                # The shared Black-Scholes library returns Price at scalar expiry
+                # and float before expiry. Use numeric premiums for VaR arithmetic;
+                # keep Price precision semantics unchanged for market valuation.
+                drift += p.units * (float(new) - float(old))
         variance = 0.0
         total_absolute = 0.0
         for i, exposure in enumerate(exposures):

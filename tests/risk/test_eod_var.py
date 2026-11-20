@@ -247,6 +247,38 @@ def test_zero_market_premium_is_valid_for_option_risk():
     assert all(r["excluded_exposure"] == 0 for records in rows.values() for r in records)
 
 
+@pytest.mark.parametrize("side", ["CALL", "PUT"])
+@pytest.mark.parametrize("maturity,horizon", [(1, 1), (2, 5)])
+def test_parametric_var_handles_scalar_price_at_or_after_option_expiry(side, maturity, horizon):
+    """Black-Scholes returns Price at expiry, float before expiry."""
+    index = market("index", "WIG20", 4200.0)
+    option = market(
+        "option",
+        "EXPIRING_OPTION",
+        115.0,
+        underlying=index,
+        multiplier=10,
+        strike=4100.0 if side == "CALL" else 4300.0,
+        expiration=maturity,
+        option_side=side,
+        option_type="European",
+    )
+    model = engine(
+        {
+            "confidence_levels": [0.95, 0.99],
+            "horizons_days": [horizon],
+            "montecarlo_scenarios": 1500,
+        }
+    )
+    rows = model.rows_for_agent(agent({1: option}, {1: 2}), day=0)
+    assert set(rows) == {"parametric", "historical", "montecarlo"}
+    assert all(
+        len(method_rows) == 2
+        and all(np.isfinite(row["var_amount"]) and row["var_amount"] >= 0 for row in method_rows)
+        for method_rows in rows.values()
+    )
+
+
 def test_rejects_fractional_horizon_instead_of_silent_truncation():
     with pytest.raises(ValueError, match="must contain integers"):
         engine({"horizons_days": [1.5], "montecarlo_scenarios": 1500})
