@@ -166,7 +166,7 @@ class MMZOHAgent(InstrumentLimitMixin, Agent):
             # TODO: make the calculation, but what about methods - own, global, side, cash?
             # TODO: per market!
             for asset_id, market in self.markets.items():
-                self.cum_volume += market.traded_prices.get(current_time - 1, {}).get("Volume", 0)
+                self.cum_volume += market.traded_prices.get(current_time - 1, {}).get("volume", 0)
             if self.cum_volume >= self.rebalance_volume:
                 self.last_rebalance_time = current_time
                 self.cum_volume = 0

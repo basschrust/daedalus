@@ -234,7 +234,7 @@ class OptionMMZOHAgent(InstrumentLimitMixin, Agent):
         return f"Opt_MM_ZOH{self.agent_id}"
 
     ### the Derivative agent typical methods:
-    def calculate_greeks(self, as_of_day: int | None = None):
+    def calculate_greeks(self, *, as_of_day: int | None = None):
         as_of_day = as_of_day if as_of_day is not None else self.current_day
         for asset_id, market in self.underlying_markets.items():
             self.greeks_agg[asset_id] = {
@@ -255,7 +255,7 @@ class OptionMMZOHAgent(InstrumentLimitMixin, Agent):
                     K=option_market.strike,
                     r=option_market.r,
                     volatility=option_market.volatility,
-                    Time=(option_market.expiration - as_of_day) / 248,
+                    Time=(option_market.expiration - as_of_day) / 252,
                     d=0.0,
                 )
             elif option_market.option_side == "PUT":
@@ -264,14 +264,16 @@ class OptionMMZOHAgent(InstrumentLimitMixin, Agent):
                     K=option_market.strike,
                     r=option_market.r,
                     volatility=option_market.volatility,
-                    Time=(option_market.expiration - as_of_day) / 248,
+                    Time=(option_market.expiration - as_of_day) / 252,
                     d=0.0,
                 )
 
             # now add and aggregate for the underlying
             for greek_letter in self.greeks_agg[underlying_id]:
                 self.greeks_agg[underlying_id][greek_letter] += (
-                    self.greeks[option_id][greek_letter] * self.position[option_id]
+                    self.greeks[option_id][greek_letter]
+                    * self.position[option_id]
+                    * option_market.multiplier
                 )
 
         self.logger.info(f"Greeks: {self.greeks}")
