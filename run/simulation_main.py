@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 from marketsim.analysis.report import MarketRealismReport
 from marketsim.database.ikaros_queries import connect
-from marketsim.input.config import create_run_directory, load_config
+from input.config import create_run_directory, load_config
 from marketsim.market.historical_prices import load_historical_prices, load_simulation_dates
 from marketsim.risk.calibration_sync import sync_greeks_calibration
 from marketsim.risk.daily_calibration import DailyCalibratedSimulator
@@ -21,7 +21,7 @@ from marketsim.scenarios.wig20 import prepare as prepare_wig20
 from marketsim.simulator import Simulator
 
 ROOT = Path(__file__).resolve().parents[1]
-INPUT_DIR = ROOT / "marketsim" / "input"
+INPUT_DIR = ROOT / "input"
 DATASETS = {
     "wig20": ("wig20.yaml", "wig20_auto.yaml", prepare_wig20),
     "gpw": ("gpw.yaml", "gpw_auto.yaml", prepare_gpw),
@@ -104,7 +104,7 @@ def main(argv: list[str] | None = None) -> None:
         "config",
         nargs="?",
         default=None,
-        help="YAML file in marketsim/input (default: market_structure.yaml)",
+        help="YAML file in input (default: market_structure.yaml)",
     )
     parser.add_argument(
         "--dataset",

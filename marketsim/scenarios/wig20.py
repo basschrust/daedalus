@@ -223,7 +223,7 @@ def prepare(conn, settings: dict, root: Path):
 
     cutoff, members, history, index_level = resolve(conn, lookback)
 
-    output = root / "marketsim" / "input"
+    output = root / "input"
     data_dir = output / "market_data"
     data_dir.mkdir(parents=True, exist_ok=True)
 

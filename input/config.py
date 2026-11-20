@@ -29,7 +29,7 @@ IncludeLoader.add_constructor("!include", include_constructor)
 
 
 def load_config(filename: str = DEFAULT_CONFIG) -> dict:
-    src_file = Path("marketsim/input") / filename
+    src_file = Path("input") / filename
 
     with open(src_file, "r") as f:
         loader = IncludeLoader(f)
