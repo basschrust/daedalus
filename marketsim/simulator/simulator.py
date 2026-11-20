@@ -497,9 +497,23 @@ class Simulator:
 
             ## MM, simple delta hedger
             if agent_group["agent_class"] == "OptionMMZOHAgent":
-                # TODO - what with underlying?
+                options = [market for market in markets if market.instrument_class == "option"]
+                index_ids = {
+                    option.underlying.asset_id
+                    for option in options
+                    if option.underlying.instrument_class == "index"
+                }
+                # Only listable futures on the same index are hedge instruments.
+                # Stock-basket replication and basis arbitrage belong to arbitrageurs.
+                hedge_futures = [
+                    market
+                    for market in self.markets.values()
+                    if market.instrument_class == "future"
+                    and market.underlying.asset_id in index_ids
+                    and market.is_tradable
+                ]
                 agent = OptionMMZOHAgent(
-                    markets=markets,  # market_map=self.market_map, #underlying_market=market.underlying,
+                    markets=options + hedge_futures,
                     configuration=agent_group.get("config", None),
                     repository=self.repository,
                     output_dir=self.output_dir,

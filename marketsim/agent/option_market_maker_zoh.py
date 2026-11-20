@@ -66,7 +66,13 @@ class OptionMMZOHAgent(InstrumentLimitMixin, Agent):
         self.derivatives_map = {
             m_id: market.underlying.asset_id for m_id, market in self.option_markets.items()
         }
-        self.markets = self.option_markets | self.underlying_markets
+        self.hedge_futures = {
+            market.asset_id: market
+            for market in markets
+            if market.instrument_class == "future"
+            and market.underlying.asset_id in self.underlying_markets
+        }
+        self.markets = self.option_markets | self.underlying_markets | self.hedge_futures
         self.greeks = defaultdict(dict)  # per option, per unit,
         self.greeks_agg = defaultdict(dict)  # per underlying, per position
 
@@ -121,7 +127,7 @@ class OptionMMZOHAgent(InstrumentLimitMixin, Agent):
                 self.cum_volume = 0
                 return True
             # TODO: make the calculation, but what about methods - own, global, side, cash?
-            self.cum_volume += market.traded_prices.get(current_time - 1, {}).get("Volume", 0)
+            self.cum_volume += market.traded_prices.get(current_time - 1, {}).get("volume", 0)
             if self.cum_volume >= self.rebalance_volume:
                 self.last_rebalance_time = current_time
                 self.cum_volume = 0
@@ -223,8 +229,7 @@ class OptionMMZOHAgent(InstrumentLimitMixin, Agent):
         # delta / gamma hedge
         self.hedge(current_time=current_time)
 
-        # TODO: add orders to the underlying market
-        # TODO: if the underlying is an index then hedge with futures, other options, stocks, etc.
+        # Index exposure is hedged with futures; basis arbitrage is handled by arbitrageurs.
 
     def get_pos_value(self) -> float:
         raise
@@ -280,43 +285,133 @@ class OptionMMZOHAgent(InstrumentLimitMixin, Agent):
         self.logger.info(f"Position: {self.position}")
         self.logger.info(f"Greeks aggregated: {self.greeks_agg}")
 
-    def hedge(self, *, current_time: int) -> None:
-        # either as adjusting MM orders or by paying spread
-        # simple delta hedge
-        for asset_id, underlying_market in self.underlying_markets.items():
-            if not underlying_market.is_tradable:
+    def _pending_hedge_orders(self, market: Security, current_time: int) -> list[Order]:
+        """Own unfilled orders, both waiting in the book and awaiting this tick."""
+        pending: dict[int, Order] = {}
+        book = market.order_book
+        if book is not None:
+            for queue in (book.buy_unmatched, book.sell_unmatched):
+                for order in queue.order_dict.values():
+                    if order.agent_id == self.agent_id and (
+                        order.valid_until is None or order.valid_until >= current_time
+                    ):
+                        pending[order.order_id] = order
+
+        for tick, activities in market.event_queue.scheduled_activities.items():
+            if tick < current_time:
                 continue
-            delta_pos = self.greeks_agg[asset_id].get("delta")
-            # check position and align, check minimum difference which leads to rebalance
+            for order in activities:
+                if order.agent_id == self.agent_id and (
+                    order.valid_until is None or order.valid_until >= current_time
+                ):
+                    pending[order.order_id] = order
+        return list(pending.values())
 
-            required_adjustment = -int(delta_pos)
+    def _cancel_pending_hedges(self, market: Security) -> None:
+        """Cancel unfilled hedge orders, including orders not yet in the book."""
+        activities = market.event_queue.scheduled_activities
+        for tick, orders in list(activities.items()):
+            retained = [order for order in orders if order.agent_id != self.agent_id]
+            if retained:
+                activities[tick] = retained
+            else:
+                activities.pop(tick, None)
+        if market.order_book is not None:
+            # Inspect the actual unmatched queues: a partially filled order
+            # can acquire a new order ID absent from FourHeap.agent_id_map.
+            for queue in (
+                market.order_book.buy_unmatched,
+                market.order_book.sell_unmatched,
+            ):
+                for order_id, order in list(queue.order_dict.items()):
+                    if order.agent_id == self.agent_id:
+                        market.order_book.remove(order_id)
 
-            if required_adjustment >= 1:
-                order = Order(
-                    price=underlying_market.last_traded_price,
-                    quantity=required_adjustment,
-                    agent_id=self.agent_id,
-                    day=underlying_market.current_day,
-                    time=current_time,
-                    order_type=BUY,
-                    asset_id=underlying_market.asset_id,
-                    valid_until=current_time + 10,
+    def _submit_hedge_adjustment(
+        self, *, market: Security, desired: int, current_time: int
+    ) -> None:
+        """Reconcile target adjustment against open orders before quoting again."""
+        pending = self._pending_hedge_orders(market, current_time)
+        pending_signed = sum(order.order_type * order.quantity for order in pending)
+        pending_gross = sum(order.quantity for order in pending)
+        # A reversal, over-sized order or opposite-side pair is stale. Replace
+        # it rather than entering an offsetting order and risking both fills.
+        if pending and (
+            desired == 0
+            or (desired > 0) != (pending_signed > 0)
+            or pending_gross != abs(pending_signed)
+            or abs(pending_signed) > abs(desired)
+        ):
+            self._cancel_pending_hedges(market)
+            pending_signed = 0
+
+        adjustment = desired - pending_signed
+        if adjustment == 0:
+            return
+        order = Order(
+            price=market.last_traded_price,
+            quantity=abs(adjustment),
+            agent_id=self.agent_id,
+            day=market.current_day,
+            time=current_time,
+            order_type=BUY if adjustment > 0 else SELL,
+            asset_id=market.asset_id,
+            valid_until=current_time + 10,
+        )
+        self.logger.info(f"Submitting delta-hedge order: {order}")
+        market.add_orders([order])
+
+    def hedge(self, *, current_time: int) -> None:
+        """Hedge stocks directly and non-tradable indices via matching futures."""
+        for index_id, underlying in self.underlying_markets.items():
+            delta = float(self.greeks_agg[index_id]["delta"])
+            if underlying.is_tradable:
+                # Stock units are indivisible; preserve the existing truncation.
+                self._submit_hedge_adjustment(
+                    market=underlying, desired=-int(delta), current_time=current_time
                 )
-                self.logger.info(f"Adding buy order to underlying market: {order}")
-                underlying_market.add_orders([order])
-            elif required_adjustment <= -1:
-                order = Order(
-                    price=underlying_market.last_traded_price,
-                    quantity=abs(required_adjustment),
-                    agent_id=self.agent_id,
-                    day=underlying_market.current_day,
-                    time=current_time,
-                    order_type=SELL,
-                    asset_id=underlying_market.asset_id,
-                    valid_until=current_time + 10,
-                )
-                self.logger.info(f"Adding sell order to underlying market: {order}")
-                underlying_market.add_orders([order])
+                continue
+
+            matching = [
+                future
+                for future in self.hedge_futures.values()
+                if future.underlying.asset_id == index_id
+            ]
+            active = [
+                future
+                for future in matching
+                if future.is_tradable
+                and future.status == "active"
+                and int(future.expiration) > self.current_day
+            ]
+            if not active:
+                for future in matching:
+                    if future.order_book is not None:
+                        self._cancel_pending_hedges(future)
+                if abs(delta) > 0.5:
+                    self.logger.warning(
+                        f"No active future for index {underlying.short_name}; "
+                        f"unhedged option delta={delta:.2f}"
+                    )
+                continue
+
+            # Prefer the earliest expiration; other futures positions still
+            # contribute to the total delta exposure, including across rolls.
+            selected = min(active, key=lambda f: (int(f.expiration), f.asset_id))
+            for future in matching:
+                if future.asset_id != selected.asset_id and future.order_book is not None:
+                    self._cancel_pending_hedges(future)
+            futures_delta = sum(
+                self.futures_position.get(future.asset_id, 0) * float(future.multiplier)
+                for future in matching
+            )
+            multiplier = float(selected.multiplier)
+            if not math.isfinite(multiplier) or multiplier <= 0:
+                raise ValueError(f"Invalid hedge futures multiplier: {selected.short_name}")
+            desired = round((-delta - futures_delta) / multiplier)
+            self._submit_hedge_adjustment(
+                market=selected, desired=desired, current_time=current_time
+            )
 
     def sod(self):
         expired_options = [
