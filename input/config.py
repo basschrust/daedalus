@@ -45,6 +45,10 @@ def load_config(filename: str = DEFAULT_CONFIG) -> dict:
 
 
 def create_run_directory() -> Path:
-    output_dir = Path("marketsim/output") / datetime.now().strftime("run_%Y%m%d_%H%M%S")
+    output_dir = (
+        Path(__file__).resolve().parents[1]
+        / "output"
+        / datetime.now().strftime("run_%Y%m%d_%H%M%S")
+    )
     output_dir.mkdir(parents=True, exist_ok=True)
     return output_dir

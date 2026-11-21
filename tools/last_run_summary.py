@@ -10,7 +10,7 @@ from marketsim.database.inspection import inspect_run_summary as inspect_databas
 
 def main() -> None:
     project_root = Path(__file__).resolve().parent.parent
-    output_dir = project_root / "marketsim" / "output"
+    output_dir = project_root / "output"
 
     pattern = re.compile(r"^run_(\d{8}_\d{6})$")
 
