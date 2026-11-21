@@ -7,7 +7,7 @@ from pathlib import Path
 def main() -> None:
     # Project root: parent of the tools directory
     project_root = Path(__file__).resolve().parent.parent
-    output_dir = project_root / "marketsim" / "output"
+    output_dir = project_root / "output"
 
     # Match directories named run_YYYYMMDD_HHMMSS
     pattern = re.compile(r"^run_(\d{8}_\d{6})$")

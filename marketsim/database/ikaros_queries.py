@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 from datetime import date
+from getpass import getpass
 from typing import Any
 
 import pandas as pd
@@ -25,8 +26,11 @@ def connect() -> Any:
         authenticator=os.getenv("SNOWFLAKE_AUTHENTICATOR", "snowflake"),
         enable_server_session_keep_alive_auto_detection=False,
     )
-    if kwargs["authenticator"] == "snowflake":
+    authenticator = kwargs["authenticator"]
+    if authenticator in {"snowflake", "username_password_mfa"}:
         kwargs["password"] = os.environ["SNOWFLAKE_PASSWORD"]
+    if authenticator == "username_password_mfa":
+        kwargs["passcode"] = getpass("Snowflake TOTP code: ").strip()
     if os.getenv("SNOWFLAKE_ROLE"):
         kwargs["role"] = os.environ["SNOWFLAKE_ROLE"]
     return snowflake.connector.connect(**kwargs)

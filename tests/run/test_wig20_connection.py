@@ -19,6 +19,9 @@ def mock_wig20_setup():
         patch("run.simulation_main.load_dotenv"),
         patch("run.simulation_main.yaml.safe_load", return_value=settings),
         patch("run.simulation_main.Path.open", MagicMock()),
+        # This test verifies failure AFTER a cache miss, not freshness logic.
+        # Mocking Path.open globally also breaks zoneinfo's TZif file loading.
+        patch("run.simulation_main.PreparedDatasetCache.use_if_fresh", return_value=False),
     ):
         yield
 

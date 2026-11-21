@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 
-PROFILE = Path(__file__).resolve().parents[2] / "marketsim/input/gpw_50d.yaml"
+PROFILE = Path(__file__).resolve().parents[2] / "input/gpw_50d.yaml"
 
 
 def test_no_dedicated_futures_liquidity_group():

@@ -12,6 +12,7 @@ from decimal import Decimal
 import pandas as pd
 
 from marketsim.database import ikaros_queries
+from marketsim.scenarios.wig20_data import futures_history, to_price
 
 
 def _field(row: pd.Series, *names: str):
@@ -44,8 +45,6 @@ def select_options(
     INSTRUMENT_TYPE, UNDERLYING_SYMBOL, EXPIRY_DATE, MULTIPLIER,
     and strike/side fields (recognized aliases below).
     """
-    from marketsim.scenarios.wig20_data import futures_history, to_price
-
     if count <= 0:
         return []
     if not simulation_dates:
@@ -63,6 +62,8 @@ def select_options(
             strike = to_price(_field(row, "strike", "strike_price", "exercise_price"))
             side = _side(_field(row, "option_side", "call_put", "option_type", "put_call"))
             expiry = pd.Timestamp(_field(row, "expiry_date", "expiration_date")).date()
+            if expiry <= simulation_dates[-1]:
+                continue
             multiplier = float(_field(row, "multiplier", "contract_multiplier"))
             if multiplier <= 0:
                 raise ValueError("Invalid multiplier")
