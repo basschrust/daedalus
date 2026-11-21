@@ -10,9 +10,9 @@ from pathlib import Path
 import yaml
 from dotenv import load_dotenv
 
+from input.config import create_run_directory, load_config
 from marketsim.analysis.report import MarketRealismReport
 from marketsim.database.ikaros_queries import connect
-from input.config import create_run_directory, load_config
 from marketsim.market.historical_prices import load_historical_prices, load_simulation_dates
 from marketsim.risk.calibration_sync import sync_greeks_calibration
 from marketsim.risk.daily_calibration import DailyCalibratedSimulator
