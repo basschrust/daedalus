@@ -51,3 +51,7 @@ tmp/
 .env
 .env.*
 !.env.example
+
+# input and output data
+output/
+input/market_data/
