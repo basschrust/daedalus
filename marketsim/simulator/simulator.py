@@ -516,6 +516,7 @@ class Simulator:
                     markets=options + hedge_futures,
                     configuration=agent_group.get("config", None),
                     repository=self.repository,
+                    group=group_name,
                     output_dir=self.output_dir,
                 )
                 self.add_agents([agent])

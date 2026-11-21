@@ -496,6 +496,7 @@ agents:
       volume: 2
       volume_fraction: 0.05
       q_max: 300
+      option_inventory_fraction: 1.0
   momentum_fast:
     agent_class: MomentumAgent
     instrument_classes:
