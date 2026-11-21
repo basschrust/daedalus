@@ -17,6 +17,7 @@ from marketsim.market.historical_prices import load_historical_prices, load_simu
 from marketsim.risk.calibration_sync import sync_greeks_calibration
 from marketsim.risk.daily_calibration import DailyCalibratedSimulator
 from marketsim.scenarios.gpw import prepare as prepare_gpw
+from marketsim.scenarios.prepared_cache import PreparedDatasetCache
 from marketsim.scenarios.wig20 import prepare as prepare_wig20
 from marketsim.simulator import Simulator
 
@@ -33,16 +34,23 @@ def kwargs_for(func: Callable, config: dict) -> dict:
     return {key: value for key, value in config.items() if key in params}
 
 
-def prepare_dataset(name: str) -> tuple[str, bool]:
-    """Prepare a dataset in Ikaros/Snowflake and return its generated YAML name."""
+def prepare_dataset(name: str, *, refresh_data: bool = False) -> tuple[str, bool]:
+    """Prepare a dataset once; reuse fresh local OHLCV on subsequent runs."""
     settings_file, generated_file, prepare = DATASETS[name]
     with (INPUT_DIR / settings_file).open(encoding="utf-8") as stream:
         settings = yaml.safe_load(stream)
 
+    cache = PreparedDatasetCache(root=ROOT)
+    realism_enabled = settings.get("market_realism", {}).get("enabled", True)
+    if not refresh_data and cache.use_if_fresh(
+        dataset=name, settings=settings, yaml_name=generated_file
+    ):
+        return generated_file, realism_enabled
+
+    # Only the cache miss/stale path needs to log into Snowflake.
     try:
         connection = connect()
     except Exception as exc:
-        # The connector may raise authentication, network or configuration errors.
         raise RuntimeError(f"Cannot connect to Ikaros Snowflake: {exc}") from exc
 
     try:
@@ -50,12 +58,13 @@ def prepare_dataset(name: str) -> tuple[str, bool]:
     finally:
         connection.close()
 
+    cache.record_preparation(dataset=name, settings=settings, yaml_name=generated_file)
+
     if name == "wig20":
         print(f"Prepared WIG20: {prepared_path}; cutoff={cutoff}; index close={detail:.2f}")
     else:
         print(f"Prepared GPW: {prepared_path}; cutoff={cutoff}; markets={detail}")
 
-    realism_enabled = settings.get("market_realism", {}).get("enabled", True)
     return generated_file, realism_enabled
 
 
@@ -109,12 +118,17 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--dataset",
         choices=sorted(DATASETS),
-        help="Prepare and simulate a market dataset from Ikaros",
+        help="Prepare and simulate a market dataset from Ikaros (cached when fresh)",
     )
     parser.add_argument(
         "--prepare-only",
         action="store_true",
         help="Prepare the selected dataset without running the simulation",
+    )
+    parser.add_argument(
+        "--refresh-data",
+        action="store_true",
+        help="Ignore the local market-data cache and fetch again from Snowflake",
     )
     args = parser.parse_args(argv)
 
@@ -122,9 +136,11 @@ def main(argv: list[str] | None = None) -> None:
         parser.error("Specify either a YAML configuration or --dataset, not both")
     if args.prepare_only and not args.dataset:
         parser.error("--prepare-only requires --dataset")
+    if args.refresh_data and not args.dataset:
+        parser.error("--refresh-data requires --dataset")
 
     if args.dataset:
-        config_file, realism_enabled = prepare_dataset(args.dataset)
+        config_file, realism_enabled = prepare_dataset(args.dataset, refresh_data=args.refresh_data)
         if args.prepare_only:
             return
     else:

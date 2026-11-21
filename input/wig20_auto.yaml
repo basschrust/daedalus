@@ -1,6 +1,6 @@
 seed: 67
-days: 15
-sim_time: 25
+days: 25
+sim_time: 45
 lob_plot_interval: 10000
 markets:
   ale.wa:
@@ -236,7 +236,7 @@ markets:
     short_name: FW20Z2620
     instrument_class: future
     underlying: wig20
-    expiration: 15
+    expiration: 21
     multiplier: 20.0
     margin_rate: 0.1
   fw20h2720:
@@ -245,7 +245,7 @@ markets:
     short_name: FW20H2720
     instrument_class: future
     underlying: wig20
-    expiration: 15
+    expiration: 25
     multiplier: 20.0
     margin_rate: 0.1
   fw20m2720:
@@ -254,7 +254,7 @@ markets:
     short_name: FW20M2720
     instrument_class: future
     underlying: wig20
-    expiration: 15
+    expiration: 25
     multiplier: 20.0
     margin_rate: 0.1
   ow20k264225:
@@ -346,7 +346,7 @@ markets:
       strike: '4400.00'
       option_side: CALL
       option_type: European
-      expiration: 15
+      expiration: 21
       multiplier: 10.0
 agents:
   relative_momentum:

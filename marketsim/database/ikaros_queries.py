@@ -8,11 +8,11 @@ from __future__ import annotations
 
 import os
 from datetime import date
+from getpass import getpass
 from typing import Any
 
 import pandas as pd
 import snowflake.connector
-from getpass import getpass
 
 
 def connect() -> Any:
