@@ -1,15 +1,26 @@
-# WIG20 scenario preparation
+# Main and authoritative WIG20 configuration
+
+dataset: wig20
 
 days: 20
 sim_time: 55
 seed: 67
+lob_plot_interval: 10000
 
 lookback_sessions: 252
-
-agents_profile: gpw_50d.yaml
-
 futures_count: 3
 options_count: 20
+
+# Reuse agent definitions through the existing loader
+agents: !include templates/agents/gpw_50d_agents.yaml
+
+non_trading_dates:
+  - '2026-11-11'
+  - '2026-12-24'
+  - '2026-12-25'
+  - '2026-12-31'
+  - '2027-01-01'
+  - '2027-01-06'
 
 market_realism:
   enabled: true
@@ -22,3 +33,11 @@ risk_var:
   historical_min_scenarios: 30
   montecarlo_scenarios: 10000
   montecarlo_seed: 67
+
+risk_greeks:
+  enabled: true
+  calibration_id: YOUR_CALIBRATION_ID
+  short_rates:
+    PLN: 0.04
+  dividend_yields:
+    WIG20: 0.0

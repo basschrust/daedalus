@@ -272,20 +272,12 @@ def prepare(conn, settings: dict, root: Path):
 
         frames.append(frame[["symbol", "date", *OHLCV]])
 
-    profile = settings.get("agents_profile", "gpw_50d.yaml")
-
-    with (output / profile).open(encoding="utf-8") as stream:
-        base = yaml.safe_load(stream)
-
     contracts = futures_contracts(
         conn,
         cutoff,
         count=int(settings.get("futures_count", 1)),
     )
 
-    base["days"] = int(settings.get("days", 50))
-    base["sim_time"] = int(settings.get("sim_time", 60))
-    base["seed"] = int(settings.get("seed", 67))
     base["historical_prices"] = dict(
         enabled=True,
         path=f"market_data/{csv_name}",
@@ -326,6 +318,18 @@ def prepare(conn, settings: dict, root: Path):
         contracts=contracts,
         simulation_dates=simulation_dates,
     )
+
+    market_data = {
+        "markets": markets,
+        "start_date": start_date,
+        "historical_prices": {
+            "enabled": True,
+            "path": f"market_data/{csv_name}",
+            "lookback_sessions": lookback,
+            "cutoff_date": cutoff.isoformat(),
+            "allow_short_history": allowed_symbols,
+        },
+    }
 
     for option in options:
         symbol = option["symbol"]
