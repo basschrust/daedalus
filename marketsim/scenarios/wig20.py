@@ -1,4 +1,4 @@
-"""Prepare a 21-market WIG20 scenario from Ikaros Snowflake."""
+"""Prepare a WIG20 scenario from an Ikaros market-data source."""
 
 from __future__ import annotations
 
@@ -10,9 +10,15 @@ import pandas as pd
 import yaml
 
 from marketsim.database import ikaros_queries
+from marketsim.database.wig20_history_queries import fetch_stock_window
 from marketsim.market.historical_prices import load_simulation_dates
 from marketsim.scenarios.scenario_settings import build_scenario_settings
-from marketsim.scenarios.wig20_data import futures_history, to_price
+from marketsim.scenarios.wig20_data import (
+    align_stock_history,
+    futures_history,
+    index_session_history,
+    to_price,
+)
 from marketsim.scenarios.wig20_options import select_options
 
 OHLCV = ("open", "high", "low", "close", "volume")
@@ -47,7 +53,22 @@ def candidate_dates(conn, max_date: date):
     """Get possible cutoff dates from the stock price table."""
     frame = ikaros_queries.fetch_candidate_dates(conn, max_date)
 
-    return frame.session_date.tolist()
+    return [pd.Timestamp(value).date() for value in frame.session_date.tolist()]
+
+
+def _non_trading_dates(values):
+    return {date.fromisoformat(str(value)) for value in values}
+
+
+def _index_window(conn, cutoff, sessions, holidays):
+    # Overfetch before filtering source observations dated on weekends/holidays.
+    raw = ikaros_queries.fetch_wig20_index_history(conn, cutoff, sessions * 3)
+    return index_session_history(
+        raw,
+        cutoff=cutoff,
+        sessions=sessions,
+        non_trading_dates=holidays,
+    )
 
 
 def stock_history(
@@ -55,16 +76,27 @@ def stock_history(
     symbol: str,
     cutoff: date,
     sessions: int,
+    *,
+    expected_sessions,
+    non_trading_dates=(),
 ):
-    frame = ikaros_queries.fetch_wig20_stock_history(conn, symbol, cutoff, sessions)
+    """Validate full date window; do not count a holiday as a trading session."""
+    if len(expected_sessions) != sessions:
+        raise ValueError(f"{symbol}: expected {sessions} index sessions")
 
-    if len(frame) != sessions:
-        raise ValueError(f"{symbol}: only {len(frame)} of {sessions} historical sessions")
-
-    frame["date"] = pd.to_datetime(frame.date)
-
-    if frame.date.duplicated().any() or frame.date.max().date() != cutoff:
-        raise ValueError(f"{symbol}: duplicate sessions or missing cutoff date")
+    raw = fetch_stock_window(
+        conn,
+        symbol=symbol,
+        first_session=expected_sessions[0],
+        cutoff=cutoff,
+    )
+    frame, ignored = align_stock_history(
+        raw,
+        symbol=symbol,
+        required_sessions=expected_sessions,
+        non_trading_dates=non_trading_dates,
+    )
+    frame["date"] = pd.to_datetime(frame["date"])
 
     for col in ("open", "high", "low", "close"):
         frame[col] = frame[col].map(to_price)
@@ -83,7 +115,7 @@ def stock_history(
     ).any():
         raise ValueError(f"{symbol}: inconsistent OHLC")
 
-    return frame.sort_values("date").reset_index(drop=True)
+    return frame.sort_values("date").reset_index(drop=True), ignored
 
 
 def fetch_index_close(conn, cutoff: date) -> float:
@@ -106,31 +138,73 @@ def fetch_index_close(conn, cutoff: date) -> float:
     return value
 
 
-def resolve(conn, sessions=250):
-    """Resolve the latest complete stock and index snapshot."""
+def resolve(conn, sessions=250, *, non_trading_dates=()):
+    """Resolve newest complete candidate and report per-symbol calendar defects.
 
+    A close on a weekend or a known exchange holiday cannot become a cutoff.
+    The *observed* index sessions define the required window; a separately
+    verified GPW calendar would provide stronger completeness guarantees.
+    """
     if sessions < 2:
         raise ValueError("At least two lookback sessions required")
 
+    holidays = _non_trading_dates(non_trading_dates)
     diagnostics = []
 
     # Exclude today, since today's ingest may be partial.
     max_date = date.today() - timedelta(days=1)
 
     for cutoff in candidate_dates(conn, max_date):
+        if cutoff.weekday() >= 5 or cutoff in holidays:
+            continue
         try:
             members = constituents(conn, cutoff)
+            index_window = _index_window(conn, cutoff, sessions, holidays)
+            expected = tuple(index_window["date"].tolist())
+            excluded_index = index_window.attrs.get("excluded_non_trading_dates", ())
 
-            history = {
-                symbol: stock_history(conn, symbol, cutoff, sessions) for symbol in members.symbol
-            }
-
-            calendars = {tuple(frame.date.dt.date) for frame in history.values()}
-
-            if len(calendars) != 1:
-                raise ValueError("Stock trading calendars do not match")
+            history = {}
+            ignored = {}
+            failures = []
+            for symbol in members.symbol:
+                try:
+                    frame, skipped = stock_history(
+                        conn,
+                        symbol,
+                        cutoff,
+                        sessions,
+                        expected_sessions=expected,
+                        non_trading_dates=holidays,
+                    )
+                    history[symbol] = frame
+                    if skipped:
+                        ignored[symbol] = skipped
+                except ValueError as exc:
+                    failures.append(str(exc))
+            ignored_summary = []
+            if excluded_index:
+                ignored_summary.append(
+                    "WIG20 index excluded non-trading dates: "
+                    + ", ".join(day.isoformat() for day in excluded_index[:5])
+                )
+            if ignored:
+                ignored_summary.append(
+                    "excluded non-trading stock observations: " + ", ".join(sorted(ignored)[:8])
+                )
+            if failures:
+                suffix = f"; (+{len(failures) - 8} other instruments)" if len(failures) > 8 else ""
+                notice = " | " + " | ".join(ignored_summary) if ignored_summary else ""
+                raise ValueError(" | ".join(failures[:8]) + suffix + notice)
 
             index_level = fetch_index_close(conn, cutoff)
+
+            for notice in ignored_summary:
+                print(f"WIG20 {cutoff}: {notice}")
+            for symbol, days in sorted(ignored.items()):
+                dates = ", ".join(value.isoformat() for value in days[:5])
+                if len(days) > 5:
+                    dates += f" (+{len(days) - 5} more)"
+                print(f"WIG20 {cutoff}: excluded {symbol} non-trading observations: {dates}")
 
             return cutoff, members, history, index_level
 
@@ -221,8 +295,13 @@ def prepare(conn, settings: dict, root: Path):
     """Build and save a reproducible Daedalus scenario."""
 
     lookback = int(settings.get("lookback_sessions", 250))
+    holidays = _non_trading_dates(settings.get("non_trading_dates", []))
 
-    cutoff, members, history, index_level = resolve(conn, lookback)
+    cutoff, members, history, index_level = resolve(
+        conn,
+        lookback,
+        non_trading_dates=holidays,
+    )
 
     output = root / "input"
     data_dir = output / "market_data"
@@ -241,11 +320,12 @@ def prepare(conn, settings: dict, root: Path):
 
         frames.append(data[["symbol", "date", *OHLCV]])
 
-    # Official WIG20 index history
+    # Official WIG20 index history, aligned to precisely the same session set.
     wig20_history = index_history(
         conn,
         cutoff,
         sessions=lookback,
+        non_trading_dates=holidays,
     )
 
     index_data = wig20_history.reset_index()
@@ -362,23 +442,13 @@ def prepare(conn, settings: dict, root: Path):
     return output / yaml_name, cutoff, index_level
 
 
-def index_history(conn, cutoff, sessions=250):
-    frame = ikaros_queries.fetch_wig20_index_history(conn, cutoff, sessions)
-
-    if frame.empty:
-        raise ValueError("WIG20: no historical index observations available")
-
-    if len(frame) < sessions:
-        print(
-            f"Warning: WIG20 has only {len(frame)} historical sessions "
-            f"instead of the requested {sessions}."
-        )
-
-    frame["date"] = pd.to_datetime(frame["date"])
+def index_history(conn, cutoff, sessions=250, *, non_trading_dates=()):
+    frame = _index_window(conn, cutoff, sessions, _non_trading_dates(non_trading_dates))
 
     for column in ("open", "high", "low", "close"):
         frame[column] = frame[column].map(to_price)
 
+    frame["date"] = pd.to_datetime(frame["date"])
     frame["volume"] = 0
 
     return frame.sort_values("date").set_index("date")
