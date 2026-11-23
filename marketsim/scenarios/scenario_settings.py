@@ -14,11 +14,9 @@ def build_scenario_settings(
         if key in settings:
             raise ValueError(f"{key} must come from market data")
 
-    config = deepcopy({
-        key: value
-        for key, value in (profile or {}).items()
-        if key not in GENERATED_KEYS
-    })
+    config = deepcopy(
+        {key: value for key, value in (profile or {}).items() if key not in GENERATED_KEYS}
+    )
 
     config.update(deepcopy(settings))
 

@@ -11,9 +11,9 @@ import yaml
 
 from marketsim.database import ikaros_queries
 from marketsim.market.historical_prices import load_simulation_dates
+from marketsim.scenarios.scenario_settings import build_scenario_settings
 from marketsim.scenarios.wig20_data import futures_history, to_price
 from marketsim.scenarios.wig20_options import select_options
-from marketsim.scenarios.scenario_settings import build_scenario_settings
 
 OHLCV = ("open", "high", "low", "close", "volume")
 
@@ -274,10 +274,12 @@ def prepare(conn, settings: dict, root: Path):
         frames.append(frame[["symbol", "date", *OHLCV]])
 
     start_date = (cutoff + timedelta(days=1)).isoformat()
-    simulation_dates = load_simulation_dates({
-        **settings,
-        "start_date": start_date,
-    })
+    simulation_dates = load_simulation_dates(
+        {
+            **settings,
+            "start_date": start_date,
+        }
+    )
 
     allowed_symbols = ["WIG20", *contracts["symbol"].tolist()]
 

@@ -12,7 +12,7 @@ futures_count: 3
 options_count: 20
 
 # Reuse agent definitions through the existing loader
-agents: !include templates/agents/gpw_50d_agents.yaml
+agents: !include templates/agents/wig20_agents.yaml
 
 non_trading_dates:
   - '2026-11-11'
