@@ -37,8 +37,7 @@ def kwargs_for(func: Callable, config: dict) -> dict:
 def prepare_dataset(name: str, *, refresh_data: bool = False) -> tuple[str, bool]:
     """Prepare a dataset once; reuse fresh local OHLCV on subsequent runs."""
     settings_file, generated_file, prepare = DATASETS[name]
-    with (INPUT_DIR / settings_file).open(encoding="utf-8") as stream:
-        settings = yaml.safe_load(stream)
+    settings = load_config(settings_file)
 
     cache = PreparedDatasetCache(root=ROOT)
     realism_enabled = settings.get("market_realism", {}).get("enabled", True)
