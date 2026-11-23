@@ -4,14 +4,22 @@ from __future__ import annotations
 
 import argparse
 import inspect
+import os
+import shutil
 from collections.abc import Callable
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import yaml
 from dotenv import load_dotenv
 
 from input.config import create_run_directory, load_config
 from marketsim.analysis.report import MarketRealismReport
+from marketsim.database.ikaros_local import (
+    CachedIkarosConnection,
+    stage_local_ikaros,
+    validate_wig20_snapshot,
+)
 from marketsim.database.ikaros_queries import connect
 from marketsim.market.historical_prices import load_historical_prices, load_simulation_dates
 from marketsim.risk.calibration_sync import sync_greeks_calibration
@@ -34,13 +42,96 @@ def kwargs_for(func: Callable, config: dict) -> dict:
     return {key: value for key, value in config.items() if key in params}
 
 
-def prepare_dataset(name: str, *, refresh_data: bool = False) -> tuple[str, bool]:
+def _promote_prepared_files(
+    *,
+    work_root: Path,
+    generated_file: str,
+    cache: PreparedDatasetCache,
+    dataset: str,
+    settings: dict,
+) -> None:
+    """Publish a prepared YAML/CSV pair and roll back on cache-store failure."""
+    sources = [
+        (
+            work_root / "input" / "market_data" / f"{dataset}_auto.ohlcv.csv",
+            INPUT_DIR / "market_data" / f"{dataset}_auto.ohlcv.csv",
+        ),
+        (work_root / "input" / generated_file, INPUT_DIR / generated_file),
+    ]
+    backups: list[tuple[Path, Path | None]] = []
+    try:
+        for index, (source, target) in enumerate(sources):
+            if not source.is_file():
+                raise FileNotFoundError(f"Preparatory output missing: {source}")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            backup = None
+            if target.is_file():
+                backup = work_root / f"backup_{index}"
+                shutil.copy2(target, backup)
+            backups.append((target, backup))
+            temporary_target = target.with_name(target.name + ".incoming")
+            try:
+                shutil.copy2(source, temporary_target)
+                os.replace(temporary_target, target)
+            finally:
+                temporary_target.unlink(missing_ok=True)
+        cache.record_preparation(dataset=dataset, settings=settings, yaml_name=generated_file)
+    except Exception:
+        for target, backup in reversed(backups):
+            if backup is None:
+                target.unlink(missing_ok=True)
+            else:
+                os.replace(backup, target)
+        raise
+
+
+def prepare_dataset(
+    name: str,
+    *,
+    refresh_data: bool = False,
+    source: str = "snowflake",
+    ikaros_db: Path | None = None,
+) -> tuple[str, bool]:
     """Prepare a dataset once; reuse fresh local OHLCV on subsequent runs."""
     settings_file, generated_file, prepare = DATASETS[name]
     settings = load_config(settings_file)
 
     cache = PreparedDatasetCache(root=ROOT)
     realism_enabled = settings.get("market_realism", {}).get("enabled", True)
+    if source == "duckdb":
+        if name != "wig20":
+            raise ValueError("Local Ikaros preparation is currently implemented for WIG20 only")
+        snapshot = stage_local_ikaros(
+            source_path=ikaros_db or (INPUT_DIR / "market_data" / "ikaros.duckdb"),
+            cache_path=cache.db_path,
+        )
+        print(f"Imported read-only Ikaros source into {cache.db_path}: {snapshot.table_rows}")
+        cutoff, issues = validate_wig20_snapshot(
+            cache_path=cache.db_path,
+            settings=settings,
+            previous_yaml=INPUT_DIR / generated_file,
+        )
+        if issues:
+            details = "\n  - ".join(issues)
+            raise RuntimeError(
+                f"Ikaros local snapshot through {cutoff} is not yet a complete "
+                f"WIG20 input. Prepared simulation cache is untouched.\n  - {details}"
+            )
+        # Prepare into a temporary directory so any error leaves the existing
+        # generated YAML/CSV pair intact. Ikaros's connection is already closed.
+        with TemporaryDirectory(prefix="daedalus_local_prepare_", dir=ROOT) as temp:
+            work_root = Path(temp)
+            with CachedIkarosConnection(cache_path=cache.db_path) as connection:
+                _, cutoff, detail = prepare(connection, settings, work_root)
+            _promote_prepared_files(
+                work_root=work_root,
+                generated_file=generated_file,
+                cache=cache,
+                dataset=name,
+                settings=settings,
+            )
+        print(f"Prepared WIG20 locally: {generated_file}; cutoff={cutoff}; index={detail:.2f}")
+        return generated_file, realism_enabled
     if not refresh_data and cache.use_if_fresh(
         dataset=name, settings=settings, yaml_name=generated_file
     ):
@@ -129,6 +220,17 @@ def main(argv: list[str] | None = None) -> None:
         action="store_true",
         help="Ignore the local market-data cache and fetch again from Snowflake",
     )
+    parser.add_argument(
+        "--source",
+        choices=("snowflake", "duckdb"),
+        default="snowflake",
+        help="For --dataset, prepare from Snowflake or staged local Ikaros DuckDB",
+    )
+    parser.add_argument(
+        "--ikaros-db",
+        type=Path,
+        help="Optional immutable Ikaros DuckDB snapshot (default: input/market_data/ikaros.duckdb)",
+    )
     args = parser.parse_args(argv)
 
     if args.dataset and args.config:
@@ -137,9 +239,25 @@ def main(argv: list[str] | None = None) -> None:
         parser.error("--prepare-only requires --dataset")
     if args.refresh_data and not args.dataset:
         parser.error("--refresh-data requires --dataset")
+    if args.source == "duckdb" and not args.dataset:
+        parser.error("--source duckdb requires --dataset")
+    if args.source == "duckdb" and args.refresh_data:
+        parser.error("--source duckdb imports local data automatically; omit --refresh-data")
+    if args.ikaros_db is not None and args.source != "duckdb":
+        parser.error("--ikaros-db requires --source duckdb")
 
     if args.dataset:
-        config_file, realism_enabled = prepare_dataset(args.dataset, refresh_data=args.refresh_data)
+        try:
+            config_file, realism_enabled = prepare_dataset(
+                args.dataset,
+                refresh_data=args.refresh_data,
+                source=args.source,
+                ikaros_db=args.ikaros_db,
+            )
+        except (FileNotFoundError, RuntimeError, ValueError) as exc:
+            if args.source != "duckdb":
+                raise
+            parser.exit(2, f"Local Ikaros preparation failed:\n{exc}\n")
         if args.prepare_only:
             return
     else:
