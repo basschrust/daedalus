@@ -1,101 +1,148 @@
-# BlackScholes.py
-# module implementing the Black-Scholes Formula
+# Black-Scholes valuation, shared by market instruments and VaR.
 
 import math
 
-# TODO: import ChrustSolver
+import numpy as np
 from scipy.stats import distributions
 
 from ..price import Price
 
-N = distributions.norm.cdf  # dystrybuanta
-fi = distributions.norm.pdf  # rozklad prawdopodobienstwa
+N = distributions.norm.cdf
+fi = distributions.norm.pdf
 
 
-def BSCall(S: Price, K: Price, r: float, volatility: float, Time: float, d: float = 0.0):
-    # delta in arguments is small delta - the dividend yield
-    # TODO: print(f"BSCall, S: {S}, K: {K}, r: {r}, volatility: {volatility}, Time: {Time}")
-    # on expiration date Time=0, so the option value is S-K
-    if Time == 0:
-        callPrice = max(Price(0), S - K)
-        intrinsicValue = callPrice
-        delta = 1 if S > K else 0
-        gamma = 0
-        theta = 0
-        vega = 0
-        rho = 0
+def _black_scholes(
+    S: Price | float | np.ndarray,
+    K: Price | float,
+    r: float,
+    volatility: float,
+    Time: float,
+    d: float,
+    *,
+    call: bool,
+) -> dict:
+    """European BSM price and Greeks for a scalar or a NumPy spot array.
+
+    Scalar expiry premiums retain the historical Price return type. Scenario
+    arrays intentionally remain unrounded so Monte Carlo losses are not
+    distorted by per-scenario price tick rounding.
+    """
+    scalar = np.ndim(S) == 0
+    spot = np.asarray(S, dtype=float)
+    strike = float(K)
+    rate = float(r)
+    sigma = float(volatility)
+    years = float(Time)
+    dividend = float(d)
+
+    if (
+        not np.isfinite(spot).all()
+        or (spot < 0).any()
+        or not all(math.isfinite(x) for x in (strike, rate, sigma, years, dividend))
+        or strike <= 0
+        or sigma < 0
+        or years < 0
+    ):
+        raise ValueError("Invalid Black-Scholes inputs")
+
+    zeros = np.zeros_like(spot, dtype=float)
+    if years == 0:
+        payoff = spot - strike if call else strike - spot
+        price = np.maximum(payoff, 0)
+        if call:
+            delta = np.where(spot > strike, 1.0, np.where(spot == strike, 0.5, 0.0))
+        else:
+            delta = np.where(spot < strike, -1.0, np.where(spot == strike, -0.5, 0.0))
+        gamma = vega = theta = rho = zeros
+        intrinsic = price
     else:
-        d1 = (math.log(float(S) / float(K)) + ((r - d + (volatility**2) / 2) * Time)) / (
-            volatility * math.sqrt(Time)
-        )
-        d2 = d1 - volatility * math.sqrt(Time)
-        # print "d1, d2:", d1, d2
-        delta = N(d1)
-        gamma = fi(d1) / (float(S) * volatility * math.sqrt(Time))
-        theta = -(float(S) * fi(d1) * volatility) / (2 * math.sqrt(Time)) - r * float(K) * math.exp(
-            -r * Time
-        ) * N(d2)  # lack of dividend-related factor
-        vega = float(S) * fi(d1) * math.sqrt(Time)
-        rho = float(K) * Time * math.exp(-r * Time) * N(d2)
-        callPrice = float(S) * distributions.norm.cdf(d1) - math.exp(-r * Time) * float(
-            K
-        ) * distributions.norm.cdf(d2)
-        intrinsicValue = max(0, float(S) - float(K) * math.exp(-r * Time))
-    timeValue = callPrice - intrinsicValue
-    # print({"price": callPrice, "delta":delta, "gamma":gamma, "theta": theta, "vega": vega, "rho": rho, \
-    #   "intrinsicValue": intrinsicValue, "timeValue": timeValue})
-    # return callPrice  #maybe return a tuple (or dict) with the price and all the Greeks?
-    return {
-        "price": callPrice,
+        spot_discount = math.exp(-dividend * years)
+        strike_discount = math.exp(-rate * years)
+        discounted_spot = spot * spot_discount
+        discounted_strike = strike * strike_discount
+        forward_moneyness = discounted_spot - discounted_strike
+        intrinsic = np.maximum(forward_moneyness if call else -forward_moneyness, 0)
+        if sigma == 0:
+            # Zero-variance (deterministic) BSM limit. At the payoff kink,
+            # select the midpoint delta as a documented convention.
+            is_itm = forward_moneyness > 0 if call else forward_moneyness < 0
+            is_atm = forward_moneyness == 0
+            probability = np.where(is_itm, 1.0, np.where(is_atm, 0.5, 0.0))
+            price = intrinsic
+            delta = spot_discount * probability * (1 if call else -1)
+            gamma = vega = zeros
+            theta = np.where(
+                is_itm,
+                (dividend * discounted_spot - rate * discounted_strike) * (1 if call else -1),
+                0.0,
+            )
+            rho = strike * years * strike_discount * probability * (1 if call else -1)
+        else:
+            sqrt_years = math.sqrt(years)
+            vol_time = sigma * sqrt_years
+            with np.errstate(divide="ignore", invalid="ignore"):
+                d1 = (np.log(spot / strike) + (rate - dividend + sigma**2 / 2) * years) / vol_time
+            d2 = d1 - vol_time
+            pdf = fi(d1)
+            if call:
+                price = discounted_spot * N(d1) - discounted_strike * N(d2)
+                delta = spot_discount * N(d1)
+                theta_carry = dividend * discounted_spot * N(d1) - rate * discounted_strike * N(d2)
+                rho = strike * years * strike_discount * N(d2)
+            else:
+                price = discounted_strike * N(-d2) - discounted_spot * N(-d1)
+                delta = -spot_discount * N(-d1)
+                theta_carry = -dividend * discounted_spot * N(-d1) + rate * discounted_strike * N(
+                    -d2
+                )
+                rho = -strike * years * strike_discount * N(-d2)
+            # At spot=0, the limiting gamma is zero; no division by zero.
+            with np.errstate(divide="ignore", invalid="ignore"):
+                gamma = np.where(spot > 0, spot_discount * pdf / (spot * vol_time), 0.0)
+            theta = -discounted_spot * pdf * sigma / (2 * sqrt_years) + theta_carry
+            vega = discounted_spot * pdf * sqrt_years
+
+    time_value = price - intrinsic
+    values = {
+        "price": price,
         "delta": delta,
         "gamma": gamma,
         "theta": theta,
         "vega": vega,
         "rho": rho,
-        "intrinsicValue": intrinsicValue,
-        "timeValue": timeValue,
+        "intrinsicValue": intrinsic,
+        "timeValue": time_value,
     }
+    if scalar:
+        values = {name: float(value) for name, value in values.items()}
+        if years == 0:
+            for name in ("price", "intrinsicValue", "timeValue"):
+                values[name] = Price(values[name])
+    return values
 
 
-def BSPut(S: Price, K: Price, r: float, volatility: float, Time: float, d: float = 0.0):
-    # TODO: print(f"BSPut, S: {S}, K: {K}, r: {r}, volatility: {volatility}, Time: {Time}")
-    if Time == 0:
-        putPrice = max(Price(0), K - S)
-        intrinsicValue = putPrice
-        delta = 1 if S < K else 0
-        gamma = 0
-        theta = 0
-        vega = 0
-        rho = 0
-    else:
-        d1 = (math.log(float(S) / float(K)) + ((r - d + (volatility**2) / 2) * Time)) / (
-            volatility * math.sqrt(Time)
-        )
-        d2 = d1 - volatility * math.sqrt(Time)
-        # print "d1, d2:", d1, d2
-        delta = N(d1) - 1
-        gamma = fi(d1) / (float(S) * volatility * math.sqrt(Time))
-        theta = -(float(S) * fi(d1) * volatility) / (2 * math.sqrt(Time)) + r * float(K) * math.exp(
-            -r * Time
-        ) * N(-d2)  # as above - dividend-related factor should be added
-        vega = float(S) * fi(d1) * math.sqrt(Time)
-        rho = -float(K) * Time * math.exp(-r * Time) * N(-d2)
-        putPrice = -float(S) * distributions.norm.cdf(-d1) + math.exp(-r * Time) * float(
-            K
-        ) * distributions.norm.cdf(-d2)
-        intrinsicValue = max(0, float(K) * math.exp(-r * Time) - float(S))
-    timeValue = putPrice - intrinsicValue
-    return {
-        "price": putPrice,
-        "delta": delta,
-        "gamma": gamma,
-        "theta": theta,
-        "vega": vega,
-        "rho": rho,
-        "intrinsicValue": intrinsicValue,
-        "timeValue": timeValue,
-    }
-    # return putPrice
+def BSCall(
+    S: Price | float | np.ndarray,
+    K: Price | float,
+    r: float,
+    volatility: float,
+    Time: float,
+    d: float = 0.0,
+) -> dict:
+    """Black-Scholes European call; accepts a scalar or scenario spot array."""
+    return _black_scholes(S, K, r, volatility, Time, d, call=True)
+
+
+def BSPut(
+    S: Price | float | np.ndarray,
+    K: Price | float,
+    r: float,
+    volatility: float,
+    Time: float,
+    d: float = 0.0,
+) -> dict:
+    """Black-Scholes European put; accepts a scalar or scenario spot array."""
+    return _black_scholes(S, K, r, volatility, Time, d, call=False)
 
 
 # function calculating the volatility implied in the   prices of options

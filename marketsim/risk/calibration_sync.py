@@ -1,11 +1,15 @@
 """Synchronize an immutable L2 calibration into the simulation's local DuckDB.
 
 Snowflake remains the source of truth. No fallback or synthetic volatilities.
+The immutable calibration is also cached between simulations in input/market_data.
 """
 
 from __future__ import annotations
 
 import math
+from pathlib import Path
+
+from marketsim.scenarios.prepared_cache import PreparedDatasetCache
 
 
 def _symbol(market):
@@ -31,7 +35,13 @@ def sync_greeks_calibration(simulator, config: dict) -> None:
 
     if not simulator.repository.needs_local_greek_calibration():
         return
-    rows = simulator.repository.fetch_source_greek_calibration(calibration_id)
+
+    cache = PreparedDatasetCache(root=Path(__file__).resolve().parents[2])
+    rows = cache.get_greek_calibration(calibration_id=calibration_id)
+    downloaded = rows is None or not required.issubset({str(row[0]).upper() for row in rows})
+    if downloaded:
+        # A cache miss is the only reason for a calibration-source Snowflake read.
+        rows = simulator.repository.fetch_source_greek_calibration(calibration_id)
 
     clean = {}
     for symbol, mean, sigma in rows:
@@ -52,6 +62,13 @@ def sync_greeks_calibration(simulator, config: dict) -> None:
         raise ValueError(f"Calibration {calibration_id} has no L2 statistics in Snowflake")
 
     simulator.repository.import_greek_calibration(calibration_id, clean)
+    if downloaded:
+        cache.store_greek_calibration(
+            calibration_id=calibration_id,
+            rows=[(sym, mean, sigma) for sym, (mean, sigma) in sorted(clean.items())],
+        )
+    else:
+        print(f"Using cached L2 calibration {calibration_id}")
     print(
         f"Synchronized L2 calibration {calibration_id}: "
         f"{len(clean)} instruments; required option underlyings: {sorted(required)}"

@@ -396,7 +396,7 @@ def prepare(conn, settings: dict, root: Path):
     wig20_members = constituents(conn, cutoff)
     wig20_history = load_index_history(conn, "WIG20", cutoff, lookback)
 
-    output = root / "marketsim" / "input"
+    output = root / "input"
     data_dir = output / "market_data"
     data_dir.mkdir(parents=True, exist_ok=True)
 

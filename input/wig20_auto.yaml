@@ -1,6 +1,6 @@
 seed: 67
-days: 5
-sim_time: 5
+days: 25
+sim_time: 45
 lob_plot_interval: 10000
 markets:
   ale.wa:
@@ -9,7 +9,7 @@ markets:
     symbol: ALE.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '67.40'
+    reference_price: '67.95'
     currency: PLN
   alr.wa:
     name: ALR.WA
@@ -17,7 +17,7 @@ markets:
     symbol: ALR.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '146.00'
+    reference_price: '143.10'
     currency: PLN
   bdx.wa:
     name: BDX.WA
@@ -25,7 +25,7 @@ markets:
     symbol: BDX.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '768.00'
+    reference_price: '751.00'
     currency: PLN
   cdr.wa:
     name: CDR.WA
@@ -33,7 +33,7 @@ markets:
     symbol: CDR.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '264.80'
+    reference_price: '282.90'
     currency: PLN
   dnp.wa:
     name: DNP.WA
@@ -41,7 +41,7 @@ markets:
     symbol: DNP.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '37.10'
+    reference_price: '37.34'
     currency: PLN
   ebp.wa:
     name: EBP.WA
@@ -49,7 +49,7 @@ markets:
     symbol: EBP.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '795.40'
+    reference_price: '781.00'
     currency: PLN
   kgh.wa:
     name: KGH.WA
@@ -57,7 +57,7 @@ markets:
     symbol: KGH.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '264.30'
+    reference_price: '248.20'
     currency: PLN
   kru.wa:
     name: KRU.WA
@@ -65,7 +65,7 @@ markets:
     symbol: KRU.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '324.50'
+    reference_price: '319.20'
     currency: PLN
   kty.wa:
     name: KTY.WA
@@ -73,7 +73,7 @@ markets:
     symbol: KTY.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '1298.00'
+    reference_price: '1270.00'
     currency: PLN
   lpp.wa:
     name: LPP.WA
@@ -89,7 +89,7 @@ markets:
     symbol: MBK.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '1723.50'
+    reference_price: '1688.50'
     currency: PLN
   mdv.wa:
     name: MDV.WA
@@ -97,7 +97,7 @@ markets:
     symbol: MDV.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '108.60'
+    reference_price: '114.45'
     currency: PLN
   pco.wa:
     name: PCO.WA
@@ -105,7 +105,7 @@ markets:
     symbol: PCO.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '51.08'
+    reference_price: '51.00'
     currency: PLN
   peo.wa:
     name: PEO.WA
@@ -113,7 +113,7 @@ markets:
     symbol: PEO.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '266.70'
+    reference_price: '263.30'
     currency: PLN
   pge.wa:
     name: PGE.WA
@@ -121,7 +121,7 @@ markets:
     symbol: PGE.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '15.83'
+    reference_price: '16.18'
     currency: PLN
   pkn.wa:
     name: PKN.WA
@@ -129,7 +129,7 @@ markets:
     symbol: PKN.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '129.32'
+    reference_price: '128.96'
     currency: PLN
   pko.wa:
     name: PKO.WA
@@ -137,7 +137,7 @@ markets:
     symbol: PKO.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '119.00'
+    reference_price: '117.96'
     currency: PLN
   pzu.wa:
     name: PZU.WA
@@ -145,7 +145,7 @@ markets:
     symbol: PZU.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '75.00'
+    reference_price: '74.26'
     currency: PLN
   tpe.wa:
     name: TPE.WA
@@ -153,7 +153,7 @@ markets:
     symbol: TPE.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '9.18'
+    reference_price: '9.22'
     currency: PLN
   zab.wa:
     name: ZAB.WA
@@ -161,7 +161,7 @@ markets:
     symbol: ZAB.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '31.86'
+    reference_price: '31.80'
     currency: PLN
   wig20:
     symbol: WIG20
@@ -171,72 +171,72 @@ markets:
     components:
     - security: ale.wa
       weight: 0.1066
-      base_price: '67.40'
+      base_price: '67.95'
     - security: alr.wa
       weight: 0.0206
-      base_price: '146.00'
+      base_price: '143.10'
     - security: bdx.wa
       weight: 0.0159
-      base_price: '768.00'
+      base_price: '751.00'
     - security: cdr.wa
       weight: 0.0336
-      base_price: '264.80'
+      base_price: '282.90'
     - security: dnp.wa
       weight: 0.0336
-      base_price: '37.10'
+      base_price: '37.34'
     - security: ebp.wa
       weight: 0.0568
-      base_price: '795.40'
+      base_price: '781.00'
     - security: kgh.wa
       weight: 0.0718
-      base_price: '264.30'
+      base_price: '248.20'
     - security: kru.wa
       weight: 0.0112
-      base_price: '324.50'
+      base_price: '319.20'
     - security: kty.wa
       weight: 0.0217
-      base_price: '1298.00'
+      base_price: '1270.00'
     - security: lpp.wa
       weight: 0.0618
       base_price: '28500.00'
     - security: mbk.wa
       weight: 0.033
-      base_price: '1723.50'
+      base_price: '1688.50'
     - security: mdv.wa
       weight: 0.0087
-      base_price: '108.60'
+      base_price: '114.45'
     - security: pco.wa
       weight: 0.0147
-      base_price: '51.08'
+      base_price: '51.00'
     - security: peo.wa
       weight: 0.0803
-      base_price: '266.70'
+      base_price: '263.30'
     - security: pge.wa
       weight: 0.0255
-      base_price: '15.83'
+      base_price: '16.18'
     - security: pkn.wa
       weight: 0.1423
-      base_price: '129.32'
+      base_price: '128.96'
     - security: pko.wa
       weight: 0.141
-      base_price: '119.00'
+      base_price: '117.96'
     - security: pzu.wa
       weight: 0.0734
-      base_price: '75.00'
+      base_price: '74.26'
     - security: tpe.wa
       weight: 0.0179
-      base_price: '9.18'
+      base_price: '9.22'
     - security: zab.wa
       weight: 0.0296
-      base_price: '31.86'
-    base_index_level: '4252.28'
+      base_price: '31.80'
+    base_index_level: '4226.28'
   fw20z2620:
     symbol: FW20Z2620
     name: FW20Z2620
     short_name: FW20Z2620
     instrument_class: future
     underlying: wig20
-    expiration: 5
+    expiration: 21
     multiplier: 20.0
     margin_rate: 0.1
   fw20h2720:
@@ -245,7 +245,7 @@ markets:
     short_name: FW20H2720
     instrument_class: future
     underlying: wig20
-    expiration: 5
+    expiration: 25
     multiplier: 20.0
     margin_rate: 0.1
   fw20m2720:
@@ -254,117 +254,26 @@ markets:
     short_name: FW20M2720
     instrument_class: future
     underlying: wig20
-    expiration: 5
+    expiration: 25
     multiplier: 20.0
     margin_rate: 0.1
-  ow20k264250:
-    symbol: OW20K264250
-    name: OW20K264250
-    short_name: OW20K264250
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4250.00'
-      option_side: CALL
-      option_type: European
-      expiration: 2
-      multiplier: 10.0
-  ow20w264250:
-    symbol: OW20W264250
-    name: OW20W264250
-    short_name: OW20W264250
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4250.00'
-      option_side: PUT
-      option_type: European
-      expiration: 2
-      multiplier: 10.0
-  ow20w264275:
-    symbol: OW20W264275
-    name: OW20W264275
-    short_name: OW20W264275
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4275.00'
-      option_side: PUT
-      option_type: European
-      expiration: 2
-      multiplier: 10.0
-  ow20k264275:
-    symbol: OW20K264275
-    name: OW20K264275
-    short_name: OW20K264275
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4275.00'
-      option_side: CALL
-      option_type: European
-      expiration: 2
-      multiplier: 10.0
-  ow20k264300:
-    symbol: OW20K264300
-    name: OW20K264300
-    short_name: OW20K264300
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4300.00'
-      option_side: CALL
-      option_type: European
-      expiration: 2
-      multiplier: 10.0
-  ow20w264300:
-    symbol: OW20W264300
-    name: OW20W264300
-    short_name: OW20W264300
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4300.00'
-      option_side: PUT
-      option_type: European
-      expiration: 2
-      multiplier: 10.0
-  ow20w264200:
-    symbol: OW20W264200
-    name: OW20W264200
-    short_name: OW20W264200
+  ow20c274200:
+    symbol: OW20C274200
+    name: OW20C274200
+    short_name: OW20C274200
     instrument_class: option
     market_type: continuous
     derivatives_config:
       underlying: wig20
       strike: '4200.00'
-      option_side: PUT
-      option_type: European
-      expiration: 2
-      multiplier: 10.0
-  ow20k264350:
-    symbol: OW20K264350
-    name: OW20K264350
-    short_name: OW20K264350
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4350.00'
       option_side: CALL
       option_type: European
-      expiration: 2
+      expiration: 25
       multiplier: 10.0
-  ow20w264100:
-    symbol: OW20W264100
-    name: OW20W264100
-    short_name: OW20W264100
+  ow20o274100:
+    symbol: OW20O274100
+    name: OW20O274100
+    short_name: OW20O274100
     instrument_class: option
     market_type: continuous
     derivatives_config:
@@ -372,12 +281,155 @@ markets:
       strike: '4100.00'
       option_side: PUT
       option_type: European
-      expiration: 2
+      expiration: 25
       multiplier: 10.0
-  ow20w264000:
-    symbol: OW20W264000
-    name: OW20W264000
-    short_name: OW20W264000
+  ow20f274200:
+    symbol: OW20F274200
+    name: OW20F274200
+    short_name: OW20F274200
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4200.00'
+      option_side: CALL
+      option_type: European
+      expiration: 25
+      multiplier: 10.0
+  ow20i274200:
+    symbol: OW20I274200
+    name: OW20I274200
+    short_name: OW20I274200
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4200.00'
+      option_side: CALL
+      option_type: European
+      expiration: 25
+      multiplier: 10.0
+  ow20f274300:
+    symbol: OW20F274300
+    name: OW20F274300
+    short_name: OW20F274300
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4300.00'
+      option_side: CALL
+      option_type: European
+      expiration: 25
+      multiplier: 10.0
+  ow20c274300:
+    symbol: OW20C274300
+    name: OW20C274300
+    short_name: OW20C274300
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4300.00'
+      option_side: CALL
+      option_type: European
+      expiration: 25
+      multiplier: 10.0
+  ow20i274300:
+    symbol: OW20I274300
+    name: OW20I274300
+    short_name: OW20I274300
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4300.00'
+      option_side: CALL
+      option_type: European
+      expiration: 25
+      multiplier: 10.0
+  ow20c274100:
+    symbol: OW20C274100
+    name: OW20C274100
+    short_name: OW20C274100
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4100.00'
+      option_side: CALL
+      option_type: European
+      expiration: 25
+      multiplier: 10.0
+  ow20f274100:
+    symbol: OW20F274100
+    name: OW20F274100
+    short_name: OW20F274100
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4100.00'
+      option_side: CALL
+      option_type: European
+      expiration: 25
+      multiplier: 10.0
+  ow20u274100:
+    symbol: OW20U274100
+    name: OW20U274100
+    short_name: OW20U274100
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4100.00'
+      option_side: PUT
+      option_type: European
+      expiration: 25
+      multiplier: 10.0
+  ow20c274400:
+    symbol: OW20C274400
+    name: OW20C274400
+    short_name: OW20C274400
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4400.00'
+      option_side: CALL
+      option_type: European
+      expiration: 25
+      multiplier: 10.0
+  ow20f274400:
+    symbol: OW20F274400
+    name: OW20F274400
+    short_name: OW20F274400
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4400.00'
+      option_side: CALL
+      option_type: European
+      expiration: 25
+      multiplier: 10.0
+  ow20i274400:
+    symbol: OW20I274400
+    name: OW20I274400
+    short_name: OW20I274400
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4400.00'
+      option_side: CALL
+      option_type: European
+      expiration: 25
+      multiplier: 10.0
+  ow20u274000:
+    symbol: OW20U274000
+    name: OW20U274000
+    short_name: OW20U274000
     instrument_class: option
     market_type: continuous
     derivatives_config:
@@ -385,7 +437,85 @@ markets:
       strike: '4000.00'
       option_side: PUT
       option_type: European
-      expiration: 2
+      expiration: 25
+      multiplier: 10.0
+  ow20c274000:
+    symbol: OW20C274000
+    name: OW20C274000
+    short_name: OW20C274000
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4000.00'
+      option_side: CALL
+      option_type: European
+      expiration: 25
+      multiplier: 10.0
+  ow20f274000:
+    symbol: OW20F274000
+    name: OW20F274000
+    short_name: OW20F274000
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4000.00'
+      option_side: CALL
+      option_type: European
+      expiration: 25
+      multiplier: 10.0
+  ow20r274000:
+    symbol: OW20R274000
+    name: OW20R274000
+    short_name: OW20R274000
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4000.00'
+      option_side: PUT
+      option_type: European
+      expiration: 25
+      multiplier: 10.0
+  ow20o274000:
+    symbol: OW20O274000
+    name: OW20O274000
+    short_name: OW20O274000
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4000.00'
+      option_side: PUT
+      option_type: European
+      expiration: 25
+      multiplier: 10.0
+  ow20i274000:
+    symbol: OW20I274000
+    name: OW20I274000
+    short_name: OW20I274000
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4000.00'
+      option_side: CALL
+      option_type: European
+      expiration: 25
+      multiplier: 10.0
+  ow20c274500:
+    symbol: OW20C274500
+    name: OW20C274500
+    short_name: OW20C274500
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4500.00'
+      option_side: CALL
+      option_type: European
+      expiration: 25
       multiplier: 10.0
 agents:
   relative_momentum:
@@ -535,6 +665,7 @@ agents:
       volume: 2
       volume_fraction: 0.05
       q_max: 300
+      option_inventory_fraction: 1.0
   momentum_fast:
     agent_class: MomentumAgent
     instrument_classes:
@@ -603,23 +734,33 @@ historical_prices:
   enabled: true
   path: market_data/wig20_auto.ohlcv.csv
   lookback_sessions: 252
-  cutoff_date: '2026-11-17'
+  cutoff_date: '2026-11-18'
   allow_short_history:
   - WIG20
   - FW20Z2620
   - FW20H2720
   - FW20M2720
-  - OW20K264250
-  - OW20W264250
-  - OW20W264275
-  - OW20K264275
-  - OW20K264300
-  - OW20W264300
-  - OW20W264200
-  - OW20K264350
-  - OW20W264100
-  - OW20W264000
-start_date: '2026-11-18'
+  - OW20C274200
+  - OW20O274100
+  - OW20F274200
+  - OW20I274200
+  - OW20F274300
+  - OW20C274300
+  - OW20I274300
+  - OW20C274100
+  - OW20F274100
+  - OW20U274100
+  - OW20C274400
+  - OW20F274400
+  - OW20I274400
+  - OW20U274000
+  - OW20C274000
+  - OW20F274000
+  - OW20R274000
+  - OW20O274000
+  - OW20I274000
+  - OW20C274500
+start_date: '2026-11-19'
 non_trading_dates:
 - '2026-11-11'
 - '2026-12-24'
