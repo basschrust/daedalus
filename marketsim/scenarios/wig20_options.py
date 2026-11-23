@@ -1,7 +1,8 @@
-"""Select listed WIG20 options and their historical prices from Ikaros.
+"""Select listed WIG20 options and their observed historical prices from Ikaros.
 
-The initial selection excludes contracts expiring within the simulation horizon.
-Expiry-matched historical benchmarking is intentionally deferred.
+Prefer contracts surviving the simulation horizon, but do not silently remove
+all option markets when such contracts are unavailable. Shorter-lived contracts
+retain their actual expiration dates and expire normally during simulation.
 """
 
 from __future__ import annotations
@@ -39,11 +40,11 @@ def select_options(
     count: int = 4,
     lookback_sessions: int = 252,
 ) -> list[dict]:
-    """Return options with metadata and OHLCV; prefer near-ATM liquid contracts.
+    """Select liquid near-ATM options, preferring longer remaining maturity.
 
-    Requires DERIVATIVE_CONTRACTS columns CONTRACT_ID, SYMBOL,
-    INSTRUMENT_TYPE, UNDERLYING_SYMBOL, EXPIRY_DATE, MULTIPLIER,
-    and strike/side fields (recognized aliases below).
+    Unlike a daily stock price feed, derivative trade history can legitimately
+    have no row on the historical cutoff date. Do not require a trade exactly on
+    `cutoff`; we only use observations actually stored in Ikaros.
     """
     if count <= 0:
         return []
@@ -52,27 +53,37 @@ def select_options(
 
     contracts = ikaros_queries.fetch_wig20_option_contracts(conn, cutoff)
     if contracts.empty:
-        print("Warning: no WIG20 options survive the simulation horizon")
-        return []
+        raise ValueError(
+            "Ikaros returned no WIG20 option contracts active at the historical cutoff "
+            f"{cutoff}; requested {count} options."
+        )
 
-    candidates = []
+    candidates: list[dict] = []
     for _, row in contracts.drop_duplicates(subset=["contract_id"]).iterrows():
         try:
             symbol = str(_field(row, "symbol", "contract_symbol"))
             strike = to_price(_field(row, "strike", "strike_price", "exercise_price"))
             side = _side(_field(row, "option_side", "call_put", "option_type", "put_call"))
             expiry = pd.Timestamp(_field(row, "expiry_date", "expiration_date")).date()
-            if expiry <= simulation_dates[-1]:
+            if expiry <= cutoff:
                 continue
             multiplier = float(_field(row, "multiplier", "contract_multiplier"))
             if multiplier <= 0:
                 raise ValueError("Invalid multiplier")
+
             history = futures_history(conn, row["contract_id"], cutoff, lookback_sessions)
             history = history.drop_duplicates("date").sort_values("date")
-            # Only use positive-price observations; missing/non-trading sessions
-            # are not filled with synthetic prices.
-            if len(history) < 4 or history["date"].max().date() != cutoff:
+            if len(history) < 4:
+                print(
+                    f"Skipping option {symbol}: only {len(history)} observed price sessions "
+                    "(minimum four)"
+                )
                 continue
+            # The query must not return future data, but there is no requirement
+            # that the option traded on cutoff itself (thin markets often don't).
+            last_observation = pd.Timestamp(history["date"].max()).date()
+            if last_observation > cutoff:
+                raise ValueError(f"History extends past cutoff: {last_observation}")
             liquidity = float(history["volume"].tail(20).sum())
             candidates.append(
                 {
@@ -89,10 +100,26 @@ def select_options(
         except (ValueError, TypeError, KeyError) as exc:
             print(f"Skipping option {row.get('symbol', row.get('contract_id'))}: {exc}")
 
-    # Select both calls and puts when available, then fill remaining slots.
-    candidates.sort(key=lambda x: (x["moneyness"], -x["liquidity"], x["expiry_date"]))
-    selected = []
-    selected_symbols = set()
+    if not candidates:
+        raise ValueError(
+            "No WIG20 options qualified: check Ikaros derivative contracts and "
+            f"their price history at cutoff {cutoff} (minimum four observed sessions)."
+        )
+
+    horizon_end = simulation_dates[-1]
+
+    def selection_order(candidate: dict) -> tuple:
+        expiry = candidate["expiry_date"]
+        if expiry > horizon_end:
+            # A full-horizon contract: prioritize proximity to ATM and liquidity.
+            return (0, candidate["moneyness"], -candidate["liquidity"], expiry.toordinal())
+        # A short-lived contract: prefer those surviving more simulation days.
+        return (1, -expiry.toordinal(), candidate["moneyness"], -candidate["liquidity"])
+
+    candidates.sort(key=selection_order)
+    selected: list[dict] = []
+    selected_symbols: set[str] = set()
+    # Preserve both option sides if they are available.
     for side in ("CALL", "PUT"):
         if len(selected) >= count:
             break
@@ -109,5 +136,9 @@ def select_options(
         if candidate["symbol"] not in selected_symbols:
             selected.append(candidate)
             selected_symbols.add(candidate["symbol"])
-    print(f"Selected {len(selected)} WIG20 options (requested {count})")
+    full_horizon = sum(c["expiry_date"] > horizon_end for c in selected)
+    print(
+        f"Selected {len(selected)} WIG20 options (requested {count}); "
+        f"{full_horizon} survive all {len(simulation_dates)} simulation sessions"
+    )
     return selected
