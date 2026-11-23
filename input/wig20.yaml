@@ -1,7 +1,7 @@
 # WIG20 scenario preparation
 
-days: 25
-sim_time: 45
+days: 20
+sim_time: 55
 seed: 67
 
 lookback_sessions: 252
@@ -20,5 +20,5 @@ risk_var:
   confidence_levels: [0.95, 0.99]
   horizons_days: [1, 5, 10]
   historical_min_scenarios: 30
-  montecarlo_scenarios: 20 # later 20000 :)
+  montecarlo_scenarios: 10000
   montecarlo_seed: 67
