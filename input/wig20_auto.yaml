@@ -770,8 +770,16 @@ non_trading_dates:
 - '2027-01-06'
 risk_var:
   enabled: true
-  calibration_id: 5a57f50d01e7f1020a08666d276788b7baa6c768e5b32126e6a4c5ea04ac848a
-  confidence_level: 0.99
+  lookback_sessions: 250
+  confidence_levels: [0.95, 0.99]
+  horizons_days: [1, 5, 10]
+  historical_min_scenarios: 30
+  montecarlo_scenarios: 10000
+  montecarlo_seed: 67
+#risk_var:
+#  enabled: true
+#  calibration_id: 5a57f50d01e7f1020a08666d276788b7baa6c768e5b32126e6a4c5ea04ac848a
+#  confidence_level: 0.99
 risk_greeks:
   enabled: true
   calibration_id: 5a57f50d01e7f1020a08666d276788b7baa6c768e5b32126e6a4c5ea04ac848a
