@@ -108,3 +108,140 @@ def load_derivative_exposure(db_path: Path | str) -> pd.DataFrame:
         ).fetchdf()
     result["last_eod_day"] = int(last_day)
     return result
+
+
+def _pick_first(columns: set[str], *candidates: str) -> str | None:
+    for candidate in candidates:
+        if candidate in columns:
+            return candidate
+    return None
+
+
+def load_wig20_greeks(db_path: Path | str) -> pd.DataFrame:
+    """Load net EoD delta/gamma per agent/day for the WIG20 underlying.
+
+    Supports either a wide table (delta/gamma columns) or a long table
+    (greek_name + greek_value). If no underlying symbol column is present,
+    all rows are assumed to belong to WIG20, which is the only configured
+    Greeks underlying at this stage of the project.
+    """
+    import duckdb
+
+    db_path = Path(db_path)
+    if not db_path.is_file():
+        raise FileNotFoundError(f"Simulation DuckDB not found: {db_path}")
+    with duckdb.connect(str(db_path), read_only=True) as conn:
+        present = {str(row[0]).lower() for row in conn.execute("SHOW TABLES").fetchall()}
+        required = {"agents", "eod_agent_greeks"}
+        if missing := required - present:
+            raise ValueError(f"Simulation missing Greeks tables: {sorted(missing)}")
+        greeks = conn.execute("SELECT * FROM eod_agent_greeks").fetchdf()
+        agents = conn.execute("SELECT agent_id, group_name, name FROM agents").fetchdf()
+        index_map = pd.DataFrame()
+        if "indices" in present:
+            index_map = conn.execute(
+                "SELECT index_id AS underlying_id, COALESCE(short_name, name) AS underlying_symbol FROM indices"
+            ).fetchdf()
+        security_map = pd.DataFrame()
+        if "securities" in present:
+            security_map = conn.execute(
+                "SELECT asset_id AS underlying_id, COALESCE(short_name, name) AS underlying_symbol FROM securities"
+            ).fetchdf()
+
+    if greeks.empty:
+        return pd.DataFrame(
+            columns=["day", "agent_id", "underlying_symbol", "delta", "gamma", "group_name", "name"]
+        )
+
+    greeks.columns = [str(column).lower() for column in greeks.columns]
+    columns = set(greeks.columns)
+    if "agent_id" not in columns or "day" not in columns:
+        raise ValueError("eod_agent_greeks must contain day and agent_id")
+
+    if "delta" not in columns or "gamma" not in columns:
+        greek_name_col = _pick_first(columns, "greek_name", "greek", "measure")
+        greek_value_col = _pick_first(columns, "greek_value", "value", "amount")
+        if greek_name_col is None or greek_value_col is None:
+            raise ValueError(
+                "eod_agent_greeks must expose delta/gamma directly or provide greek_name/greek_value"
+            )
+        index_cols = ["day", "agent_id"]
+        for candidate in (
+            "underlying_symbol",
+            "underlying_short_name",
+            "underlying_name",
+            "underlying_id",
+            "symbol",
+            "short_name",
+        ):
+            if candidate in columns and candidate not in index_cols:
+                index_cols.append(candidate)
+                break
+        greeks = greeks.pivot_table(
+            index=index_cols,
+            columns=greek_name_col,
+            values=greek_value_col,
+            aggfunc="sum",
+            fill_value=0,
+        ).reset_index()
+        greeks.columns = [str(column).lower() for column in greeks.columns]
+        columns = set(greeks.columns)
+
+    for greek in ("delta", "gamma"):
+        if greek not in greeks.columns:
+            greeks[greek] = 0.0
+        greeks[greek] = pd.to_numeric(greeks[greek], errors="coerce").fillna(0.0)
+
+    underlying_symbol_col = _pick_first(
+        columns,
+        "underlying_symbol",
+        "underlying_short_name",
+        "underlying_name",
+        "symbol",
+        "short_name",
+    )
+    if underlying_symbol_col is not None:
+        greeks["underlying_symbol"] = greeks[underlying_symbol_col].astype(str)
+    elif "underlying_id" in columns:
+        greeks = greeks.merge(index_map, on="underlying_id", how="left")
+        if not security_map.empty:
+            greeks = greeks.merge(
+                security_map.rename(columns={"underlying_symbol": "security_underlying_symbol"}),
+                on="underlying_id",
+                how="left",
+            )
+            greeks["underlying_symbol"] = greeks["underlying_symbol"].fillna(
+                greeks["security_underlying_symbol"]
+            )
+            greeks = greeks.drop(columns=["security_underlying_symbol"])
+    else:
+        greeks["underlying_symbol"] = "WIG20"
+
+    symbol = greeks["underlying_symbol"].fillna("").astype(str).str.upper()
+    mask = symbol.str.replace(" ", "", regex=False).str.contains("WIG20", regex=False)
+    if mask.any():
+        greeks = greeks.loc[mask].copy()
+    elif greeks["underlying_symbol"].nunique(dropna=True) <= 1:
+        greeks = greeks.copy()
+        greeks["underlying_symbol"] = "WIG20"
+    else:
+        greeks = greeks.iloc[0:0].copy()
+
+    if greeks.empty:
+        return pd.DataFrame(
+            columns=["day", "agent_id", "underlying_symbol", "delta", "gamma", "group_name", "name"]
+        )
+
+    greeks["day"] = pd.to_numeric(greeks["day"], errors="raise").astype(int)
+    greeks["agent_id"] = pd.to_numeric(greeks["agent_id"], errors="raise").astype(int)
+    aggregated = (
+        greeks.groupby(["day", "agent_id", "underlying_symbol"], as_index=False)[["delta", "gamma"]]
+        .sum()
+        .sort_values(["agent_id", "day"])
+    )
+    aggregated = aggregated.merge(agents, on="agent_id", how="left", validate="many_to_one")
+    aggregated["group_name"] = (
+        aggregated["group_name"].fillna("Unclassified").replace("", "Unclassified")
+    )
+    aggregated["name"] = aggregated["name"].fillna("Unknown agent")
+    return aggregated

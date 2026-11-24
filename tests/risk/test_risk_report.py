@@ -1,4 +1,4 @@
-"""Offline risk reporting, cross-agent aggregation and Kupiec regression tests."""
+"""Offline risk reporting, cross-agent aggregation, Greeks and Kupiec regression tests."""
 
 from pathlib import Path
 
@@ -7,7 +7,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from marketsim.database.risk_reporting_queries import load_derivative_exposure
+from marketsim.database.risk_reporting_queries import (
+    load_derivative_exposure,
+    load_wig20_greeks,
+)
 from marketsim.plot.risk_report import add_var_percent, agent_summary, group_summary, select_var
 from marketsim.risk.var_backtesting import kupiec_report, kupiec_uc, one_day_apl
 from run.risk_report import generate_report, latest_run_db
@@ -67,7 +70,6 @@ def test_one_day_apl_is_forward_shifted_and_excludes_nonconsecutive_gaps():
     assert set(results.horizon_days) == {1}
     assert (results.actual_pnl == -10).all()
     assert (results.loss == 10).all()
-    # Missing t+1 is never silently bridged to t+2.
     incomplete = equity.loc[equity.day != 2].copy()
     results = one_day_apl(risk, incomplete)
     assert set(results.day) == {0, 3}
@@ -101,7 +103,7 @@ def test_short_kupiec_samples_warn_instead_of_claiming_validation():
     assert (report.exceptions == 0).all()
 
 
-def test_postrun_generates_charts_and_csv_without_touching_database(tmp_path, monkeypatch):
+def test_postrun_generates_charts_greeks_and_csv_without_touching_database(tmp_path, monkeypatch):
     risk, equity = fixtures()
     monkeypatch.setattr("run.risk_report.load_risk_report_data", lambda unused: (risk, equity))
     monkeypatch.setattr(
@@ -126,23 +128,58 @@ def test_postrun_generates_charts_and_csv_without_touching_database(tmp_path, mo
                 ),
                 dict(
                     agent_id=12,
-                    options_last_eod=0,
+                    options_last_eod=1,
                     futures_last_eod=1,
-                    options_any_eod=0,
+                    options_any_eod=1,
                     futures_any_eod=1,
                     last_eod_day=4,
                 ),
             ]
         ),
     )
+    monkeypatch.setattr(
+        "run.risk_report.load_wig20_greeks",
+        lambda unused: pd.DataFrame(
+            [
+                dict(
+                    day=0,
+                    agent_id=10,
+                    underlying_symbol="WIG20",
+                    delta=1.2,
+                    gamma=0.2,
+                    group_name="MM",
+                    name="A10",
+                ),
+                dict(
+                    day=1,
+                    agent_id=10,
+                    underlying_symbol="WIG20",
+                    delta=1.0,
+                    gamma=0.1,
+                    group_name="MM",
+                    name="A10",
+                ),
+                dict(
+                    day=0,
+                    agent_id=12,
+                    underlying_symbol="WIG20",
+                    delta=-2.0,
+                    gamma=-0.2,
+                    group_name="Momentum",
+                    name="A12",
+                ),
+            ]
+        ),
+    )
     outputs = generate_report(db_path=Path("unused.duckdb"), output_dir=tmp_path)
-    assert len(outputs) == 5  # top three agents, group comparison and ranking
+    assert len(outputs) == 7  # top three agents, group, ranking, 2 Greeks
     assert all(path.is_file() and path.stat().st_size > 500 for path in outputs)
     for name in (
         "var_agents_summary.csv",
         "var_groups_summary.csv",
         "kupiec_observations_apl.csv",
         "kupiec_1d_apl.csv",
+        "greeks_wig20.csv",
     ):
         assert (tmp_path / name).exists()
     kupiec = pd.read_csv(tmp_path / "kupiec_1d_apl.csv")
@@ -153,6 +190,8 @@ def test_postrun_generates_charts_and_csv_without_touching_database(tmp_path, mo
     assert row.options_any_eod == 2
     assert row.futures_any_eod == 1
     assert row.last_eod_day == 4
+    greeks = pd.read_csv(tmp_path / "greeks_wig20.csv")
+    assert set(greeks.agent_id) == {10, 12}
 
 
 def test_latest_db_scans_run_directories_only(tmp_path):
@@ -222,7 +261,6 @@ def test_agent_ranking_uses_full_period_median_not_last_day():
 
 
 def test_derivative_exposure_reads_option_and_futures_eod_positions(tmp_path):
-    """Futures positions are not in the ordinary position table."""
     db = tmp_path / "daedalus.duckdb"
     with duckdb.connect(str(db)) as conn:
         conn.execute("CREATE TABLE agents (agent_id INTEGER)")
@@ -295,5 +333,46 @@ def test_missing_derivative_inventory_is_not_silently_labelled_flat(tmp_path, mo
             ]
         ),
     )
+    monkeypatch.setattr(
+        "run.risk_report.load_wig20_greeks",
+        lambda unused: pd.DataFrame(
+            columns=["day", "agent_id", "underlying_symbol", "delta", "gamma"]
+        ),
+    )
     with pytest.raises(ValueError, match="Derivative inventory unavailable"):
         generate_report(db_path=Path("unused.duckdb"), output_dir=tmp_path)
+
+
+def test_load_wig20_greeks_supports_long_form_and_filters_option_agents(tmp_path):
+    db = tmp_path / "daedalus.duckdb"
+    with duckdb.connect(str(db)) as conn:
+        conn.execute("CREATE TABLE agents (agent_id INTEGER, group_name VARCHAR, name VARCHAR)")
+        conn.execute("INSERT INTO agents VALUES (10, 'MM', 'Agent 10'), (11, 'Noise', 'Agent 11')")
+        conn.execute("CREATE TABLE indices (index_id INTEGER, name VARCHAR, short_name VARCHAR)")
+        conn.execute(
+            "INSERT INTO indices VALUES (7, 'WIG Twenty', 'WIG20'), (8, 'Other', 'mWIG40')"
+        )
+        conn.execute(
+            "CREATE TABLE eod_agent_greeks "
+            "(day INTEGER, agent_id INTEGER, underlying_id INTEGER, greek_name VARCHAR, greek_value DOUBLE)"
+        )
+        conn.execute(
+            "INSERT INTO eod_agent_greeks VALUES "
+            "(0, 10, 7, 'delta', 2.5), (0, 10, 7, 'gamma', 0.4), "
+            "(1, 10, 7, 'delta', 2.0), (1, 10, 7, 'gamma', 0.3), "
+            "(1, 11, 8, 'delta', 9.9), (1, 11, 8, 'gamma', 9.9)"
+        )
+    data = load_wig20_greeks(db)
+    assert list(data.columns) == [
+        "day",
+        "agent_id",
+        "underlying_symbol",
+        "delta",
+        "gamma",
+        "group_name",
+        "name",
+    ]
+    assert set(data.agent_id) == {10}
+    assert set(data.underlying_symbol) == {"WIG20"}
+    assert data.loc[data.day == 0, "delta"].iloc[0] == pytest.approx(2.5)
+    assert data.loc[data.day == 1, "gamma"].iloc[0] == pytest.approx(0.3)

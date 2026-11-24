@@ -1,4 +1,4 @@
-"""Offline VaR plots and one-day Kupiec APL diagnostics from a simulation run.
+"""Offline VaR plots, Greeks and one-day Kupiec APL diagnostics from a simulation run.
 
 Usage:
     python -m run.risk_report
@@ -16,12 +16,14 @@ import duckdb
 from marketsim.database.risk_reporting_queries import (
     load_derivative_exposure,
     load_risk_report_data,
+    load_wig20_greeks,
 )
 from marketsim.plot.risk_report import (
     add_var_percent,
     agent_ranking_plot,
     agent_summary,
     evolution_plots,
+    greeks_evolution_plots,
     group_plot,
     group_summary,
     select_var,
@@ -54,6 +56,7 @@ def generate_report(
         raise ValueError("Invalid horizon, confidence, top-agents or max-ranked value")
     risk, equity = load_risk_report_data(db_path)
     exposure = load_derivative_exposure(db_path)
+    greeks = load_wig20_greeks(db_path)
     risk = add_var_percent(risk)
     chosen = select_var(risk, horizon=horizon, confidence=confidence)
     summary = agent_summary(chosen)
@@ -85,11 +88,17 @@ def generate_report(
     observations = one_day_apl(risk, equity)
     kupiec = kupiec_report(observations)
 
+    option_agents = sorted(
+        exposure.loc[exposure["options_any_eod"] > 0, "agent_id"].astype(int).tolist()
+    )
+    greeks = greeks.loc[greeks["agent_id"].isin(option_agents)].copy()
+
     output_dir.mkdir(parents=True, exist_ok=True)
     summary.to_csv(output_dir / "var_agents_summary.csv", index=False)
     groups.to_csv(output_dir / "var_groups_summary.csv", index=False)
     observations.to_csv(output_dir / "kupiec_observations_apl.csv", index=False)
     kupiec.to_csv(output_dir / "kupiec_1d_apl.csv", index=False)
+    greeks.to_csv(output_dir / "greeks_wig20.csv", index=False)
 
     images = evolution_plots(
         chosen,
@@ -108,21 +117,26 @@ def generate_report(
             max_agents=max_ranked,
         )
     )
+    images.extend(greeks_evolution_plots(greeks, out=output_dir, agent_ids=option_agents))
     print(f"Read-only source: {db_path}")
-    print(f"Report files: {output_dir} ({len(images)} PNGs + 4 CSVs)")
+    print(f"Report files: {output_dir} ({len(images)} PNGs + 5 CSVs)")
     print(f"VaR evolution agent IDs: {agents}")
     print("Agent ranking: median daily VaR/equity across the simulation, not the last day")
     print(
         "Derivatives: nonzero positions at final EoD "
         f"day {int(exposure['last_eod_day'].iloc[0])} vs any EoD (O=option, F=future)"
     )
+    if option_agents:
+        print(f"Greeks: WIG20 delta/gamma plots for option traders {option_agents}")
+    else:
+        print("Greeks: no agents held options at any EoD; no Greeks plots generated")
     if kupiec.empty:
         print("Kupiec: no eligible day-t -> day-(t+1) observations")
     else:
         low = int((kupiec.assessment == "LOW_POWER").sum())
         print(f"Kupiec one-day APL tests: {len(kupiec)}; LOW_POWER: {low}")
     print("CAUTION: Backtest uses realized equity P&L (APL), not frozen-book HPL.")
-    print("A 20-day run has very low power; no model validation is implied.")
+    print("A short run has very low power; no model validation is implied.")
     return images
 
 
@@ -153,6 +167,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.exit(2, f"Risk report failed: {exc}\n")
     except duckdb.IOException as exc:
         detail = str(exc)
+        detail_lower = detail.lower()
         lock_signatures = (
             "being used by another process",
             "already open in",
@@ -160,7 +175,7 @@ def main(argv: list[str] | None = None) -> int:
             "file is locked",
             "database is locked",
         )
-        if any(signature in detail.lower() for signature in lock_signatures):
+        if any(signature in detail_lower for signature in lock_signatures):
             parser.exit(
                 2,
                 f"Risk report failed: simulation database is locked: {db.resolve()}\n"

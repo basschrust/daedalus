@@ -1,4 +1,4 @@
-"""Noninteractive VaR time-series and cross-agent charts."""
+"""Noninteractive VaR time-series, Greeks and cross-agent charts."""
 
 from __future__ import annotations
 
@@ -203,3 +203,34 @@ def agent_ranking_plot(
     fig.savefig(target, dpi=140, bbox_inches="tight")
     plt.close(fig)
     return target
+
+
+def greeks_evolution_plots(
+    greeks: pd.DataFrame, *, out: Path, agent_ids: list[int], underlying: str = "WIG20"
+) -> list[Path]:
+    """Per-option-trader time series of net delta and gamma against WIG20."""
+    outputs: list[Path] = []
+    for agent_id in agent_ids:
+        rows = greeks.loc[greeks["agent_id"] == agent_id].sort_values("day")
+        if rows.empty:
+            continue
+        group = rows.iloc[0].get("group_name", "Unclassified")
+        fig, axes = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
+        axes[0].plot(rows["day"], rows["delta"], marker="o", markersize=3, linewidth=1.8)
+        axes[0].axhline(0, linewidth=1.0, alpha=0.4)
+        axes[0].set_ylabel("Net delta")
+        axes[0].grid(alpha=0.25)
+
+        axes[1].plot(rows["day"], rows["gamma"], marker="o", markersize=3, linewidth=1.8)
+        axes[1].axhline(0, linewidth=1.0, alpha=0.4)
+        axes[1].set_ylabel("Net gamma")
+        axes[1].set_xlabel("Simulation day (EoD)")
+        axes[1].grid(alpha=0.25)
+
+        fig.suptitle(f"Agent {agent_id} ({group}) | {underlying} net Greeks through time")
+        fig.tight_layout(rect=(0, 0, 1, 0.97))
+        target = out / f"greeks_wig20_agent_{agent_id}.png"
+        fig.savefig(target, dpi=140, bbox_inches="tight")
+        plt.close(fig)
+        outputs.append(target)
+    return outputs
