@@ -1,10 +1,23 @@
-# Risk reporting
+# Offline risk reporting
 
-The offline risk report now produces:
+Run `python -m run.risk_report` to read the latest local simulation DuckDB and
+produce VaR time-series, agent comparisons and preliminary one-day Kupiec APL
+diagnostics. It also produces one Delta/Gamma plot per agent who held options
+on at least one simulation EoD, using the WIG20 underlying only.
 
-- VaR evolution plots for selected agents.
-- Cross-agent and cross-group VaR comparisons.
-- Preliminary one-day Kupiec APL diagnostics.
-- WIG20 Greeks evolution plots (delta and gamma) for agents that held options at at least one EoD.
+The Greeks loader uses actual Daedalus tables:
 
-The Greeks charts are generated from `eod_agent_greeks` and filtered to the WIG20 underlying. They show net delta and net gamma through time for each option-trading agent.
+- `eod_agent_option_greeks` for signed option exposures (`delta_equivalent`,
+  `gamma_equivalent`), which already include contract positions and multipliers.
+- `eod_option_greeks` for available EoD dates, and as a fallback for older
+  snapshots without `gamma_equivalent`.
+- `indices` to identify WIG20 by its registered symbol.
+
+Each plot shows option-only Greeks, *not* the net delta of the entire agent
+portfolio including futures or stock hedges. Flat option positions are shown
+as zeros on days where per-option EoD Greeks were recorded. The report does
+not treat absent Greek observations as zeros if the model never ran.
+
+If the run did not calculate option Greeks (`risk_greeks.enabled: false`), the
+VaR report still runs, prints a diagnostic, and does not invent Greek values.
+Enable the EoD Greeks during a new simulation to plot real observations.

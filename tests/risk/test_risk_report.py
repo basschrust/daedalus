@@ -343,7 +343,7 @@ def test_missing_derivative_inventory_is_not_silently_labelled_flat(tmp_path, mo
         generate_report(db_path=Path("unused.duckdb"), output_dir=tmp_path)
 
 
-def test_load_wig20_greeks_supports_long_form_and_filters_option_agents(tmp_path):
+def test_wig20_greeks_uses_actual_agent_option_tables(tmp_path):
     db = tmp_path / "daedalus.duckdb"
     with duckdb.connect(str(db)) as conn:
         conn.execute("CREATE TABLE agents (agent_id INTEGER, group_name VARCHAR, name VARCHAR)")
@@ -353,14 +353,29 @@ def test_load_wig20_greeks_supports_long_form_and_filters_option_agents(tmp_path
             "INSERT INTO indices VALUES (7, 'WIG Twenty', 'WIG20'), (8, 'Other', 'mWIG40')"
         )
         conn.execute(
-            "CREATE TABLE eod_agent_greeks "
-            "(day INTEGER, agent_id INTEGER, underlying_id INTEGER, greek_name VARCHAR, greek_value DOUBLE)"
+            "CREATE TABLE eod_agent_option_greeks ("
+            "day INTEGER, agent_id INTEGER, asset_id INTEGER, underlying_id INTEGER, "
+            "position INTEGER, delta DOUBLE, delta_equivalent DOUBLE, multiplier DOUBLE, "
+            "calibration_id VARCHAR, gamma_equivalent DOUBLE)"
         )
         conn.execute(
-            "INSERT INTO eod_agent_greeks VALUES "
-            "(0, 10, 7, 'delta', 2.5), (0, 10, 7, 'gamma', 0.4), "
-            "(1, 10, 7, 'delta', 2.0), (1, 10, 7, 'gamma', 0.3), "
-            "(1, 11, 8, 'delta', 9.9), (1, 11, 8, 'gamma', 9.9)"
+            "INSERT INTO eod_agent_option_greeks VALUES "
+            "(0, 10, 20, 7, 2, 0.4, 8, 10, 'c0', 0.3), "
+            "(0, 10, 21, 7, -1, -0.2, 2, 10, 'c0', -0.1), "
+            "(1, 11, 30, 8, 3, 0.9, 27, 10, 'c1', 0.8)"
+        )
+        conn.execute(
+            "CREATE TABLE eod_option_greeks ("
+            "day INTEGER, asset_id INTEGER, underlying_id INTEGER, "
+            "gamma DOUBLE, multiplier DOUBLE, calibration_id VARCHAR)"
+        )
+        conn.execute(
+            "INSERT INTO eod_option_greeks VALUES "
+            "(0, 20, 7, 0.015, 10, 'c0'), "
+            "(0, 21, 7, 0.01, 10, 'c0'), "
+            "(1, 20, 7, 0.014, 10, 'c1'), "
+            "(1, 21, 7, 0.01, 10, 'c1'), "
+            "(1, 30, 8, 0.01, 10, 'c1')"
         )
     data = load_wig20_greeks(db)
     assert list(data.columns) == [
@@ -372,7 +387,78 @@ def test_load_wig20_greeks_supports_long_form_and_filters_option_agents(tmp_path
         "group_name",
         "name",
     ]
-    assert set(data.agent_id) == {10}
     assert set(data.underlying_symbol) == {"WIG20"}
-    assert data.loc[data.day == 0, "delta"].iloc[0] == pytest.approx(2.5)
-    assert data.loc[data.day == 1, "gamma"].iloc[0] == pytest.approx(0.3)
+    agent_10 = data.loc[data.agent_id == 10].set_index("day")
+    assert agent_10.loc[0, "delta"] == pytest.approx(10)
+    assert agent_10.loc[0, "gamma"] == pytest.approx(0.2)
+    # No WIG20 options at day 1, but the market Greeks were recorded.
+    assert agent_10.loc[1, "delta"] == pytest.approx(0)
+    assert agent_10.loc[1, "gamma"] == pytest.approx(0)
+    agent_11 = data.loc[data.agent_id == 11].set_index("day")
+    assert agent_11.loc[1, "delta"] == pytest.approx(0)
+    assert agent_11.loc[1, "gamma"] == pytest.approx(0)
+
+
+def test_older_schema_can_recover_gamma_from_per_option_table(tmp_path):
+    db = tmp_path / "daedalus.duckdb"
+    with duckdb.connect(str(db)) as conn:
+        conn.execute("CREATE TABLE agents (agent_id INTEGER, group_name VARCHAR, name VARCHAR)")
+        conn.execute("INSERT INTO agents VALUES (10, 'MM', 'A10')")
+        conn.execute("CREATE TABLE indices (index_id INTEGER, name VARCHAR, short_name VARCHAR)")
+        conn.execute("INSERT INTO indices VALUES (7, 'WIG20', 'WIG20')")
+        conn.execute(
+            "CREATE TABLE eod_agent_option_greeks ("
+            "day INTEGER, agent_id INTEGER, asset_id INTEGER, underlying_id INTEGER, "
+            "position INTEGER, delta DOUBLE, delta_equivalent DOUBLE, multiplier DOUBLE)"
+        )
+        conn.execute("INSERT INTO eod_agent_option_greeks VALUES (0, 10, 20, 7, -3, 0.4, -12, 10)")
+        conn.execute(
+            "CREATE TABLE eod_option_greeks ("
+            "day INTEGER, asset_id INTEGER, underlying_id INTEGER, "
+            "gamma DOUBLE, multiplier DOUBLE)"
+        )
+        conn.execute("INSERT INTO eod_option_greeks VALUES (0, 20, 7, 0.025, 10)")
+    data = load_wig20_greeks(db)
+    assert data.loc[0, "delta"] == pytest.approx(-12)
+    assert data.loc[0, "gamma"] == pytest.approx(-0.75)
+
+
+def test_missing_greeks_table_does_not_block_var_reporting(tmp_path):
+    db = tmp_path / "daedalus.duckdb"
+    with duckdb.connect(str(db)) as conn:
+        conn.execute("CREATE TABLE agents(agent_id INTEGER)")
+    result = load_wig20_greeks(db)
+    assert result.empty
+    assert "eod_agent_option_greeks" in result.attrs["diagnostic"]
+
+
+def test_report_keeps_var_plots_when_greeks_were_disabled(tmp_path, monkeypatch, capsys):
+    risk, equity = fixtures()
+    monkeypatch.setattr("run.risk_report.load_risk_report_data", lambda unused: (risk, equity))
+    monkeypatch.setattr(
+        "run.risk_report.load_derivative_exposure",
+        lambda unused: pd.DataFrame(
+            [
+                dict(
+                    agent_id=agent_id,
+                    options_last_eod=int(agent_id == 10),
+                    futures_last_eod=0,
+                    options_any_eod=int(agent_id == 10),
+                    futures_any_eod=0,
+                    last_eod_day=4,
+                )
+                for agent_id in (10, 11, 12)
+            ]
+        ),
+    )
+
+    def no_greeks(unused):
+        result = pd.DataFrame(columns=["day", "agent_id", "underlying_symbol", "delta", "gamma"])
+        result.attrs["diagnostic"] = "EoD Greeks disabled; no recorded option sensitivities"
+        return result
+
+    monkeypatch.setattr("run.risk_report.load_wig20_greeks", no_greeks)
+    paths = generate_report(db_path=Path("unused.duckdb"), output_dir=tmp_path)
+    assert len(paths) == 5  # Existing VaR plots; no Greeks can be fabricated.
+    assert (tmp_path / "greeks_wig20.csv").exists()
+    assert "EoD Greeks disabled" in capsys.readouterr().out

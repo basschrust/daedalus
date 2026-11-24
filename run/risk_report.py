@@ -57,6 +57,7 @@ def generate_report(
     risk, equity = load_risk_report_data(db_path)
     exposure = load_derivative_exposure(db_path)
     greeks = load_wig20_greeks(db_path)
+    greeks_diagnostic = greeks.attrs.get("diagnostic")
     risk = add_var_percent(risk)
     chosen = select_var(risk, horizon=horizon, confidence=confidence)
     summary = agent_summary(chosen)
@@ -126,8 +127,11 @@ def generate_report(
         "Derivatives: nonzero positions at final EoD "
         f"day {int(exposure['last_eod_day'].iloc[0])} vs any EoD (O=option, F=future)"
     )
-    if option_agents:
-        print(f"Greeks: WIG20 delta/gamma plots for option traders {option_agents}")
+    if greeks_diagnostic:
+        print(f"Greeks: {greeks_diagnostic}")
+    elif option_agents:
+        plotted = sorted(set(greeks["agent_id"]).intersection(option_agents))
+        print(f"Greeks: WIG20 option Delta/Gamma plots for agents {plotted}")
     else:
         print("Greeks: no agents held options at any EoD; no Greeks plots generated")
     if kupiec.empty:

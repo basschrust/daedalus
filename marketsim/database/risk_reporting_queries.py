@@ -110,138 +110,139 @@ def load_derivative_exposure(db_path: Path | str) -> pd.DataFrame:
     return result
 
 
-def _pick_first(columns: set[str], *candidates: str) -> str | None:
-    for candidate in candidates:
-        if candidate in columns:
-            return candidate
-    return None
+def _empty_wig20_greeks(reason: str) -> pd.DataFrame:
+    """Return a well-formed empty result and a reason for the caller to display."""
+    result = pd.DataFrame(
+        columns=["day", "agent_id", "underlying_symbol", "delta", "gamma", "group_name", "name"]
+    )
+    result.attrs["diagnostic"] = reason
+    return result
 
 
 def load_wig20_greeks(db_path: Path | str) -> pd.DataFrame:
-    """Load net EoD delta/gamma per agent/day for the WIG20 underlying.
+    """Read WIG20 option-portfolio Delta/Gamma from Daedalus EoD Greeks tables.
 
-    Supports either a wide table (delta/gamma columns) or a long table
-    (greek_name + greek_value). If no underlying symbol column is present,
-    all rows are assumed to belong to WIG20, which is the only configured
-    Greeks underlying at this stage of the project.
+    Agent rows already carry signed contract-multiplier-adjusted exposures.
+    Empty Greeks tables are possible when risk_greeks was disabled; in that
+    case the report can still generate its unrelated VaR output.
     """
     import duckdb
+    import numpy as np
 
-    db_path = Path(db_path)
-    if not db_path.is_file():
-        raise FileNotFoundError(f"Simulation DuckDB not found: {db_path}")
-    with duckdb.connect(str(db_path), read_only=True) as conn:
-        present = {str(row[0]).lower() for row in conn.execute("SHOW TABLES").fetchall()}
-        required = {"agents", "eod_agent_greeks"}
-        if missing := required - present:
-            raise ValueError(f"Simulation missing Greeks tables: {sorted(missing)}")
-        greeks = conn.execute("SELECT * FROM eod_agent_greeks").fetchdf()
-        agents = conn.execute("SELECT agent_id, group_name, name FROM agents").fetchdf()
-        index_map = pd.DataFrame()
-        if "indices" in present:
-            index_map = conn.execute(
-                "SELECT index_id AS underlying_id, COALESCE(short_name, name) AS underlying_symbol FROM indices"
-            ).fetchdf()
-        security_map = pd.DataFrame()
-        if "securities" in present:
-            security_map = conn.execute(
-                "SELECT asset_id AS underlying_id, COALESCE(short_name, name) AS underlying_symbol FROM securities"
-            ).fetchdf()
+    path = Path(db_path)
+    if not path.is_file():
+        raise FileNotFoundError(f"Simulation DuckDB not found: {path}")
 
-    if greeks.empty:
-        return pd.DataFrame(
-            columns=["day", "agent_id", "underlying_symbol", "delta", "gamma", "group_name", "name"]
-        )
+    with duckdb.connect(str(path), read_only=True) as conn:
+        tables = {str(row[0]).lower() for row in conn.execute("SHOW TABLES").fetchall()}
+        if "eod_agent_option_greeks" not in tables:
+            return _empty_wig20_greeks(
+                "No eod_agent_option_greeks table. The run may have had "
+                "risk_greeks.enabled=false; no Greeks plots can be reconstructed."
+            )
+        if not {"agents", "indices"} <= tables:
+            return _empty_wig20_greeks("Missing agents or indices needed to identify WIG20 Greeks")
 
-    greeks.columns = [str(column).lower() for column in greeks.columns]
-    columns = set(greeks.columns)
-    if "agent_id" not in columns or "day" not in columns:
-        raise ValueError("eod_agent_greeks must contain day and agent_id")
+        indices = conn.execute("SELECT index_id, name, short_name FROM indices").fetchdf()
+        indices["symbol"] = indices["short_name"].fillna(indices["name"])
+        wig20 = indices.loc[indices["symbol"].astype(str).str.upper().str.strip() == "WIG20"]
+        if wig20.empty:
+            return _empty_wig20_greeks("No WIG20 index registered in this simulation")
+        wig20_ids = set(wig20["index_id"])
 
-    if "delta" not in columns or "gamma" not in columns:
-        greek_name_col = _pick_first(columns, "greek_name", "greek", "measure")
-        greek_value_col = _pick_first(columns, "greek_value", "value", "amount")
-        if greek_name_col is None or greek_value_col is None:
+        rows = conn.execute("SELECT * FROM eod_agent_option_greeks").fetchdf()
+        if rows.empty:
+            return _empty_wig20_greeks("No agent option Greeks were recorded in this run")
+        rows.columns = [str(name).lower() for name in rows.columns]
+        required = {"day", "agent_id", "asset_id", "underlying_id", "position", "multiplier"}
+        if required - set(rows.columns):
             raise ValueError(
-                "eod_agent_greeks must expose delta/gamma directly or provide greek_name/greek_value"
+                "Incomplete eod_agent_option_greeks columns: "
+                f"{sorted(required - set(rows.columns))}"
             )
-        index_cols = ["day", "agent_id"]
-        for candidate in (
-            "underlying_symbol",
-            "underlying_short_name",
-            "underlying_name",
-            "underlying_id",
-            "symbol",
-            "short_name",
-        ):
-            if candidate in columns and candidate not in index_cols:
-                index_cols.append(candidate)
-                break
-        greeks = greeks.pivot_table(
-            index=index_cols,
-            columns=greek_name_col,
-            values=greek_value_col,
-            aggfunc="sum",
-            fill_value=0,
-        ).reset_index()
-        greeks.columns = [str(column).lower() for column in greeks.columns]
-        columns = set(greeks.columns)
+        rows = rows.loc[rows["underlying_id"].isin(wig20_ids)].copy()
+        if rows.empty:
+            return _empty_wig20_greeks("No WIG20 option Greeks recorded in this run")
 
-    for greek in ("delta", "gamma"):
-        if greek not in greeks.columns:
-            greeks[greek] = 0.0
-        greeks[greek] = pd.to_numeric(greeks[greek], errors="coerce").fillna(0.0)
+        if "delta_equivalent" not in rows.columns:
+            if "delta" not in rows.columns:
+                raise ValueError("Agent option Greeks contain neither delta_equivalent nor delta")
+            rows["delta_equivalent"] = rows["position"] * rows["multiplier"] * rows["delta"]
+        elif rows["delta_equivalent"].isna().any():
+            if "delta" not in rows.columns:
+                raise ValueError("Missing option delta-equivalent observations")
+            missing_delta = rows["delta_equivalent"].isna()
+            rows.loc[missing_delta, "delta_equivalent"] = (
+                rows.loc[missing_delta, "position"]
+                * rows.loc[missing_delta, "multiplier"]
+                * rows.loc[missing_delta, "delta"]
+            )
 
-    underlying_symbol_col = _pick_first(
-        columns,
-        "underlying_symbol",
-        "underlying_short_name",
-        "underlying_name",
-        "symbol",
-        "short_name",
+        if "gamma_equivalent" not in rows.columns:
+            rows["gamma_equivalent"] = float("nan")
+
+        option_greek_days = None
+        if "eod_option_greeks" in tables:
+            raw = conn.execute("SELECT * FROM eod_option_greeks").fetchdf()
+            raw.columns = [str(name).lower() for name in raw.columns]
+            needed = {"day", "asset_id", "underlying_id", "gamma", "multiplier"}
+            if needed <= set(raw.columns):
+                raw = raw.loc[raw["underlying_id"].isin(wig20_ids)].copy()
+                option_greek_days = sorted(raw["day"].unique().tolist())
+                if rows["gamma_equivalent"].isna().any():
+                    join_keys = ["day", "asset_id", "underlying_id"]
+                    if "calibration_id" in rows and "calibration_id" in raw:
+                        join_keys.append("calibration_id")
+                    if raw.duplicated(join_keys).any():
+                        raise ValueError("Duplicate option-Gamma snapshots for a calibration")
+                    selected_raw = raw[join_keys + ["gamma"]]
+                    rows = rows.merge(
+                        selected_raw, on=join_keys, how="left", validate="many_to_one"
+                    )
+                    missing_gamma = rows["gamma_equivalent"].isna()
+                    rows.loc[missing_gamma, "gamma_equivalent"] = (
+                        rows.loc[missing_gamma, "position"]
+                        * rows.loc[missing_gamma, "multiplier"]
+                        * rows.loc[missing_gamma, "gamma"]
+                    )
+                    rows = rows.drop(columns=["gamma"])
+
+        for column in ("delta_equivalent", "gamma_equivalent"):
+            rows[column] = pd.to_numeric(rows[column], errors="coerce")
+            if not np.isfinite(rows[column].to_numpy(dtype=float)).all():
+                return _empty_wig20_greeks(
+                    f"Missing or non-finite {column} in recorded WIG20 Greeks. "
+                    "Cannot plot a reliable exposure series."
+                )
+
+        agents = conn.execute("SELECT agent_id, group_name, name FROM agents").fetchdf()
+        if agents["agent_id"].duplicated().any():
+            raise ValueError("Duplicate agent IDs in agent registry")
+
+    aggregate = rows.groupby(["day", "agent_id"], as_index=False).agg(
+        delta=("delta_equivalent", "sum"), gamma=("gamma_equivalent", "sum")
     )
-    if underlying_symbol_col is not None:
-        greeks["underlying_symbol"] = greeks[underlying_symbol_col].astype(str)
-    elif "underlying_id" in columns:
-        greeks = greeks.merge(index_map, on="underlying_id", how="left")
-        if not security_map.empty:
-            greeks = greeks.merge(
-                security_map.rename(columns={"underlying_symbol": "security_underlying_symbol"}),
-                on="underlying_id",
-                how="left",
-            )
-            greeks["underlying_symbol"] = greeks["underlying_symbol"].fillna(
-                greeks["security_underlying_symbol"]
-            )
-            greeks = greeks.drop(columns=["security_underlying_symbol"])
-    else:
-        greeks["underlying_symbol"] = "WIG20"
-
-    symbol = greeks["underlying_symbol"].fillna("").astype(str).str.upper()
-    mask = symbol.str.replace(" ", "", regex=False).str.contains("WIG20", regex=False)
-    if mask.any():
-        greeks = greeks.loc[mask].copy()
-    elif greeks["underlying_symbol"].nunique(dropna=True) <= 1:
-        greeks = greeks.copy()
-        greeks["underlying_symbol"] = "WIG20"
-    else:
-        greeks = greeks.iloc[0:0].copy()
-
-    if greeks.empty:
-        return pd.DataFrame(
-            columns=["day", "agent_id", "underlying_symbol", "delta", "gamma", "group_name", "name"]
+    # A Greek snapshot is available every day on which the option Greeks table
+    # was populated. Fill missing agent/days with zero only on those verified days:
+    # such agents held no WIG20 options at that EoD.
+    if option_greek_days:
+        frame = pd.MultiIndex.from_product(
+            [sorted(agents["agent_id"].astype(int).tolist()), option_greek_days],
+            names=["agent_id", "day"],
+        ).to_frame(index=False)
+        aggregate = frame.merge(
+            aggregate, on=["agent_id", "day"], how="left", validate="one_to_one"
         )
+        aggregate[["delta", "gamma"]] = aggregate[["delta", "gamma"]].fillna(0.0)
 
-    greeks["day"] = pd.to_numeric(greeks["day"], errors="raise").astype(int)
-    greeks["agent_id"] = pd.to_numeric(greeks["agent_id"], errors="raise").astype(int)
-    aggregated = (
-        greeks.groupby(["day", "agent_id", "underlying_symbol"], as_index=False)[["delta", "gamma"]]
-        .sum()
+    aggregate["underlying_symbol"] = "WIG20"
+    aggregate = aggregate.merge(agents, on="agent_id", how="left", validate="many_to_one")
+    aggregate["group_name"] = (
+        aggregate["group_name"].fillna("Unclassified").replace("", "Unclassified")
+    )
+    aggregate["name"] = aggregate["name"].fillna("Unknown agent")
+    return (
+        aggregate[["day", "agent_id", "underlying_symbol", "delta", "gamma", "group_name", "name"]]
         .sort_values(["agent_id", "day"])
+        .reset_index(drop=True)
     )
-    aggregated = aggregated.merge(agents, on="agent_id", how="left", validate="many_to_one")
-    aggregated["group_name"] = (
-        aggregated["group_name"].fillna("Unclassified").replace("", "Unclassified")
-    )
-    aggregated["name"] = aggregated["name"].fillna("Unknown agent")
-    return aggregated

@@ -218,16 +218,19 @@ def greeks_evolution_plots(
         fig, axes = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
         axes[0].plot(rows["day"], rows["delta"], marker="o", markersize=3, linewidth=1.8)
         axes[0].axhline(0, linewidth=1.0, alpha=0.4)
-        axes[0].set_ylabel("Net delta")
+        axes[0].set_ylabel("Option Delta (PLN / WIG20 point)")
         axes[0].grid(alpha=0.25)
 
         axes[1].plot(rows["day"], rows["gamma"], marker="o", markersize=3, linewidth=1.8)
         axes[1].axhline(0, linewidth=1.0, alpha=0.4)
-        axes[1].set_ylabel("Net gamma")
+        axes[1].set_ylabel("Option Gamma (PLN / point²)")
         axes[1].set_xlabel("Simulation day (EoD)")
         axes[1].grid(alpha=0.25)
 
-        fig.suptitle(f"Agent {agent_id} ({group}) | {underlying} net Greeks through time")
+        fig.suptitle(
+            f"Agent {agent_id} ({group}) | {underlying} options Delta & Gamma through time\n"
+            "Option-only exposures; futures hedges are excluded"
+        )
         fig.tight_layout(rect=(0, 0, 1, 0.97))
         target = out / f"greeks_wig20_agent_{agent_id}.png"
         fig.savefig(target, dpi=140, bbox_inches="tight")
