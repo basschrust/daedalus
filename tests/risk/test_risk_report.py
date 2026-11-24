@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from marketsim.database.risk_reporting_queries import load_derivative_exposure
 from marketsim.plot.risk_report import add_var_percent, agent_summary, group_summary, select_var
 from marketsim.risk.var_backtesting import kupiec_report, kupiec_uc, one_day_apl
 from run.risk_report import generate_report, latest_run_db
@@ -103,6 +104,37 @@ def test_short_kupiec_samples_warn_instead_of_claiming_validation():
 def test_postrun_generates_charts_and_csv_without_touching_database(tmp_path, monkeypatch):
     risk, equity = fixtures()
     monkeypatch.setattr("run.risk_report.load_risk_report_data", lambda unused: (risk, equity))
+    monkeypatch.setattr(
+        "run.risk_report.load_derivative_exposure",
+        lambda unused: pd.DataFrame(
+            [
+                dict(
+                    agent_id=10,
+                    options_last_eod=1,
+                    futures_last_eod=0,
+                    options_any_eod=2,
+                    futures_any_eod=1,
+                    last_eod_day=4,
+                ),
+                dict(
+                    agent_id=11,
+                    options_last_eod=0,
+                    futures_last_eod=0,
+                    options_any_eod=0,
+                    futures_any_eod=0,
+                    last_eod_day=4,
+                ),
+                dict(
+                    agent_id=12,
+                    options_last_eod=0,
+                    futures_last_eod=1,
+                    options_any_eod=0,
+                    futures_any_eod=1,
+                    last_eod_day=4,
+                ),
+            ]
+        ),
+    )
     outputs = generate_report(db_path=Path("unused.duckdb"), output_dir=tmp_path)
     assert len(outputs) == 5  # top three agents, group comparison and ranking
     assert all(path.is_file() and path.stat().st_size > 500 for path in outputs)
@@ -115,6 +147,12 @@ def test_postrun_generates_charts_and_csv_without_touching_database(tmp_path, mo
         assert (tmp_path / name).exists()
     kupiec = pd.read_csv(tmp_path / "kupiec_1d_apl.csv")
     assert (kupiec.observations == 4).all()
+    summary = pd.read_csv(tmp_path / "var_agents_summary.csv")
+    row = summary.loc[(summary.agent_id == 10) & (summary.method == "montecarlo")].iloc[0]
+    assert row.options_last_eod == 1
+    assert row.options_any_eod == 2
+    assert row.futures_any_eod == 1
+    assert row.last_eod_day == 4
 
 
 def test_latest_db_scans_run_directories_only(tmp_path):
@@ -168,3 +206,94 @@ def test_cli_unrelated_duckdb_io_error_is_not_called_lock(tmp_path, monkeypatch,
     assert "DuckDB I/O error" in captured.err
     assert "corrupted file" in captured.err
     assert "locked" not in captured.err
+
+
+def test_agent_ranking_uses_full_period_median_not_last_day():
+    risk, _ = fixtures()
+    selected = select_var(add_var_percent(risk), horizon=1, confidence=0.99)
+    summary = agent_summary(selected)
+    item = summary.loc[(summary.agent_id == 10) & (summary.method == "montecarlo")].iloc[0]
+    observed = selected.loc[
+        (selected.agent_id == 10) & (selected.method == "montecarlo")
+    ].sort_values("day")
+    assert item.days == 5
+    assert item.median_var_pct == pytest.approx(observed.var_pct_equity.median())
+    assert item.median_var_pct != pytest.approx(observed.var_pct_equity.iloc[-1])
+
+
+def test_derivative_exposure_reads_option_and_futures_eod_positions(tmp_path):
+    """Futures positions are not in the ordinary position table."""
+    db = tmp_path / "daedalus.duckdb"
+    with duckdb.connect(str(db)) as conn:
+        conn.execute("CREATE TABLE agents (agent_id INTEGER)")
+        conn.execute("INSERT INTO agents VALUES (10), (11), (12), (13)")
+        conn.execute("CREATE TABLE securities (asset_id INTEGER, instrument_class VARCHAR)")
+        conn.execute("INSERT INTO securities VALUES (1, 'stock'), (2, 'option'), (3, 'option')")
+        conn.execute("CREATE TABLE futures (contract_id INTEGER)")
+        conn.execute("INSERT INTO futures VALUES (9)")
+        conn.execute(
+            "CREATE TABLE eod_agent_positions "
+            "(day INTEGER, agent_id INTEGER, asset_id INTEGER, position INTEGER)"
+        )
+        conn.execute(
+            "INSERT INTO eod_agent_positions VALUES "
+            "(0, 10, 2, 3), (0, 10, 3, -2), (1, 10, 1, 5), "
+            "(2, 10, 2, 0), (2, 11, 2, -4), (2, 12, 1, 15)"
+        )
+        conn.execute(
+            "CREATE TABLE eod_agent_futures_position "
+            "(day INTEGER, agent_id INTEGER, asset_id INTEGER, position INTEGER)"
+        )
+        conn.execute(
+            "INSERT INTO eod_agent_futures_position VALUES "
+            "(0, 10, 9, 7), (2, 10, 9, 0), (2, 12, 9, -2)"
+        )
+        conn.execute(
+            "CREATE TABLE eod_agent_portfolio_value "
+            "(day INTEGER, agent_id INTEGER, portfolio_value DOUBLE)"
+        )
+        conn.execute(
+            "INSERT INTO eod_agent_portfolio_value VALUES "
+            "(0, 10, 1000), (1, 10, 999), (2, 10, 1001), "
+            "(2, 11, 950), (2, 12, 1000), (2, 13, 1000)"
+        )
+    positions = load_derivative_exposure(db).set_index("agent_id")
+    assert len(positions) == 4
+    assert set(positions.last_eod_day) == {2}
+    assert positions.loc[10, "options_any_eod"] == 2
+    assert positions.loc[10, "futures_any_eod"] == 1
+    assert positions.loc[10, "options_last_eod"] == 0
+    assert positions.loc[10, "futures_last_eod"] == 0
+    assert positions.loc[11, "options_last_eod"] == 1
+    assert positions.loc[12, "futures_last_eod"] == 1
+    assert positions.loc[13, ["options_any_eod", "futures_any_eod"]].sum() == 0
+
+
+def test_derivative_exposure_errors_on_missing_tables(tmp_path):
+    db = tmp_path / "daedalus.duckdb"
+    with duckdb.connect(str(db)) as conn:
+        conn.execute("CREATE TABLE agents(agent_id INTEGER)")
+    with pytest.raises(ValueError, match="derivative-position tables"):
+        load_derivative_exposure(db)
+
+
+def test_missing_derivative_inventory_is_not_silently_labelled_flat(tmp_path, monkeypatch):
+    risk, equity = fixtures()
+    monkeypatch.setattr("run.risk_report.load_risk_report_data", lambda unused: (risk, equity))
+    monkeypatch.setattr(
+        "run.risk_report.load_derivative_exposure",
+        lambda unused: pd.DataFrame(
+            [
+                dict(
+                    agent_id=10,
+                    options_last_eod=0,
+                    futures_last_eod=0,
+                    options_any_eod=0,
+                    futures_any_eod=0,
+                    last_eod_day=4,
+                )
+            ]
+        ),
+    )
+    with pytest.raises(ValueError, match="Derivative inventory unavailable"):
+        generate_report(db_path=Path("unused.duckdb"), output_dir=tmp_path)

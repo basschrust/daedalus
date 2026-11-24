@@ -38,3 +38,27 @@ The Kupiec test here uses **actual P&L (APL)**, approximated by the difference i
 `LOW_POWER` is set whenever the number of expected exceptions is less than 5 (or the expected non-exception count is less than 5). At 99% confidence, that requires at least 500 usable independent trading-day pairs before the label can be lifted; actual testing power may require more. The LRuc and p-value are still shown for transparency. `NOT_REJECTED_5PCT` does *not* prove a model correct. VaR exceptions from agents trading the same simulated market are dependent; **do not pool agent-day observations as independent evidence**. The test checks unconditional coverage, not exception independence.
 
 For a genuine HPL backtest we should eventually freeze EoD positions, price them with next-day observed market conditions, and account for option/futures cashflows; for risk beyond the currently modelled FX/dividend/volatility assumptions, extend the valuation and risk-factor model first.
+
+
+## Highest-risk agents: time aggregation and derivative holdings
+
+`var_agents_ranking.png` orders agents by **median daily Monte Carlo VaR /
+positive portfolio equity** over the selected simulation period; it does **not**
+rank by final-day VaR. Each of the three bars is the corresponding method's
+median daily percentage, with days of nonpositive equity excluded.
+
+Each agent label now includes `Last: O#/F#` and `Any: O#/F#` where `O` means
+number of distinct **option series** with nonzero positions, and `F` means
+number of distinct **futures series** with nonzero positions. `Last` is the
+final simulation EoD; `Any` counts the distinct series held at **one or more
+EoDs** (not the sum of daily positions). For instance:
+
+- `Last: O0/F0` and `Any: O2/F1`: the agent had option and futures positions
+  earlier but finished the simulation flat in derivatives.
+- `Last: O1/F0` and `Any: O1/F0`: an option position remains on the final day.
+
+This measures EoD inventory only, not intraday trading, contract quantity,
+notional exposure, delta-equivalent exposure, or the presence of orders.
+The four counts, plus `last_eod_day`, are also saved in
+`var_agents_summary.csv`, repeated for each VaR method. The input DuckDB is
+opened read-only and is never modified.

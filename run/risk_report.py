@@ -13,7 +13,10 @@ from pathlib import Path
 
 import duckdb
 
-from marketsim.database.risk_reporting_queries import load_risk_report_data
+from marketsim.database.risk_reporting_queries import (
+    load_derivative_exposure,
+    load_risk_report_data,
+)
 from marketsim.plot.risk_report import (
     add_var_percent,
     agent_ranking_plot,
@@ -50,10 +53,23 @@ def generate_report(
     if horizon < 1 or not 0.5 < confidence < 1 or top_agents < 1 or max_ranked < 1:
         raise ValueError("Invalid horizon, confidence, top-agents or max-ranked value")
     risk, equity = load_risk_report_data(db_path)
+    exposure = load_derivative_exposure(db_path)
     risk = add_var_percent(risk)
     chosen = select_var(risk, horizon=horizon, confidence=confidence)
     summary = agent_summary(chosen)
     groups = group_summary(summary)
+    summary = summary.merge(exposure, on="agent_id", how="left", validate="many_to_one")
+    if summary["last_eod_day"].isna().any():
+        unmatched = sorted(summary.loc[summary["last_eod_day"].isna(), "agent_id"].unique())
+        raise ValueError(f"Derivative inventory unavailable for agent IDs: {unmatched}")
+    derivative_columns = (
+        "options_last_eod",
+        "futures_last_eod",
+        "options_any_eod",
+        "futures_any_eod",
+    )
+    for column in derivative_columns:
+        summary[column] = summary[column].fillna(0).astype(int)
 
     if agents is None:
         montecarlo = summary.loc[summary.method == "montecarlo"].sort_values(
@@ -95,6 +111,11 @@ def generate_report(
     print(f"Read-only source: {db_path}")
     print(f"Report files: {output_dir} ({len(images)} PNGs + 4 CSVs)")
     print(f"VaR evolution agent IDs: {agents}")
+    print("Agent ranking: median daily VaR/equity across the simulation, not the last day")
+    print(
+        "Derivatives: nonzero positions at final EoD "
+        f"day {int(exposure['last_eod_day'].iloc[0])} vs any EoD (O=option, F=future)"
+    )
     if kupiec.empty:
         print("Kupiec: no eligible day-t -> day-(t+1) observations")
     else:

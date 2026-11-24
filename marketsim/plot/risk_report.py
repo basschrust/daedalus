@@ -163,27 +163,42 @@ def agent_ranking_plot(
     confidence: float,
     max_agents: int,
 ) -> Path:
+    """Rank by median daily VaR%, with final/any EoD derivative holdings."""
     pivot = summary.pivot(index="agent_id", columns="method", values="median_var_pct")
-    groups = summary.drop_duplicates("agent_id").set_index("agent_id")["group_name"]
+    metadata = summary.drop_duplicates("agent_id").set_index("agent_id")
     preferred = "montecarlo" if "montecarlo" in pivot else pivot.columns[0]
     pivot = pivot.sort_values(preferred, ascending=False).head(max_agents)
-    fig, ax = plt.subplots(figsize=(max(10, 0.42 * len(pivot) + 3), 6))
+    fig, ax = plt.subplots(figsize=(max(11, 0.70 * len(pivot) + 3), 7.6))
     x = np.arange(len(pivot))
     for offset, method, label in zip((-0.26, 0, 0.26), METHODS, LABELS):
         if method in pivot:
             ax.bar(x + offset, pivot[method].to_numpy(dtype=float), width=0.25, label=label)
-    ax.set_xticks(
-        x,
-        [f"{int(a)}\n{groups.loc[a]}" for a in pivot.index],
-        rotation=65,
-        ha="right",
-        fontsize=8,
+
+    labels = []
+    for agent_id in pivot.index:
+        item = metadata.loc[agent_id]
+        labels.append(
+            f"{int(agent_id)}\n{item['group_name']}\n"
+            f"Last: O{int(item['options_last_eod'])}/F{int(item['futures_last_eod'])}\n"
+            f"Any: O{int(item['options_any_eod'])}/F{int(item['futures_any_eod'])}"
+        )
+    ax.set_xticks(x, labels, rotation=60, ha="right", fontsize=8)
+    ax.set_ylabel("Median daily VaR / positive equity (%)")
+    ax.set_title(
+        f"Highest-risk agents | {horizon}d {confidence:.1%} VaR\n"
+        "Ranked by median across simulation days (not final-day VaR)"
     )
-    ax.set_ylabel("Agent median EoD VaR / positive equity (%)")
-    ax.set_title(f"Highest-risk agents | {horizon}d {confidence:.1%} VaR")
     ax.grid(axis="y", alpha=0.2)
     ax.legend()
-    fig.tight_layout()
+    fig.text(
+        0.5,
+        0.015,
+        "O/F = distinct option/futures series with nonzero EoD positions; "
+        "Last = final simulation EoD, Any = at least one EoD",
+        ha="center",
+        fontsize=8,
+    )
+    fig.tight_layout(rect=(0, 0.05, 1, 1))
     target = out / "var_agents_ranking.png"
     fig.savefig(target, dpi=140, bbox_inches="tight")
     plt.close(fig)
