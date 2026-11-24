@@ -1,12 +1,8 @@
 # Offline VaR reporting and Kupiec diagnostics
 
-This package was built for Daedalus `feature/risk_u` (inspected HEAD `377000279d94352909ee8d18062ec71380b0d2dc`). Copy the paths in the ZIP over the repository root. **No current source files are overwritten**; this adds four Python modules plus tests and this document.
-
-From the project root, using the same Python environment as your simulation:
+To generate the risk report run the following command from Daedalus project root:
 
 ```powershell
-make lint-check
-pytest tests/risk/test_risk_report.py
 python -m run.risk_report
 ```
 
