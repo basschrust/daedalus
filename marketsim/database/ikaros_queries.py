@@ -12,11 +12,20 @@ from getpass import getpass
 from typing import Any
 
 import pandas as pd
-import snowflake.connector
 
 
 def connect() -> Any:
     """Create the existing Ikaros Snowflake source connection."""
+    try:
+        import snowflake.connector
+    except ModuleNotFoundError as exc:
+        if exc.name != "snowflake":
+            raise
+        raise RuntimeError(
+            'Snowflake support is not installed. '
+            'Run: python -m pip install -e ".[snowflake]"'
+        ) from exc
+
     kwargs = dict(
         account=os.environ["SNOWFLAKE_ACCOUNT"],
         user=os.environ["SNOWFLAKE_USER"],
