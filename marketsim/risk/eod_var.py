@@ -10,8 +10,8 @@ FX is frozen at the EoD exchange rate (currency-translation risk is not modeled)
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from hashlib import sha256
 from math import ceil, isfinite, sqrt
 from statistics import NormalDist
 from typing import TYPE_CHECKING
@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from marketsim.market.valuation_libs.BlackScholes import BSCall, BSPut
+from marketsim.risk.shared_montecarlo import SharedGaussianPaths
 
 if TYPE_CHECKING:
     from marketsim.agent.agent import Agent
@@ -120,7 +121,17 @@ class EodVaR:
             raise ValueError("Daily risk covariance is not positive semidefinite")
         self.factor = eigvecs @ np.diag(np.sqrt(np.maximum(eigvals, 0)))
         self.sigmas = np.sqrt(np.maximum(np.diag(self.covariance), 0)) * sqrt(TRADING_DAYS)
-        self._paths: dict[int, tuple[dict[int, np.ndarray], dict[int, np.ndarray]]] = {}
+        # One shared innovation stream across horizons and agents. Lazy windows
+        # retain only requested horizon/expiry checkpoints, not all daily states.
+        self._montecarlo = SharedGaussianPaths(
+            calibration_id=self.calibration_id,
+            seed=self.seed,
+            scenarios=self.scenarios,
+            mean=self.mean,
+            factor=self.factor,
+            horizons=self.horizons,
+        )
+        self._paths: dict[int, tuple[dict[int, np.ndarray], Mapping[int, np.ndarray]]] = {}
 
     def _convert(self, agent: Agent, amount: float, currency: str, day: int) -> float:
         return float(
@@ -253,7 +264,7 @@ class EodVaR:
             covered += abs(units * spot)
         return positions, covered, excluded
 
-    def _generate(self, horizon: int) -> tuple[dict[int, np.ndarray], dict[int, np.ndarray]]:
+    def _generate(self, horizon: int) -> tuple[dict[int, np.ndarray], Mapping[int, np.ndarray]]:
         if horizon in self._paths:
             return self._paths[horizon]
         if len(self.prices) - horizon < self.history_minimum:
@@ -261,29 +272,16 @@ class EodVaR:
                 f"Historical VaR horizon {horizon}: only {len(self.prices) - horizon} "
                 f"scenarios (minimum {self.history_minimum})"
             )
-        # Every possible prefix is retained, so a derivative that expires
-        # before the horizon is valued using the observed underlying at expiry.
+        # Historical VaR retains every intermediate stop for early expiry.
+        # Monte Carlo checkpoints are generated lazily and shared by all horizons.
         n = len(self.prices) - horizon
         lp = np.log(self.prices)
         historical = {stop: lp[stop : stop + n] - lp[:n] for stop in range(1, horizon + 1)}
-
-        payload = f"{self.calibration_id}|{horizon}|{self.seed}".encode()
-        seed = int.from_bytes(sha256(payload).digest()[:8], "big")
-        rng = np.random.default_rng(seed)
-        cumulative = np.zeros((self.scenarios, len(self.symbols)), dtype=float)
-        montecarlo = {}
-        for stop in range(1, horizon + 1):
-            cumulative = (
-                cumulative
-                + self.mean
-                + rng.standard_normal((self.scenarios, len(self.symbols))) @ self.factor.T
-            )
-            montecarlo[stop] = cumulative.copy()
-        self._paths[horizon] = historical, montecarlo
-        return historical, montecarlo
+        self._paths[horizon] = historical, self._montecarlo.window(horizon)
+        return self._paths[horizon]
 
     def _pnl(
-        self, positions: list[Position], paths: dict[int, np.ndarray], horizon: int
+        self, positions: list[Position], paths: Mapping[int, np.ndarray], horizon: int
     ) -> np.ndarray:
         result = np.zeros(next(iter(paths.values())).shape[0], dtype=float)
         for position in positions:

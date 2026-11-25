@@ -16,6 +16,8 @@ from zoneinfo import ZoneInfo
 import duckdb
 import yaml
 
+from marketsim.scenarios.scenario_settings import build_scenario_settings
+
 SOURCE_FIELDS = {
     "wig20": ("days", "lookback_sessions", "futures_count", "options_count"),
     "gpw": ("days", "lookback_sessions", "minimum_history_sessions", "margin_rate"),
@@ -58,27 +60,39 @@ def selection_signature(dataset: str, settings: dict, profile: dict) -> str:
 
 
 def _profile_settings(input_dir: Path, settings: dict) -> dict:
+    # New configuration: agents are already resolved through !include.
+    if isinstance(settings.get("agents"), dict):
+        return settings
+
+    # Legacy GPW configuration: keep the existing behaviour.
     profile_name = settings.get("agents_profile", "gpw_50d.yaml")
     profile_path = (input_dir / profile_name).resolve()
+
     if not profile_path.is_relative_to(input_dir.resolve()):
         raise ValueError("agents_profile must be inside input/")
+
     with profile_path.open(encoding="utf-8") as stream:
         profile = yaml.safe_load(stream)
+
     if not isinstance(profile, dict):
         raise ValueError(f"Invalid scenario profile: {profile_path}")
+
     return profile
 
 
-def _scenario_from_cached(dataset: str, snapshot: dict, profile: dict, settings: dict) -> dict:
-    """Repeat the scenario builders' profile overlay without any Snowflake query."""
-    base = dict(profile)
-    base["markets"] = snapshot["markets"]
-    base["historical_prices"] = snapshot["historical_prices"]
-    base["start_date"] = snapshot["start_date"]
-    base["days"] = int(settings.get("days", 50))
-    base["sim_time"] = int(settings.get("sim_time", 60))
-    base["seed"] = int(settings.get("seed", 67))
-    return base
+def _scenario_from_cached(
+    dataset: str,
+    snapshot: dict,
+    profile: dict,
+    settings: dict,
+) -> dict:
+    market_data = {key: snapshot[key] for key in ("markets", "historical_prices", "start_date")}
+
+    return build_scenario_settings(
+        settings=settings,
+        market_data=market_data,
+        profile=(None if isinstance(settings.get("agents"), dict) else profile),
+    )
 
 
 def _market_data_path(input_dir: Path, snapshot: dict) -> Path:

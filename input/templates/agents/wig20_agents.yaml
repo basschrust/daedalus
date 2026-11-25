@@ -1,0 +1,213 @@
+agents:
+  relative_momentum:
+    agent_class: RelativeMomentumAgent
+    instrument_classes:
+      - stock
+    number: 20
+    config:
+      lookback_sessions: 252
+      turnover_sessions: 30
+      min_median_turnover: 250000
+      portfolio_size: 10
+      rebalance_sessions: 5
+      rebalance_offset: 0
+      aggression: 0.003
+      order_validity_ticks: 3
+      base_currency: PLN
+      initial_cash:
+        PLN: 1000000
+  arbitrageurs:
+    agent_class: IndexFuturesArbitrageAgent
+    number: 5
+    config:
+      entry_threshold: 0.0015
+      exit_threshold: 0.0004
+      order_quantity: 25
+      max_order_quantity: 100
+      max_position: 500
+      max_gross_exposure_pln: 100000000
+      volume_aggression: 8.0
+      max_stock_order_quantity: 10000
+      validity_period: 1
+      initial_cash:
+        PLN: 100000000
+  noise_tight:
+    agent_class: NoiseAgent
+    instrument_classes:
+    - stock
+    - future
+    number: 9
+    config:
+      lam: 0.45
+      mean_volume: 150
+      mean_spread: 0.7
+      validity_period: 3
+      volume_fraction: 0.004
+      use_historical_volatility: true
+      historical_volatility_scale: 0.15
+      volume_lookback: 20
+      volatility_lookback: 20
+      max_price_deviation: 0.02
+      volume_basis: notional
+      initial_cash:
+        PLN: 30000000
+      future_lam_multiplier: 1.5
+      future_mean_contracts: 75
+      future_max_order_contracts: 180
+      future_max_position_contracts: 1800
+      future_max_daily_contracts: 2500
+      stock_coverage_fraction: 0.30
+      min_noise_agents_per_stock: 3
+      stock_volume_coverage_scale: 1.0
+      coverage_seed: 67
+  noise_medium:
+    agent_class: NoiseAgent
+    instrument_classes:
+    - stock
+    - future
+    number: 15
+    config:
+      lam: 0.3
+      mean_volume: 200
+      mean_spread: 1.5
+      validity_period: 10
+      volume_fraction: 0.03
+      historical_volatility_scale: 0.2
+      max_price_deviation: 0.02
+      volume_basis: notional
+      initial_cash:
+        PLN: 30000000
+      future_lam_multiplier: 1.8
+      future_mean_contracts: 100
+      future_max_order_contracts: 240
+      future_max_position_contracts: 2400
+      future_max_daily_contracts: 3500
+      stock_coverage_fraction: 0.30
+      min_noise_agents_per_stock: 3
+      stock_volume_coverage_scale: 1.0
+      coverage_seed: 67
+  noise_wide:
+    agent_class: NoiseAgent
+    number: 8
+    config:
+      lam: 0.2
+      mean_volume: 250
+      mean_spread: 4.0
+      validity_period: 20
+      volume_fraction: 0.003
+      historical_volatility_scale: 0.15
+      max_price_deviation: 0.02
+      volume_basis: notional
+      initial_cash:
+        PLN: 30000000
+      future_lam_multiplier: 2.0
+      future_mean_contracts: 130
+      future_max_order_contracts: 300
+      future_max_position_contracts: 3000
+      future_max_daily_contracts: 4500
+      min_noise_agents_per_stock: 3
+      stock_coverage_fraction: 0.30
+      stock_volume_coverage_scale: 1.0
+      coverage_seed: 67
+    instrument_classes:
+    - stock
+    - future
+    - option
+  market_makers:
+    agent_class: MMZOHAgent
+    instrument_classes:
+    - stock
+    - future
+    number: 3
+    config:
+      rebalance_by: time
+      rebalance_period: 4
+      volume_fraction: 0.2
+      historical_volatility_scale: 0.9
+      max_price_deviation: 0.04
+      K: 4
+      xi: 0.1
+      omega: 0.1
+      q_max: 1000000
+      initial_cash:
+        PLN: 100000000
+  option_market_makers:
+    agent_class: OptionMMZOHAgent
+    number: 3
+    instrument_classes:
+      - option
+      - stock
+    markets: ALL
+    config:
+      K: 3
+      xi: 0.1
+      omega: 0.1
+      rebalance_period: 5
+      volume: 2
+      volume_fraction: 0.05
+      q_max: 300
+      option_inventory_fraction: 1.0
+  momentum_fast:
+    agent_class: MomentumAgent
+    instrument_classes:
+    - stock
+    number: 4
+    config:
+      momentum_mode: intraday
+      period: 5
+      threshold: 0.001
+      lam: 0.45
+      mean_volume: 150
+      q_max: 10000
+      aggression: 0.0005
+      volume_fraction: 0.01
+      historical_volatility_scale: 0.7
+      max_price_deviation: 0.07
+      initial_cash:
+        PLN: 10000000
+  momentum_slow:
+    agent_class: MomentumAgent
+    instrument_classes:
+    - stock
+    number: 3
+    config:
+      momentum_mode: daily
+      daily_lookback: 10
+      threshold: 0.01
+      lam: 0.3
+      mean_volume: 150
+      q_max: 5000
+      aggression: 0.0005
+      volume_fraction: 0.008
+      historical_volatility_scale: 0.7
+      max_price_deviation: 0.09
+      initial_cash:
+        PLN: 10000000
+  hbl:
+    agent_class: HBLAgent
+    number: 2
+  regime_traders:
+    agent_class: RegimeTraderAgent
+    instrument_classes:
+    - stock
+    number: 4
+    config:
+      lam: 0.65
+      mean_volume: 200
+      regime_switch_probability: 0.02
+      bullish_probability: 0.45
+      bearish_probability: 0.45
+      aggression_ticks: 10
+      tick_size: 0.01
+      validity_period: 3
+      max_position: 35000
+      volume_fraction: 0.015
+      historical_volatility_scale: 0.6
+      max_price_deviation: 0.08
+      fundamental_price_discovery: true
+      fundamental_gap_threshold: 0.002
+      fundamental_gap_sensitivity: 25.0
+      fundamental_max_activity_multiplier: 3.0
+      fundamental_max_size_multiplier: 3.0
+      initial_cash:
+        PLN: 10000000
