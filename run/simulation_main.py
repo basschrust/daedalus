@@ -10,6 +10,7 @@ from collections.abc import Callable
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import duckdb
 import yaml
 from dotenv import load_dotenv
 
@@ -21,6 +22,7 @@ from marketsim.database.ikaros_local import (
     validate_wig20_snapshot,
 )
 from marketsim.database.ikaros_queries import connect
+from marketsim.database.prepared_snapshot_restore import restore_historical_csv
 from marketsim.market.historical_prices import load_historical_prices, load_simulation_dates
 from marketsim.risk.calibration_sync import sync_greeks_calibration
 from marketsim.risk.daily_calibration import DailyCalibratedSimulator
@@ -188,8 +190,115 @@ def plot_wig20_greeks_after_run(*, output_dir: Path) -> list[Path]:
     return images
 
 
+class ScenarioInputError(Exception):
+    """A normal, actionable setup problem rather than a simulator exception."""
+
+
+def _historical_input_path(*, scenario: dict) -> Path | None:
+    """Get an enabled scenario's historical CSV path without opening it."""
+    settings = scenario.get("historical_prices") or {}
+    if not settings.get("enabled", False):
+        return None
+    configured = settings.get("path")
+    if not configured or not isinstance(configured, (str, Path)):
+        raise ScenarioInputError(
+            "Historical prices are enabled, but their CSV path is missing in the YAML."
+        )
+    path = Path(configured)
+    return path if path.is_absolute() else INPUT_DIR / path
+
+
+def _local_ikaros_sources() -> list[Path]:
+    """Look only in conventional locations; never scan arbitrary user files."""
+    candidates = (
+        INPUT_DIR / "market_data" / "ikaros.duckdb",
+        ROOT.parent / "Ikaros" / "input" / "market_data" / "ikaros.duckdb",
+        ROOT.parent / "ikaros" / "input" / "market_data" / "ikaros.duckdb",
+    )
+    return [path for path in candidates if path.is_file()]
+
+
+def _has_snowflake_settings() -> bool:
+    """Do not attempt an interactive or unauthenticated external connection."""
+    if not os.getenv("SNOWFLAKE_ACCOUNT") or not os.getenv("SNOWFLAKE_USER"):
+        return False
+    authenticator = os.getenv("SNOWFLAKE_AUTHENTICATOR", "snowflake")
+    return authenticator not in {"snowflake", "username_password_mfa"} or bool(
+        os.getenv("SNOWFLAKE_PASSWORD")
+    )
+
+
+def ensure_historical_input(*, config_file: str, scenario: dict) -> bool:
+    """Prepare a missing generated WIG20 CSV; return True if YAML was rebuilt.
+
+    No Ikaros input or Snowflake login is required when the file is present.
+    A dated, matching prepared cache is accepted even when it is old: the
+    explicit generated YAML is a reproducible snapshot, not a latest-data query.
+    """
+    path = _historical_input_path(scenario=scenario)
+    if path is None or (path.is_file() and path.stat().st_size > 0):
+        return False
+
+    if Path(config_file).name != "wig20_auto.yaml":
+        raise ScenarioInputError(
+            f"Required historical prices are missing: {path.name}. "
+            "Provide the file specified by historical_prices.path and try again."
+        )
+
+    print("WIG20 historical prices are not installed. Checking reusable market data...")
+    cache = PreparedDatasetCache(root=ROOT)
+    try:
+        if restore_historical_csv(
+            cache_path=cache.db_path,
+            output_path=path,
+            dataset="wig20",
+            scenario=scenario,
+        ):
+            print("Restored matching WIG20 history from the local DuckDB cache.")
+            return False
+    except (OSError, ValueError, duckdb.Error):
+        # If DuckDB is locked, local Ikaros or Snowflake may still be available.
+        print("The local market cache is unavailable; checking other data sources.")
+
+    failures: list[str] = []
+    for source in _local_ikaros_sources():
+        print(f"Preparing WIG20 from local Ikaros data: {source}")
+        try:
+            prepare_dataset("wig20", source="duckdb", ikaros_db=source)
+        except (OSError, RuntimeError, ValueError, duckdb.Error) as exc:
+            detail = str(exc).splitlines()[0][:140]
+            failures.append(f"Local Ikaros data need an update: {detail}")
+        else:
+            if path.is_file() and path.stat().st_size > 0:
+                return True
+
+    if _has_snowflake_settings():
+        print("Preparing WIG20 from configured Snowflake market data...")
+        try:
+            prepare_dataset("wig20", source="snowflake")
+        except (OSError, RuntimeError, ValueError, KeyError) as exc:
+            detail = str(exc).splitlines()[0][:140]
+            failures.append(f"Snowflake preparation needs attention: {detail}")
+        else:
+            if path.is_file() and path.stat().st_size > 0:
+                return True
+
+    reason = "\n".join(failures)
+    if reason:
+        reason += "\n"
+    raise ScenarioInputError(
+        f"{reason}A real WIG20 simulation needs historical Ikaros data. "
+        "Put a complete ikaros.duckdb in input/market_data/ or configure "
+        "Snowflake in .env. Then run the same command again. "
+        "No empty simulation was started."
+    )
+
+
 def run_simulation(config_file: str, *, realism_enabled: bool = False) -> None:
     config = load_config(config_file)
+    if ensure_historical_input(config_file=config_file, scenario=config):
+        # Preparation may refresh the generated instruments and dates.
+        config = load_config(config_file)
     output_dir = create_run_directory()
 
     # Preserve the resolved configuration for inspection and reproducibility.
@@ -300,7 +409,10 @@ def main(argv: list[str] | None = None) -> None:
         config_file = args.config or "market_structure.yaml"
         realism_enabled = False
 
-    run_simulation(config_file, realism_enabled=realism_enabled)
+    try:
+        run_simulation(config_file, realism_enabled=realism_enabled)
+    except ScenarioInputError as exc:
+        parser.exit(2, f"WIG20 setup: {exc}\n")
 
 
 if __name__ == "__main__":
