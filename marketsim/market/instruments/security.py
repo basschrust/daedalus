@@ -370,6 +370,10 @@ class Security(ABC):
     def __str__(self) -> str:
         return f"Security_{self.asset_id}_{self.instrument_class}_{self.short_name}"
 
+    def candle_title(self) -> str:
+        """Human-readable title, overridden by derivative instruments."""
+        return self.name or self.short_name
+
     ## plotting and supporting functions     #######################
 
     def aggregate_order_queue(
@@ -411,8 +415,12 @@ class Security(ABC):
         plot_order_book(
             bids=bids,
             asks=asks,
-            output_file=f"{self.output_dir}/{str(self)}/LOB/LOB_{self.asset_id}_{current_time}.png",
-            title=f"Order book at {current_time}",
+            output_file=str(
+                Path(self.output_dir)
+                / "LOB"
+                / f"lob_{self.asset_id}_d{self.current_day:03d}_t{current_time:04d}.png"
+            ),
+            title=f"{self.short_name} | day {self.current_day}, tick {current_time}",
         )
 
     def calculate_realized_volatility(
@@ -489,7 +497,11 @@ class Security(ABC):
         self.logger.info(df_candlestick.head())
 
         candlestick_filename = Path(self.output_dir) / "candle_plots" / f"candlestick_{self}.png"
-        plot_candlestick(df=df_candlestick, output_file=str(candlestick_filename), title=self.name)
+        plot_candlestick(
+            df=df_candlestick,
+            output_file=str(candlestick_filename),
+            title=self.candle_title(),
+        )
 
     def show_summary(self):
         self.logger.info(f"\n\nMarket {str(self)} summary:")
@@ -510,7 +522,7 @@ class Security(ABC):
                 simulated=eod_prices_df,
                 simulation_dates=self.simulation_dates,
                 output_file=str(candlestick_filename),
-                title=self.name,
+                title=self.candle_title(),
                 theoretical=self.get_theoretical_history(),
             )
         else:

@@ -158,6 +158,36 @@ def prepare_dataset(
     return generated_file, realism_enabled
 
 
+def plot_wig20_greeks_after_run(*, output_dir: Path) -> list[Path]:
+    """Create WIG20 Delta/Gamma plots after the simulation DB is closed."""
+    from marketsim.database.risk_reporting_queries import load_wig20_greeks
+    from marketsim.plot.risk_report import greeks_evolution_plots
+
+    db = output_dir / "daedalus.duckdb"
+    if not db.is_file():
+        print("WIG20 Greeks plots: no local DuckDB for this run")
+        return []
+
+    import duckdb
+
+    try:
+        values = load_wig20_greeks(db)
+    except (ValueError, OSError, duckdb.Error) as exc:
+        print(f"WIG20 Greeks plots skipped: {exc}")
+        return []
+    if values.empty:
+        print(f"WIG20 Greeks plots: {values.attrs.get('diagnostic', 'no EoD option Greeks')}")
+        return []
+
+    report_dir = output_dir / "risk_report"
+    report_dir.mkdir(parents=True, exist_ok=True)
+    values.to_csv(report_dir / "greeks_wig20.csv", index=False)
+    agent_ids = sorted(values.agent_id.astype(int).unique().tolist())
+    images = greeks_evolution_plots(values, out=report_dir, agent_ids=agent_ids)
+    print(f"WIG20 Greeks plots: {len(images)} charts in {report_dir}")
+    return images
+
+
 def run_simulation(config_file: str, *, realism_enabled: bool = False) -> None:
     config = load_config(config_file)
     output_dir = create_run_directory()
@@ -194,6 +224,12 @@ def run_simulation(config_file: str, *, realism_enabled: bool = False) -> None:
         close = getattr(simulator.repository, "close", None)
         if callable(close):
             close()
+
+    # Never open a second connection while DuckDB is still held by the simulator.
+    if config.get("risk_greeks", {}).get("enabled", False):
+        plot_wig20_greeks_after_run(output_dir=output_dir)
+    elif any(m.instrument_class == "option" for m in simulator.markets.values()):
+        print("Greeks plots skipped: risk_greeks is disabled for this scenario")
 
 
 def main(argv: list[str] | None = None) -> None:
