@@ -12,6 +12,7 @@ import argparse
 from pathlib import Path
 
 import duckdb
+import yaml
 
 from marketsim.database.risk_reporting_queries import (
     load_derivative_exposure,
@@ -41,6 +42,54 @@ def latest_run_db(*, root: Path = ROOT) -> Path:
     return candidates[0]
 
 
+def _risk_modes(db_path: Path) -> tuple[bool, bool] | None:
+    """Risk settings from the immutable configuration saved with this run.
+
+    Return None for older runs without a saved config: lack of a snapshot is
+    not evidence that risk was disabled.
+    """
+    snapshot = db_path.parent / "market_structure.yaml"
+    if not snapshot.is_file():
+        return None
+    with snapshot.open(encoding="utf-8") as stream:
+        config = yaml.safe_load(stream)
+    if not isinstance(config, dict):
+        raise ValueError(f"Invalid saved run configuration: {snapshot}")
+
+    def enabled(section: str) -> bool:
+        settings = config.get(section)
+        if settings is None:
+            return False
+        if not isinstance(settings, dict) or not isinstance(settings.get("enabled", False), bool):
+            raise ValueError(f"Invalid {section} settings in {snapshot}")
+        return settings.get("enabled", False)
+
+    return enabled("risk_var"), enabled("risk_greeks")
+
+
+def _greeks_only_report(*, db_path: Path, output_dir: Path) -> list[Path]:
+    """Generate WIG20 option Greeks when VaR itself is not requested."""
+    greeks = load_wig20_greeks(db_path)
+    if greeks.empty:
+        reason = greeks.attrs.get("diagnostic", "no WIG20 option Greeks recorded")
+        print(f"Greeks: no plots ({reason}).")
+        return []
+    exposure = load_derivative_exposure(db_path)
+    option_agents = sorted(
+        exposure.loc[exposure["options_any_eod"] > 0, "agent_id"].astype(int).tolist()
+    )
+    greeks = greeks.loc[greeks["agent_id"].isin(option_agents)].copy()
+    if greeks.empty:
+        print("Greeks: no agents held WIG20 options at EoD; no plots.")
+        return []
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    greeks.to_csv(output_dir / "greeks_wig20.csv", index=False)
+    plots = greeks_evolution_plots(greeks, out=output_dir, agent_ids=option_agents)
+    print(f"Greeks: {len(plots)} WIG20 Delta/Gamma plots saved to {output_dir}.")
+    return plots
+
+
 def generate_report(
     *,
     db_path: Path,
@@ -54,6 +103,18 @@ def generate_report(
     """Read simulation only; save figures/CSVs under output_dir."""
     if horizon < 1 or not 0.5 < confidence < 1 or top_agents < 1 or max_ranked < 1:
         raise ValueError("Invalid horizon, confidence, top-agents or max-ranked value")
+
+    # The simulation stores its resolved configuration alongside the database.
+    # Absence of risk observations is normal only when VaR wasn't requested.
+    modes = _risk_modes(db_path)
+    if modes is not None and not modes[0]:
+        print("VaR: not enabled in this scenario; skipping VaR plots and Kupiec test.")
+        if modes[1]:
+            return _greeks_only_report(db_path=db_path, output_dir=output_dir)
+        print("Greeks: not enabled in this scenario; skipping Greeks plots.")
+        print("Risk report: nothing to generate.")
+        return []
+
     risk, equity = load_risk_report_data(db_path)
     exposure = load_derivative_exposure(db_path)
     greeks = load_wig20_greeks(db_path)
