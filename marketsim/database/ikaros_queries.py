@@ -22,8 +22,7 @@ def connect() -> Any:
         if exc.name != "snowflake":
             raise
         raise RuntimeError(
-            'Snowflake support is not installed. '
-            'Run: python -m pip install -e ".[snowflake]"'
+            'Snowflake support is not installed. Run: python -m pip install -e ".[snowflake]"'
         ) from exc
 
     kwargs = dict(

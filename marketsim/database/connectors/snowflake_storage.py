@@ -14,8 +14,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import pandas as pd
-import snowflake.connector
-from snowflake.connector.pandas_tools import write_pandas
 
 from marketsim.database.queries.execution_volumes import EXECUTION_VOLUME_SQL
 from marketsim.database.queries.group_flows import EOD_GROUP_FLOW_INSERT_SQL, GROUP_FLOW_INSERT_SQL
@@ -345,6 +343,8 @@ class SnowflakeRepository:
         authenticator: str = "snowflake",
         role: str | None = None,
     ) -> None:
+        import snowflake.connector
+
         self.database = _identifier(database)
 
         # Example:
@@ -419,6 +419,8 @@ class SnowflakeRepository:
         )
 
     def _insert_frame(self, table: str, df: pd.DataFrame) -> None:
+        from snowflake.connector.pandas_tools import write_pandas
+
         if df.empty:
             return
         expected = list(TABLES[table])

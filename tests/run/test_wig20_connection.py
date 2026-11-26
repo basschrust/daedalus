@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from snowflake.connector.errors import DatabaseError
 
 from run.simulation_main import main
 
@@ -29,16 +28,8 @@ def mock_wig20_setup():
 @pytest.mark.parametrize(
     "exception",
     [
-        DatabaseError(
-            msg="Failed to login: No such host is known",
-            errno=250001,
-            sqlstate="08001",
-        ),
-        DatabaseError(
-            msg="Failed to connect: connection timed out",
-            errno=250001,
-            sqlstate="08001",
-        ),
+        ConnectionError("Failed to login: No such host is known"),
+        TimeoutError("Failed to connect: connection timed out"),
     ],
 )
 def test_snowflake_connection_failure(
