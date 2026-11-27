@@ -1,5 +1,6 @@
 """Historical point-in-time VaR -> frozen-book HPL -> Kupiec pipeline."""
 
+from dataclasses import replace
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -71,7 +72,15 @@ def test_future_price_shock_does_not_change_previous_forecast() -> None:
     altered = {session: dict(row) for session, row in prices.items()}
     altered[dates[-1]][1] *= Decimal("20")
     # The model inputs at day t are untouched by a price jump at the final day.
-    second, _, _ = _run(prices=altered, snapshots=snapshots)
+    # The final snapshot must be valued at the altered close too. Otherwise the
+    # input is inconsistent, and the backtest rightly rejects it.
+    last = snapshots[-1]
+    change = last.positions[1] * (altered[dates[-1]][1] - prices[dates[-1]][1])
+    repriced = [
+        *snapshots[:-1],
+        replace(last, portfolio_value=last.portfolio_value + change),
+    ]
+    second, _, _ = _run(prices=altered, snapshots=repriced)
     assert first.equals(second)
 
 
