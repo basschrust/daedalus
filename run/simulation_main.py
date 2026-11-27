@@ -28,7 +28,10 @@ from marketsim.database.ikaros_local import (
 from marketsim.database.ikaros_queries import connect
 from marketsim.database.prepared_snapshot_restore import restore_historical_csv
 from marketsim.market.historical_prices import load_historical_prices, load_simulation_dates
-from marketsim.risk.calibration_sync import sync_greeks_calibration
+from marketsim.risk.calibration_sync import (
+    GreeksCalibrationSetupError,
+    sync_greeks_calibration,
+)
 from marketsim.risk.daily_calibration import DailyCalibratedSimulator
 from marketsim.scenarios.gpw import prepare as prepare_gpw
 from marketsim.scenarios.prepared_cache import PreparedDatasetCache
@@ -401,8 +404,15 @@ def run_simulation(config_file: str, *, realism_enabled: bool = False) -> None:
     print("Output directory:", output_dir)
 
     simulator = DailyCalibratedSimulator(risk_var=config.get("risk_var"), **sim_kwargs)
+    original_greeks_id = (config.get("risk_greeks") or {}).get("calibration_id")
     try:
         sync_greeks_calibration(simulator, config)
+        if (config.get("risk_greeks") or {}).get("calibration_id") != original_greeks_id:
+            # The effective local calibration has its own immutable ID. Keep
+            # the copied run configuration reproducible; leave input/ untouched.
+            persisted = {key: value for key, value in config.items() if key != "output_dir"}
+            with (output_dir / "market_structure.yaml").open("w", encoding="utf-8") as stream:
+                yaml.safe_dump(persisted, stream, sort_keys=False, default_flow_style=False)
         simulator.run()
         if realism_report is not None:
             report = realism_report.generate(simulator, output_dir)
@@ -507,7 +517,7 @@ def main(argv: list[str] | None = None) -> None:
 
     try:
         run_simulation(config_file, realism_enabled=realism_enabled)
-    except (ScenarioConfigurationError, ScenarioInputError) as exc:
+    except (ScenarioConfigurationError, ScenarioInputError, GreeksCalibrationSetupError) as exc:
         parser.exit(2, f"Daedalus setup: {exc}\n")
 
 
