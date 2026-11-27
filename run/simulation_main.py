@@ -485,8 +485,6 @@ def main(argv: list[str] | None = None) -> None:
         parser.error("--prepare-only requires --dataset")
     if args.refresh_data and not args.dataset:
         parser.error("--refresh-data requires --dataset")
-    if args.source == "duckdb" and not args.dataset:
-        parser.error("--source duckdb requires --dataset")
     if args.source == "duckdb" and args.refresh_data:
         parser.error("--source duckdb imports local data automatically; omit --refresh-data")
     if args.ikaros_db is not None and args.source != "duckdb":
