@@ -6,7 +6,7 @@ from marketsim.market.historical_volume import historical_volume
 
 
 class InstrumentLimitMixin:
-    def initialize_instrument_limits(self, markets, config):
+    def initialize_instrument_limits(self, markets: dict, config: dict) -> None:
         self.q_max_by_asset = {}
         self.daily_volume_limit_by_asset = {}
         self.daily_executed_volume_by_asset = {}
@@ -64,7 +64,7 @@ class InstrumentLimitMixin:
             self.daily_executed_volume_by_asset[asset_id] = 0
             self.blocked_quote_calls_by_asset[asset_id] = 0
 
-    def limited_quote_sizes(self, asset_id, desired, levels):
+    def limited_quote_sizes(self, asset_id: int, desired, levels):
         """Conservative capacity: every level on either side could execute."""
         limit = self.q_max_by_asset.get(asset_id, 0)
         if levels <= 0 or limit <= 0:

@@ -272,14 +272,12 @@ class Agent(ABC):
         )
         old_collateral = self.futures_value[contract.asset_id]["collateral"]
         collateral_change = required_collateral - old_collateral
-        # self.cash -= collateral_change
         if collateral_change > 0:
             self.debit_cash(currency=contract.currency, amount=collateral_change)
         else:
             self.credit_cash(currency=contract.currency, amount=-collateral_change)
         if current_position == 0:
             # initiating position on this contract
-            # collateral = contract.last_traded_price * contract.margin_rate * contract.multiplier
             self.futures_value[contract.asset_id] = {
                 "avg_initial_price": contract.last_traded_price,  # the current price
                 "settlement_price": contract.last_traded_price,
@@ -288,8 +286,6 @@ class Agent(ABC):
             }
         elif current_position == -quantity:
             # squaring /closing the position
-            # freed_collateral = self.futures_value[contract.asset_id]["collateral"]
-            # self.cash += freed_collateral
             # TODO: depending on the price, there might be some unsettled_pnl to add to cash?
             self.futures_position[contract.asset_id] = 0
             self.futures_value[contract.asset_id] = {
@@ -299,12 +295,6 @@ class Agent(ABC):
                 "unsettled_pnl": Price(0),
             }
         else:
-            # existing_collateral = self.futures_value[contract.asset_id]["collateral"]
-            # target_collateral = contract.last_traded_price * contract.margin_rate * contract.multiplier
-            # changing contract position - keeping it open with different size
-            # self.futures_position[contract.asset_id] += quantity
-            # self.cash -= target_collateral - existing_collateral
-
             total_pos = current_position + quantity
             old_price = self.futures_value[contract.asset_id]["avg_initial_price"]
             avg_initial_price = (
@@ -330,14 +320,6 @@ class Agent(ABC):
     def record_valuation(self, current_time: int) -> None:
         self.current_time = current_time
         # saving value of agents portfolio
-
-        # valuation by last trade:
-        # self.portfolio_value = self.cash
-        # TODO: add multiccy valuation
-        # self.portfolio_value = self.get_cash_balance()
-        # for asset_id, market in self.markets.items():
-        #     self.portfolio_value += int(self.position[asset_id]) * market.last_traded_price
-
         self.portfolio_value = self.calculate_portfolio_value()
 
         self.portfolio_value_history[current_time] = self.portfolio_value
@@ -358,7 +340,6 @@ class Agent(ABC):
         if market.instrument_class == "option":
             cash *= Decimal(str(market.multiplier))
 
-        # self.update_position(quantity=quantity, cash=cash, asset_id=matched_order.order.asset_id)
         asset_id = matched_order.order.asset_id
         self.update_position(
             quantity=quantity,
@@ -400,12 +381,10 @@ class Agent(ABC):
         self.logger.info(f"Recording futures trade on futures {matched_order}")
         # TODO: fill this properly for trading futures
         quantity = matched_order.order.order_type * matched_order.order.quantity
-        # cash = - Price(matched_order.price * matched_order.order.quantity * matched_order.order.order_type)
         # cash to collateral, both sides - so no matter if bought or sold
         contract_id = matched_order.order.asset_id
         contract = self.markets[contract_id]
         # make sure the key will exist now:
-
         self.update_futures_position(quantity=quantity, contract=contract)
         # TODO: the below history update encapsulate in the above function
         self.futures_position_history[matched_order.time][contract_id] = (
@@ -521,12 +500,7 @@ class Agent(ABC):
 
     def settle(self, contract: Future) -> None:
         # final day settlement
-        # "avg_initial_price": avg_initial_price,  # the current price
-        # "settlement_price": contract.last_traded_price,
-        # "collateral": target_collateral,
-        # "unsettled_pnl": Price(0),
         ft_val = self.futures_value[contract.asset_id]
-        # self.cash += ft_val["collateral"] + ft_val["unsettled_pnl"]
         freed_cash = ft_val["collateral"] + ft_val["unsettled_pnl"]
         if freed_cash > 0:
             self.credit_cash(currency=contract.currency, amount=freed_cash)
@@ -628,7 +602,6 @@ class Agent(ABC):
             self.settle_futures_mtm()
 
             # make position history a DF to enable quick filtering
-            # self.position_history
             self.position_history_df = (
                 pd.DataFrame.from_dict(self.position_history, orient="index")
                 .rename_axis("time_tick")
@@ -767,9 +740,6 @@ class Agent(ABC):
             self.repository.save_eod_cash(eod_cash_df=eod_cash_df)
 
             # calculate and save portfolio value
-            # self.portfolio_value = self.get_cash_balance() # cash  # cash already includes today's option premiums
-            # for asset_id, market in self.markets.items():
-            #     self.portfolio_value += self.position[asset_id] * market.last_traded_price
             self.portfolio_value = self.calculate_portfolio_value(day=self.current_day - 1)
 
             eod_portfolio_value_df = pd.DataFrame(
@@ -808,7 +778,6 @@ class Agent(ABC):
         )
 
         self.logger.info(f"Plotting eod positions for {self.agent_id} ...")
-        # self.logger.info(f"{positions_df.head(100)}")
         eod_cash_df = self.repository.get_eod_cash(agent_id=self.agent_id)
         eod_cash_df.rename(columns={"day": "time_step"}, inplace=True)
 
