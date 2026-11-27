@@ -14,7 +14,11 @@ import duckdb
 import yaml
 from dotenv import load_dotenv
 
-from input.config import create_run_directory, load_config
+from input.config import (
+    ScenarioConfigurationError,
+    create_run_directory,
+    load_config,
+)
 from marketsim.analysis.report import MarketRealismReport
 from marketsim.database.ikaros_local import (
     CachedIkarosConnection,
@@ -294,20 +298,94 @@ def ensure_historical_input(*, config_file: str, scenario: dict) -> bool:
     )
 
 
+def _verify_simulation_config(*, config_file: str, config: dict) -> None:
+    """Reject preparation-only YAMLs before any run directory is created."""
+    if not isinstance(config.get("markets"), dict) or not config["markets"]:
+        name = Path(config_file).name
+        if name == "wig20.yaml":
+            instruction = "Use: python -m run.simulation_main --dataset wig20"
+        elif name == "gpw.yaml":
+            instruction = "Use: python -m run.simulation_main --dataset gpw"
+        else:
+            instruction = "Choose a market scenario from input/, e.g. market_structure.yaml"
+        raise ScenarioConfigurationError(
+            f"'{name}' contains no markets, so it cannot be simulated directly. {instruction}"
+        )
+
+
+def check_scenarios() -> bool:
+    """Check every input YAML and include without starting a simulation.
+
+    This is a configuration preflight, not a guarantee of available market data
+    or a substitute for actually executing each scenario.
+    """
+    filenames = sorted(path.name for path in INPUT_DIR.glob("*.yaml"))
+    ready = 0
+    needs_history: list[str] = []
+    settings_only: list[str] = []
+    invalid: list[tuple[str, str]] = []
+
+    for name in filenames:
+        try:
+            config = load_config(name)
+            if not isinstance(config.get("markets"), dict) or not config["markets"]:
+                settings_only.append(name)
+                continue
+            history = _historical_input_path(scenario=config)
+            if history is not None and (not history.is_file() or history.stat().st_size == 0):
+                needs_history.append(name)
+            ready += 1
+        except (ScenarioConfigurationError, ScenarioInputError) as exc:
+            invalid.append((name, str(exc)))
+
+    print(f"Scenario check: {ready} runnable YAML configurations parsed successfully.")
+    print(f"Preparation/settings YAMLs: {len(settings_only)} (not run directly).")
+    if needs_history:
+        print(
+            f"Historical input needed: {len(needs_history)} scenarios "
+            "(their YAML is valid, but their CSV is not installed)."
+        )
+        print("  " + ", ".join(needs_history))
+    if invalid:
+        print(f"Configuration problems: {len(invalid)}")
+        for name, message in invalid:
+            print(f"  {name}: {message}")
+    else:
+        print("All top-level YAML files and referenced templates loaded successfully.")
+    print("No simulations, database writes, or external connections were started.")
+    return not invalid
+
+
 def run_simulation(config_file: str, *, realism_enabled: bool = False) -> None:
     config = load_config(config_file)
+    _verify_simulation_config(config_file=config_file, config=config)
     if ensure_historical_input(config_file=config_file, scenario=config):
         # Preparation may refresh the generated instruments and dates.
         config = load_config(config_file)
-    output_dir = create_run_directory()
+        _verify_simulation_config(config_file=config_file, config=config)
 
+    # Validate ordinary inputs before starting a run or creating an output directory.
+    try:
+        historical = load_historical_prices(config=config, config_dir=INPUT_DIR)
+    except (OSError, ValueError) as exc:
+        raise ScenarioInputError(
+            f"Cannot load historical prices for '{Path(config_file).name}': "
+            f"{str(exc).splitlines()[0] if str(exc).splitlines() else type(exc).__name__}. "
+            "Check the CSV in input/market_data/. No simulation was started."
+        ) from exc
+    try:
+        simulation_dates = load_simulation_dates(config)
+    except ValueError as exc:
+        raise ScenarioConfigurationError(
+            f"Invalid simulation calendar in '{Path(config_file).name}': {exc}"
+        ) from exc
+
+    output_dir = create_run_directory()
     # Preserve the resolved configuration for inspection and reproducibility.
     with (output_dir / "market_structure.yaml").open("w", encoding="utf-8") as stream:
         yaml.safe_dump(config, stream, sort_keys=False, default_flow_style=False)
 
     config["output_dir"] = output_dir
-    historical = load_historical_prices(config=config, config_dir=INPUT_DIR)
-    simulation_dates = load_simulation_dates(config)
 
     sim_kwargs = kwargs_for(Simulator, config)
     sim_kwargs["historical_ohlcv_by_symbol"] = historical
@@ -356,6 +434,11 @@ def main(argv: list[str] | None = None) -> None:
         help="Prepare and simulate a market dataset from Ikaros (cached when fresh)",
     )
     parser.add_argument(
+        "--check-scenarios",
+        action="store_true",
+        help="Check all scenario YAMLs and their included templates without simulating",
+    )
+    parser.add_argument(
         "--prepare-only",
         action="store_true",
         help="Prepare the selected dataset without running the simulation",
@@ -378,6 +461,17 @@ def main(argv: list[str] | None = None) -> None:
     )
     args = parser.parse_args(argv)
 
+    if args.check_scenarios:
+        if args.config or args.dataset or args.prepare_only or args.refresh_data:
+            parser.error("--check-scenarios cannot be combined with a simulation or dataset")
+        try:
+            success = check_scenarios()
+        except OSError as exc:
+            parser.exit(2, f"Scenario check could not read input/: {exc}\n")
+        if not success:
+            parser.exit(2, "Scenario check found configuration problems.\n")
+        return
+
     if args.dataset and args.config:
         parser.error("Specify either a YAML configuration or --dataset, not both")
     if args.prepare_only and not args.dataset:
@@ -399,6 +493,8 @@ def main(argv: list[str] | None = None) -> None:
                 source=args.source,
                 ikaros_db=args.ikaros_db,
             )
+        except ScenarioConfigurationError as exc:
+            parser.exit(2, f"Daedalus setup: {exc}\n")
         except (FileNotFoundError, RuntimeError, ValueError) as exc:
             if args.source != "duckdb":
                 raise
@@ -411,8 +507,8 @@ def main(argv: list[str] | None = None) -> None:
 
     try:
         run_simulation(config_file, realism_enabled=realism_enabled)
-    except ScenarioInputError as exc:
-        parser.exit(2, f"WIG20 setup: {exc}\n")
+    except (ScenarioConfigurationError, ScenarioInputError) as exc:
+        parser.exit(2, f"Daedalus setup: {exc}\n")
 
 
 if __name__ == "__main__":
