@@ -12,8 +12,10 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Iterator
 
-import duckdb
-
+from marketsim.database.ikaros_snapshot_db import (
+    checkpoint_ikaros_database,
+    validate_ikaros_snapshot,
+)
 from marketsim.helpers.duckdb_file_lock import duckdb_access_lock
 
 
@@ -44,19 +46,11 @@ def temporary_ikaros_snapshot(
         ):
             # Cooperating Ikaros connections are all closed now.  External
             # DBeaver instances can still block this: they do not use our mutex.
-            conn = duckdb.connect(str(source), read_only=False)
-            try:
-                conn.execute("CHECKPOINT")
-            finally:
-                conn.close()
+            checkpoint_ikaros_database(database_path=source)
             shutil.copy2(source, snapshot)
 
         if snapshot.stat().st_size == 0:
             raise ValueError(f"Empty Ikaros database snapshot: {snapshot}")
         # Check that the copied database opens, with no side effects on source.
-        conn = duckdb.connect(str(snapshot), read_only=True)
-        try:
-            conn.execute("SELECT 1").fetchone()
-        finally:
-            conn.close()
+        validate_ikaros_snapshot(database_path=snapshot)
         yield snapshot
