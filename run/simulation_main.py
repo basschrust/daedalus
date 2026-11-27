@@ -100,7 +100,7 @@ def prepare_dataset(
     name: str,
     *,
     refresh_data: bool = False,
-    source: str = "snowflake",
+    source: str = "duckdb",
     ikaros_db: Path | None = None,
 ) -> tuple[str, bool]:
     """Prepare a dataset once; reuse fresh local OHLCV on subsequent runs."""
@@ -458,7 +458,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--source",
         choices=("snowflake", "duckdb"),
-        default="snowflake",
+        default="duckdb",
         help="For --dataset, prepare from Snowflake or staged local Ikaros DuckDB",
     )
     parser.add_argument(
