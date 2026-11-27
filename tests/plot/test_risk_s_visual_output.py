@@ -129,3 +129,12 @@ def test_legacy_derivative_candle_file_is_renamed_by_summary(tmp_path, monkeypat
     market.show_summary()
     assert (tmp_path / "candle_plots" / "0001_option_TNT_PUT_105_20D.png").is_file()
     assert not (tmp_path / "candle_plots" / f"candlestick_{market}.png").exists()
+
+
+def test_index_candle_plot_name_uses_zero_padded_id():
+    market = object.__new__(Security)
+    market.instrument_class = "index"
+    market.asset_id = 7
+    market.short_name = "WIG20"
+    market.symbol = "WIG20"
+    assert market.candle_plot_stem() == "0007_index_WIG20"

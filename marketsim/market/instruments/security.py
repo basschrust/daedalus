@@ -414,6 +414,12 @@ class Security(ABC):
             )
             return f"{prefix}_stock_{self._safe_plot_token(ticker)}"
 
+        if self.instrument_class == "index":
+            ticker = (
+                getattr(self, "symbol", None) or getattr(self, "ticker", None) or self.short_name
+            )
+            return f"{prefix}_index_{self._safe_plot_token(ticker)}"
+
         if self.instrument_class in {"option", "future"}:
             underlying = getattr(self, "underlying", None)
             ticker = (
