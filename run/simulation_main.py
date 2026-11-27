@@ -27,7 +27,9 @@ from marketsim.database.ikaros.ikaros_local import (
 )
 from marketsim.database.ikaros.ikaros_queries import connect
 from marketsim.database.prepared_snapshot_restore import restore_historical_csv
+from marketsim.database.risk.risk_reporting_queries import load_wig20_greeks
 from marketsim.market.historical_prices import load_historical_prices, load_simulation_dates
+from marketsim.plot.risk_report import greeks_evolution_plots
 from marketsim.risk.calibration_sync import (
     GreeksCalibrationSetupError,
     sync_greeks_calibration,
@@ -169,16 +171,10 @@ def prepare_dataset(
 
 def plot_wig20_greeks_after_run(*, output_dir: Path) -> list[Path]:
     """Create WIG20 Delta/Gamma plots after the simulation DB is closed."""
-    from marketsim.database.risk_reporting_queries import load_wig20_greeks
-
-    from marketsim.plot.risk_report import greeks_evolution_plots
-
     db = output_dir / "daedalus.duckdb"
     if not db.is_file():
         print("WIG20 Greeks plots: no local DuckDB for this run")
         return []
-
-    import duckdb
 
     try:
         values = load_wig20_greeks(db)

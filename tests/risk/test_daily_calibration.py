@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from marketsim.database.risk_queries import (
+from marketsim.database.risk.risk_queries import (
     ensure_daily_calibration_tables,
     publish_daily_calibration,
 )

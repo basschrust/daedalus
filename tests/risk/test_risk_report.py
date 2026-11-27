@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from marketsim.database.risk_reporting_queries import (
+from marketsim.database.risk.risk_reporting_queries import (
     load_derivative_exposure,
     load_wig20_greeks,
 )
