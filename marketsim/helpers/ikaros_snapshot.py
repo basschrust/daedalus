@@ -12,7 +12,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Iterator
 
-from marketsim.database.ikaros_snapshot_db import (
+from marketsim.database.ikaros.ikaros_snapshot_db import (
     checkpoint_ikaros_database,
     validate_ikaros_snapshot,
 )

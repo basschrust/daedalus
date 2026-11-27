@@ -3,7 +3,6 @@ from datetime import date, timedelta
 import pandas as pd
 import pytest
 
-from marketsim.scenarios import wig20
 from marketsim.scenarios.wig20 import (
     build_markets,
     fetch_index_close,
@@ -44,7 +43,9 @@ def test_index_close_uses_index_prices(monkeypatch):
         observed["cutoff"] = cutoff
         return pd.DataFrame({"index_close": [3125.5]})
 
-    monkeypatch.setattr(wig20.ikaros_queries, "fetch_wig20_index_close", fake_fetch)
+    monkeypatch.setattr(
+        marketsim.database.ikaros.ikaros_queries, "fetch_wig20_index_close", fake_fetch
+    )
     result = fetch_index_close(None, date(2026, 10, 28))
     assert result == 3125.5
     assert observed["cutoff"] == date(2026, 10, 28)
@@ -52,7 +53,7 @@ def test_index_close_uses_index_prices(monkeypatch):
 
 def test_index_close_missing_fails(monkeypatch):
     monkeypatch.setattr(
-        wig20.ikaros_queries,
+        marketsim.database.ikaros.ikaros_queries,
         "fetch_wig20_index_close",
         lambda *args: pd.DataFrame(columns=["index_close"]),
     )

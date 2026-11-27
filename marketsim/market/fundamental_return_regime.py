@@ -94,7 +94,7 @@ class FundamentalReturnRegime:
         canonical = [str(s).upper() for s in symbols]
         if not calibration_id or not canonical or len(set(canonical)) != len(canonical):
             raise ValueError("Provide calibration_id and unique stock symbols")
-        from marketsim.database.ikaros_queries import fetch_source_regime_statistics
+        from marketsim.database.ikaros.ikaros_queries import fetch_source_regime_statistics
 
         instrument_rows, pair_rows = fetch_source_regime_statistics(conn, calibration_id)
         return cls.from_statistics_rows(

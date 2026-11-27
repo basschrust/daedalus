@@ -12,7 +12,7 @@ from decimal import Decimal
 
 import pandas as pd
 
-from marketsim.database import ikaros_queries
+from marketsim.database.ikaros import ikaros_queries
 from marketsim.scenarios.wig20_data import futures_history, to_price
 
 

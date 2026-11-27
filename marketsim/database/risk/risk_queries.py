@@ -190,7 +190,7 @@ def load_parametric_statistics(
 
 def fetch_source_greek_statistics(calibration_id: str) -> list[tuple]:
     """Fetch historical underlying volatilities without exposing connections to risk."""
-    from marketsim.database.ikaros_queries import connect
+    from marketsim.database.ikaros.ikaros_queries import connect
 
     remote = connect()
     try:

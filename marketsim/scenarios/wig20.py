@@ -9,8 +9,8 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-from marketsim.database import ikaros_queries
-from marketsim.database.wig20_history_queries import fetch_stock_window
+from marketsim.database.ikaros import ikaros_queries
+from marketsim.database.ikaros.wig20_history_queries import fetch_stock_window
 from marketsim.market.historical_prices import load_simulation_dates
 from marketsim.scenarios.scenario_settings import build_scenario_settings
 from marketsim.scenarios.wig20_data import (

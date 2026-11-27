@@ -64,7 +64,7 @@ def _contracts():
 
 def test_prefers_full_horizon_but_keeps_shorter_contracts(monkeypatch):
     monkeypatch.setattr(
-        wig20_options.ikaros_queries,
+        marketsim.database.ikaros.ikaros_queries,
         "fetch_wig20_option_contracts",
         lambda *_: _contracts(),
     )
@@ -78,7 +78,9 @@ def test_prefers_full_horizon_but_keeps_shorter_contracts(monkeypatch):
 
 def test_no_eligible_options_is_an_explicit_error(monkeypatch):
     monkeypatch.setattr(
-        wig20_options.ikaros_queries, "fetch_wig20_option_contracts", lambda *_: pd.DataFrame()
+        marketsim.database.ikaros.ikaros_queries,
+        "fetch_wig20_option_contracts",
+        lambda *_: pd.DataFrame(),
     )
     with pytest.raises(ValueError, match="no WIG20 option contracts"):
         wig20_options.select_options(object(), CUTOFF, DATES, "4225", count=3)
@@ -86,7 +88,7 @@ def test_no_eligible_options_is_an_explicit_error(monkeypatch):
 
 def test_zero_requested_options_stays_supported(monkeypatch):
     monkeypatch.setattr(
-        wig20_options.ikaros_queries,
+        database.ikaros.ikaros_queries,
         "fetch_wig20_option_contracts",
         lambda *_: pytest.fail("Must not fetch if count=0"),
     )

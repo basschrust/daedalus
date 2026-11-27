@@ -8,7 +8,7 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-from marketsim.database import ikaros_queries
+from marketsim.database.ikaros import ikaros_queries
 from marketsim.market.historical_prices import load_simulation_dates
 from marketsim.scenarios.gpw_universe import discover_derivatives, discover_stocks
 from marketsim.scenarios.wig20 import (

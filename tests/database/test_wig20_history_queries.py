@@ -4,7 +4,7 @@ from datetime import date
 
 import pandas as pd
 
-from marketsim.database import wig20_history_queries
+from marketsim.database.ikaros import wig20_history_queries
 
 
 def test_stock_window_uses_date_interval(monkeypatch):

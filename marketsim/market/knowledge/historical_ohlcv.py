@@ -9,7 +9,7 @@ def load_historical_ohlcv(
     lookback_days: int = 365,
 ) -> dict[str, pd.DataFrame]:
 
-    from marketsim.database.ikaros_queries import fetch_legacy_historical_ohlcv
+    from marketsim.database.ikaros.ikaros_queries import fetch_legacy_historical_ohlcv
 
     df = fetch_legacy_historical_ohlcv(connection, table, cutoff_date, lookback_days)
 

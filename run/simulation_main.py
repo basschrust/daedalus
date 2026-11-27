@@ -20,12 +20,12 @@ from input.config import (
     load_config,
 )
 from marketsim.analysis.report import MarketRealismReport
-from marketsim.database.ikaros_local import (
+from marketsim.database.ikaros.ikaros_local import (
     CachedIkarosConnection,
     stage_local_ikaros,
     validate_wig20_snapshot,
 )
-from marketsim.database.ikaros_queries import connect
+from marketsim.database.ikaros.ikaros_queries import connect
 from marketsim.database.prepared_snapshot_restore import restore_historical_csv
 from marketsim.market.historical_prices import load_historical_prices, load_simulation_dates
 from marketsim.risk.calibration_sync import (
@@ -170,6 +170,7 @@ def prepare_dataset(
 def plot_wig20_greeks_after_run(*, output_dir: Path) -> list[Path]:
     """Create WIG20 Delta/Gamma plots after the simulation DB is closed."""
     from marketsim.database.risk_reporting_queries import load_wig20_greeks
+
     from marketsim.plot.risk_report import greeks_evolution_plots
 
     db = output_dir / "daedalus.duckdb"

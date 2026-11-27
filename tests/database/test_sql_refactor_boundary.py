@@ -10,7 +10,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from marketsim.database import ikaros_queries, risk_queries
+from marketsim.database import risk_queries
+from marketsim.database.ikaros import ikaros_queries
 
 
 class DuckDBLike:
