@@ -26,7 +26,7 @@ def test_generates_wig20_plot_and_csv_after_simulation(tmp_path, monkeypatch):
         ]
     )
     monkeypatch.setattr(
-        "marketsim.database.risk_reporting_queries.load_wig20_greeks",
+        "run.simulation_main.load_wig20_greeks",
         lambda unused: greeks,
     )
     observed = {}
@@ -36,7 +36,7 @@ def test_generates_wig20_plot_and_csv_after_simulation(tmp_path, monkeypatch):
         observed["dir"] = out
         return [out / "greeks_wig20_option_market_makers_agent_9.png"]
 
-    monkeypatch.setattr("marketsim.plot.risk_report.greeks_evolution_plots", fake_plots)
+    monkeypatch.setattr("run.simulation_main.greeks_evolution_plots", fake_plots)
     images = plot_wig20_greeks_after_run(output_dir=tmp_path)
     assert len(images) == 1
     assert observed["ids"] == [9]
