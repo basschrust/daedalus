@@ -61,9 +61,6 @@ class Security(ABC):
 
         self.agent_groups = set()
 
-        # TODO: check if this fundamental (externally provided value) is needed here
-        # self.fundamental = fundamental
-
         self.order_book = self._create_order_book()
         self.event_queue = EventQueue()
 
@@ -106,12 +103,6 @@ class Security(ABC):
 
     def add_to_index(self, index: Index):
         self.indices_member[index.index_id] = Index
-
-    def get_fundamental_value(self, current_time: int) -> float:
-        return self.fundamental.get_value_at(current_time)
-
-    def get_final_fundamental(self) -> float:
-        return self.fundamental.get_final_fundamental()
 
     def withdraw_all(self, agent_id: int) -> None:
         self.order_book.withdraw_all(agent_id=agent_id)
@@ -374,6 +365,79 @@ class Security(ABC):
         """Human-readable title, overridden by derivative instruments."""
         return self.name or self.short_name
 
+    def _safe_plot_token(self, value: object) -> str:
+        text = str(value).strip()
+        if not text:
+            return "unknown"
+        token = []
+        for char in text:
+            if char.isalnum():
+                token.append(char)
+            else:
+                token.append("_")
+        compact = "".join(token)
+        while "__" in compact:
+            compact = compact.replace("__", "_")
+        return compact.strip("_") or "unknown"
+
+    def _format_maturity_label(self, value: object) -> str:
+        if value is None:
+            return "maturity_unknown"
+        if isinstance(value, float) and value.is_integer():
+            value = int(value)
+        if isinstance(value, int):
+            if value == 1:
+                return "1Y"
+            return f"{value}T"
+        if isinstance(value, Decimal):
+            normalized = value.normalize()
+            if normalized == normalized.to_integral():
+                return self._format_maturity_label(int(normalized))
+            return self._safe_plot_token(f"{normalized}Y")
+        try:
+            numeric = float(value)
+        except (TypeError, ValueError):
+            return self._safe_plot_token(value)
+        if numeric.is_integer():
+            return self._format_maturity_label(int(numeric))
+        return self._safe_plot_token(f"{numeric:g}Y")
+
+    def candle_plot_stem(self) -> str:
+        if self.instrument_class == "stock":
+            return f"stock_{self.asset_id}_{self._safe_plot_token(self.short_name)}"
+
+        if self.instrument_class == "option":
+            option_side = getattr(self, "option_side", None) or getattr(self, "side", None)
+            strike = getattr(self, "strike", None) or getattr(self, "strike_price", None)
+            expiration = (
+                getattr(self, "expiration", None)
+                or getattr(self, "maturity", None)
+                or getattr(self, "expiry", None)
+                or getattr(self, "expiry_date", None)
+            )
+            underlying = getattr(self, "underlying", None)
+            underlying_name = None
+            if underlying is not None:
+                underlying_name = (
+                    getattr(underlying, "short_name", None)
+                    or getattr(underlying, "symbol", None)
+                    or getattr(underlying, "name", None)
+                )
+            underlying_name = (
+                underlying_name or getattr(self, "underlying_symbol", None) or "underlying"
+            )
+            return "_".join(
+                [
+                    "option",
+                    self._safe_plot_token(option_side or "option"),
+                    self._safe_plot_token(underlying_name),
+                    self._safe_plot_token(strike or "strike_unknown"),
+                    self._format_maturity_label(expiration),
+                ]
+            )
+
+        return f"{self._safe_plot_token(self.instrument_class)}_{self.asset_id}_{self._safe_plot_token(self.short_name)}"
+
     ## plotting and supporting functions     #######################
 
     def aggregate_order_queue(
@@ -496,7 +560,9 @@ class Security(ABC):
         df_candlestick.index.name = "time"
         self.logger.info(df_candlestick.head())
 
-        candlestick_filename = Path(self.output_dir) / "candle_plots" / f"candlestick_{self}.png"
+        candlestick_filename = (
+            Path(self.output_dir) / "candle_plots" / f"{self.candle_plot_stem()}.png"
+        )
         plot_candlestick(
             df=df_candlestick,
             output_file=str(candlestick_filename),
@@ -514,7 +580,9 @@ class Security(ABC):
         # Get simulated daily OHLCV from repository
         eod_prices_df = self.repository.get_eod_prices(asset_id=self.asset_id)
 
-        candlestick_filename = Path(self.output_dir) / "candle_plots" / f"candlestick_{self}.png"
+        candlestick_filename = (
+            Path(self.output_dir) / "candle_plots" / f"{self.candle_plot_stem()}.png"
+        )
 
         if self.historical_ohlcv is not None and self.simulation_dates is not None:
             plot_combined_candles(

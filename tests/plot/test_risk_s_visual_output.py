@@ -51,3 +51,23 @@ def test_lob_plots_share_one_dir_and_day_tick_prevent_overwrites(tmp_path):
     with patch("marketsim.market.instruments.security.plot_order_book") as plot_next:
         market.plot_lob(current_time=25)
     assert Path(plot_next.call_args.kwargs["output_file"]) != filename
+
+
+def test_stock_candle_plot_names_are_short_and_specific():
+    market = object.__new__(Security)
+    market.instrument_class = "stock"
+    market.asset_id = 0
+    market.short_name = "TNT"
+    assert market.candle_plot_stem() == "stock_0_TNT"
+
+
+def test_option_candle_plot_names_are_short_and_specific():
+    underlying = SimpleNamespace(short_name="TNT")
+    market = object.__new__(Security)
+    market.instrument_class = "option"
+    market.short_name = "PUT TNT 25 105"
+    market.underlying = underlying
+    market.option_side = "PUT"
+    market.strike = 105
+    market.expiration = 1
+    assert market.candle_plot_stem() == "option_PUT_TNT_105_1Y"
