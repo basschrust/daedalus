@@ -2,6 +2,8 @@ from sqlalchemy import insert
 
 from marketsim.database.models.securities import securities
 
+raise ValueError("Not implemented yet")
+
 
 class Repository:
     def __init__(self, engine):

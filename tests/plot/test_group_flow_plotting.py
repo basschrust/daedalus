@@ -1,10 +1,12 @@
+from pathlib import Path
+
 import pandas as pd
 import pytest
 
 from marketsim.plot.group_flows import plot_group_flows
 
 
-def sample_flows():
+def sample_flows() -> pd.DataFrame:
     return pd.DataFrame(
         [
             dict(
@@ -66,17 +68,17 @@ def sample_flows():
     )
 
 
-def test_one_figure_per_source_group(tmp_path):
+def test_one_figure_per_source_group(tmp_path: Path) -> None:
     paths = plot_group_flows(sample_flows(), output_dir=tmp_path, labels_map={10: "ABC", 11: "DEF"})
     assert len(paths) == 2
     assert all(p.exists() and p.stat().st_size > 0 for p in paths)
 
 
-def test_empty_flows_do_not_create_files(tmp_path):
+def test_empty_flows_do_not_create_files(tmp_path: Path) -> None:
     assert plot_group_flows(pd.DataFrame(), output_dir=tmp_path) == []
     assert not list(tmp_path.glob("*.png"))
 
 
-def test_missing_required_columns(tmp_path):
+def test_missing_required_columns(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="Missing group-flow columns"):
         plot_group_flows(pd.DataFrame([{"day": 0}]), output_dir=tmp_path)

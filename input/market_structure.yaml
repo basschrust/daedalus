@@ -19,7 +19,7 @@ markets:
   ########################## second security ###################################################
 
   security_2:
-    name: "First derivative - European CALL option on stock TNT with strike 100"
+    name: "European CALL option on TNT stock (strike 90)"
     instrument_class: option
     short_name: "CALL TNT 25"
     derivatives_config:
@@ -33,7 +33,7 @@ markets:
     market_type: continuous
 
   put_on_tnt:
-    name: "First derivative - European CALL option on stock TNT with strike 100"
+    name: "European PUT options on TNT stock (strikes 100 and 110)"
     instrument_class: option
     short_name: "PUT TNT 25"
     derivatives_config:

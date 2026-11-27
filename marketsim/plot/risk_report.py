@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -12,6 +13,13 @@ plt.switch_backend("Agg")
 
 METHODS = ("parametric", "historical", "montecarlo")
 LABELS = ("Parametric", "Historical", "Monte Carlo")
+
+
+def _slug(value: object) -> str:
+    text = str(value).strip().lower()
+    text = re.sub(r"[^a-z0-9]+", "_", text)
+    text = text.strip("_")
+    return text or "unclassified"
 
 
 def add_var_percent(risk: pd.DataFrame) -> pd.DataFrame:
@@ -232,7 +240,8 @@ def greeks_evolution_plots(
             "Option-only exposures; futures hedges are excluded"
         )
         fig.tight_layout(rect=(0, 0, 1, 0.97))
-        target = out / f"greeks_wig20_agent_{agent_id}.png"
+        group_slug = _slug(group)
+        target = out / f"greeks_wig20_{group_slug}_agent_{agent_id}.png"
         fig.savefig(target, dpi=140, bbox_inches="tight")
         plt.close(fig)
         outputs.append(target)

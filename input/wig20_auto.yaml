@@ -1,7 +1,253 @@
-seed: 67
 days: 20
 sim_time: 55
+seed: 67
 lob_plot_interval: 10000
+lookback_sessions: 252
+futures_count: 3
+options_count: 20
+agents:
+  agents:
+    relative_momentum:
+      agent_class: RelativeMomentumAgent
+      instrument_classes:
+      - stock
+      number: 20
+      config:
+        lookback_sessions: 252
+        turnover_sessions: 30
+        min_median_turnover: 250000
+        portfolio_size: 10
+        rebalance_sessions: 5
+        rebalance_offset: 0
+        aggression: 0.003
+        order_validity_ticks: 3
+        base_currency: PLN
+        initial_cash:
+          PLN: 1000000
+    arbitrageurs:
+      agent_class: IndexFuturesArbitrageAgent
+      number: 5
+      config:
+        entry_threshold: 0.0015
+        exit_threshold: 0.0004
+        order_quantity: 25
+        max_order_quantity: 100
+        max_position: 500
+        max_gross_exposure_pln: 100000000
+        volume_aggression: 8.0
+        max_stock_order_quantity: 10000
+        validity_period: 1
+        initial_cash:
+          PLN: 100000000
+    noise_tight:
+      agent_class: NoiseAgent
+      instrument_classes:
+      - stock
+      - future
+      number: 9
+      config:
+        lam: 0.45
+        mean_volume: 150
+        mean_spread: 0.7
+        validity_period: 3
+        volume_fraction: 0.004
+        use_historical_volatility: true
+        historical_volatility_scale: 0.15
+        volume_lookback: 20
+        volatility_lookback: 20
+        max_price_deviation: 0.02
+        volume_basis: notional
+        initial_cash:
+          PLN: 30000000
+        future_lam_multiplier: 1.5
+        future_mean_contracts: 75
+        future_max_order_contracts: 180
+        future_max_position_contracts: 1800
+        future_max_daily_contracts: 2500
+        stock_coverage_fraction: 0.3
+        min_noise_agents_per_stock: 3
+        stock_volume_coverage_scale: 1.0
+        coverage_seed: 67
+    noise_medium:
+      agent_class: NoiseAgent
+      instrument_classes:
+      - stock
+      - future
+      number: 15
+      config:
+        lam: 0.3
+        mean_volume: 200
+        mean_spread: 1.5
+        validity_period: 10
+        volume_fraction: 0.03
+        historical_volatility_scale: 0.2
+        max_price_deviation: 0.02
+        volume_basis: notional
+        initial_cash:
+          PLN: 30000000
+        future_lam_multiplier: 1.8
+        future_mean_contracts: 100
+        future_max_order_contracts: 240
+        future_max_position_contracts: 2400
+        future_max_daily_contracts: 3500
+        stock_coverage_fraction: 0.3
+        min_noise_agents_per_stock: 3
+        stock_volume_coverage_scale: 1.0
+        coverage_seed: 67
+    noise_wide:
+      agent_class: NoiseAgent
+      number: 8
+      config:
+        lam: 0.2
+        mean_volume: 250
+        mean_spread: 4.0
+        validity_period: 20
+        volume_fraction: 0.003
+        historical_volatility_scale: 0.15
+        max_price_deviation: 0.02
+        volume_basis: notional
+        initial_cash:
+          PLN: 30000000
+        future_lam_multiplier: 2.0
+        future_mean_contracts: 130
+        future_max_order_contracts: 300
+        future_max_position_contracts: 3000
+        future_max_daily_contracts: 4500
+        min_noise_agents_per_stock: 3
+        stock_coverage_fraction: 0.3
+        stock_volume_coverage_scale: 1.0
+        coverage_seed: 67
+      instrument_classes:
+      - stock
+      - future
+      - option
+    market_makers:
+      agent_class: MMZOHAgent
+      instrument_classes:
+      - stock
+      - future
+      number: 3
+      config:
+        rebalance_by: time
+        rebalance_period: 4
+        volume_fraction: 0.2
+        historical_volatility_scale: 0.9
+        max_price_deviation: 0.04
+        K: 4
+        xi: 0.1
+        omega: 0.1
+        q_max: 1000000
+        initial_cash:
+          PLN: 100000000
+    option_market_makers:
+      agent_class: OptionMMZOHAgent
+      number: 3
+      instrument_classes:
+      - option
+      - stock
+      markets: ALL
+      config:
+        K: 3
+        xi: 0.1
+        omega: 0.1
+        rebalance_period: 5
+        volume: 2
+        volume_fraction: 0.05
+        q_max: 300
+        option_inventory_fraction: 1.0
+    momentum_fast:
+      agent_class: MomentumAgent
+      instrument_classes:
+      - stock
+      number: 4
+      config:
+        momentum_mode: intraday
+        period: 5
+        threshold: 0.001
+        lam: 0.45
+        mean_volume: 150
+        q_max: 10000
+        aggression: 0.0005
+        volume_fraction: 0.01
+        historical_volatility_scale: 0.7
+        max_price_deviation: 0.07
+        initial_cash:
+          PLN: 10000000
+    momentum_slow:
+      agent_class: MomentumAgent
+      instrument_classes:
+      - stock
+      number: 3
+      config:
+        momentum_mode: daily
+        daily_lookback: 10
+        threshold: 0.01
+        lam: 0.3
+        mean_volume: 150
+        q_max: 5000
+        aggression: 0.0005
+        volume_fraction: 0.008
+        historical_volatility_scale: 0.7
+        max_price_deviation: 0.09
+        initial_cash:
+          PLN: 10000000
+    hbl:
+      agent_class: HBLAgent
+      number: 2
+    regime_traders:
+      agent_class: RegimeTraderAgent
+      instrument_classes:
+      - stock
+      number: 4
+      config:
+        lam: 0.65
+        mean_volume: 200
+        regime_switch_probability: 0.02
+        bullish_probability: 0.45
+        bearish_probability: 0.45
+        aggression_ticks: 10
+        tick_size: 0.01
+        validity_period: 3
+        max_position: 35000
+        volume_fraction: 0.015
+        historical_volatility_scale: 0.6
+        max_price_deviation: 0.08
+        fundamental_price_discovery: true
+        fundamental_gap_threshold: 0.002
+        fundamental_gap_sensitivity: 25.0
+        fundamental_max_activity_multiplier: 3.0
+        fundamental_max_size_multiplier: 3.0
+        initial_cash:
+          PLN: 10000000
+non_trading_dates:
+- '2026-11-11'
+- '2026-12-24'
+- '2026-12-25'
+- '2026-12-31'
+- '2027-01-01'
+- '2027-01-06'
+market_realism:
+  enabled: true
+risk_var:
+  enabled: true
+  lookback_sessions: 250
+  confidence_levels:
+  - 0.95
+  - 0.99
+  horizons_days:
+  - 1
+  - 5
+  - 10
+  historical_min_scenarios: 30
+  montecarlo_scenarios: 10000
+  montecarlo_seed: 67
+risk_greeks:
+  enabled: true
+  calibration_id: YOUR_CALIBRATION_ID
+  short_rates:
+    PLN: 0.04
+  dividend_yields:
+    WIG20: 0.0
 markets:
   ale.wa:
     name: ALE.WA
@@ -9,7 +255,7 @@ markets:
     symbol: ALE.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '67.95'
+    reference_price: '66.67'
     currency: PLN
   alr.wa:
     name: ALR.WA
@@ -17,7 +263,7 @@ markets:
     symbol: ALR.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '143.10'
+    reference_price: '137.50'
     currency: PLN
   bdx.wa:
     name: BDX.WA
@@ -25,7 +271,7 @@ markets:
     symbol: BDX.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '751.00'
+    reference_price: '745.00'
     currency: PLN
   cdr.wa:
     name: CDR.WA
@@ -33,7 +279,7 @@ markets:
     symbol: CDR.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '282.90'
+    reference_price: '277.60'
     currency: PLN
   dnp.wa:
     name: DNP.WA
@@ -41,7 +287,7 @@ markets:
     symbol: DNP.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '37.34'
+    reference_price: '37.55'
     currency: PLN
   ebp.wa:
     name: EBP.WA
@@ -49,7 +295,7 @@ markets:
     symbol: EBP.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '781.00'
+    reference_price: '746.00'
     currency: PLN
   kgh.wa:
     name: KGH.WA
@@ -57,7 +303,7 @@ markets:
     symbol: KGH.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '248.20'
+    reference_price: '235.15'
     currency: PLN
   kru.wa:
     name: KRU.WA
@@ -65,7 +311,7 @@ markets:
     symbol: KRU.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '319.20'
+    reference_price: '311.10'
     currency: PLN
   kty.wa:
     name: KTY.WA
@@ -73,7 +319,7 @@ markets:
     symbol: KTY.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '1270.00'
+    reference_price: '1258.00'
     currency: PLN
   lpp.wa:
     name: LPP.WA
@@ -81,7 +327,7 @@ markets:
     symbol: LPP.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '28500.00'
+    reference_price: '28040.00'
     currency: PLN
   mbk.wa:
     name: MBK.WA
@@ -89,7 +335,7 @@ markets:
     symbol: MBK.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '1688.50'
+    reference_price: '1609.00'
     currency: PLN
   mdv.wa:
     name: MDV.WA
@@ -97,7 +343,7 @@ markets:
     symbol: MDV.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '114.45'
+    reference_price: '121.00'
     currency: PLN
   pco.wa:
     name: PCO.WA
@@ -105,7 +351,7 @@ markets:
     symbol: PCO.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '51.00'
+    reference_price: '50.14'
     currency: PLN
   peo.wa:
     name: PEO.WA
@@ -113,7 +359,7 @@ markets:
     symbol: PEO.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '263.30'
+    reference_price: '248.60'
     currency: PLN
   pge.wa:
     name: PGE.WA
@@ -121,7 +367,7 @@ markets:
     symbol: PGE.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '16.18'
+    reference_price: '15.35'
     currency: PLN
   pkn.wa:
     name: PKN.WA
@@ -129,7 +375,7 @@ markets:
     symbol: PKN.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '128.96'
+    reference_price: '119.40'
     currency: PLN
   pko.wa:
     name: PKO.WA
@@ -137,7 +383,7 @@ markets:
     symbol: PKO.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '117.96'
+    reference_price: '110.20'
     currency: PLN
   pzu.wa:
     name: PZU.WA
@@ -145,7 +391,7 @@ markets:
     symbol: PZU.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '74.26'
+    reference_price: '68.68'
     currency: PLN
   tpe.wa:
     name: TPE.WA
@@ -153,7 +399,7 @@ markets:
     symbol: TPE.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '9.22'
+    reference_price: '8.83'
     currency: PLN
   zab.wa:
     name: ZAB.WA
@@ -161,7 +407,7 @@ markets:
     symbol: ZAB.WA
     instrument_class: stock
     market_type: continuous
-    reference_price: '31.80'
+    reference_price: '31.75'
     currency: PLN
   wig20:
     symbol: WIG20
@@ -170,73 +416,73 @@ markets:
     instrument_class: index
     components:
     - security: ale.wa
-      weight: 0.1066
-      base_price: '67.95'
+      weight: 0.085487
+      base_price: '66.67'
     - security: alr.wa
-      weight: 0.0206
-      base_price: '143.10'
+      weight: 0.021529
+      base_price: '137.50'
     - security: bdx.wa
-      weight: 0.0159
-      base_price: '751.00'
+      weight: 0.016744
+      base_price: '745.00'
     - security: cdr.wa
-      weight: 0.0336
-      base_price: '282.90'
+      weight: 0.033922
+      base_price: '277.60'
     - security: dnp.wa
-      weight: 0.0336
-      base_price: '37.34'
+      weight: 0.031012
+      base_price: '37.55'
     - security: ebp.wa
-      weight: 0.0568
-      base_price: '781.00'
+      weight: 0.057109
+      base_price: '746.00'
     - security: kgh.wa
-      weight: 0.0718
-      base_price: '248.20'
+      weight: 0.086968
+      base_price: '235.15'
     - security: kru.wa
-      weight: 0.0112
-      base_price: '319.20'
+      weight: 0.014478
+      base_price: '311.10'
     - security: kty.wa
-      weight: 0.0217
-      base_price: '1270.00'
+      weight: 0.022528
+      base_price: '1258.00'
     - security: lpp.wa
-      weight: 0.0618
-      base_price: '28500.00'
+      weight: 0.049542
+      base_price: '28040.00'
     - security: mbk.wa
-      weight: 0.033
-      base_price: '1688.50'
+      weight: 0.034045
+      base_price: '1609.00'
     - security: mdv.wa
-      weight: 0.0087
-      base_price: '114.45'
+      weight: 0.008666
+      base_price: '121.00'
     - security: pco.wa
-      weight: 0.0147
-      base_price: '51.00'
+      weight: 0.013791
+      base_price: '50.14'
     - security: peo.wa
-      weight: 0.0803
-      base_price: '263.30'
+      weight: 0.085007
+      base_price: '248.60'
     - security: pge.wa
-      weight: 0.0255
-      base_price: '16.18'
+      weight: 0.016309
+      base_price: '15.35'
     - security: pkn.wa
-      weight: 0.1423
-      base_price: '128.96'
+      weight: 0.15
+      base_price: '119.40'
     - security: pko.wa
-      weight: 0.141
-      base_price: '117.96'
+      weight: 0.15
+      base_price: '110.20'
     - security: pzu.wa
-      weight: 0.0734
-      base_price: '74.26'
+      weight: 0.076221
+      base_price: '68.68'
     - security: tpe.wa
-      weight: 0.0179
-      base_price: '9.22'
+      weight: 0.01603
+      base_price: '8.83'
     - security: zab.wa
-      weight: 0.0296
-      base_price: '31.80'
-    base_index_level: '4226.28'
+      weight: 0.030612
+      base_price: '31.75'
+    base_index_level: '4043.87'
   fw20z2620:
     symbol: FW20Z2620
     name: FW20Z2620
     short_name: FW20Z2620
     instrument_class: future
     underlying: wig20
-    expiration: 20
+    expiration: 15
     multiplier: 20.0
     margin_rate: 0.1
   fw20h2720:
@@ -257,210 +503,54 @@ markets:
     expiration: 20
     multiplier: 20.0
     margin_rate: 0.1
-  ow20l264250:
-    symbol: OW20L264250
-    name: OW20L264250
-    short_name: OW20L264250
+  ow20c274000:
+    symbol: OW20C274000
+    name: OW20C274000
+    short_name: OW20C274000
     instrument_class: option
     market_type: continuous
     derivatives_config:
       underlying: wig20
-      strike: '4250.00'
+      strike: '4000.00'
       option_side: CALL
       option_type: European
       expiration: 20
       multiplier: 10.0
-  ow20x264250:
-    symbol: OW20X264250
-    name: OW20X264250
-    short_name: OW20X264250
+  ow20u274000:
+    symbol: OW20U274000
+    name: OW20U274000
+    short_name: OW20U274000
     instrument_class: option
     market_type: continuous
     derivatives_config:
       underlying: wig20
-      strike: '4250.00'
+      strike: '4000.00'
       option_side: PUT
       option_type: European
       expiration: 20
       multiplier: 10.0
-  ow20l264200:
-    symbol: OW20L264200
-    name: OW20L264200
-    short_name: OW20L264200
+  ow20f274000:
+    symbol: OW20F274000
+    name: OW20F274000
+    short_name: OW20F274000
     instrument_class: option
     market_type: continuous
     derivatives_config:
       underlying: wig20
-      strike: '4200.00'
+      strike: '4000.00'
       option_side: CALL
       option_type: European
       expiration: 20
       multiplier: 10.0
-  ow20x264200:
-    symbol: OW20X264200
-    name: OW20X264200
-    short_name: OW20X264200
+  ow20r274000:
+    symbol: OW20R274000
+    name: OW20R274000
+    short_name: OW20R274000
     instrument_class: option
     market_type: continuous
     derivatives_config:
       underlying: wig20
-      strike: '4200.00'
-      option_side: PUT
-      option_type: European
-      expiration: 20
-      multiplier: 10.0
-  ow20c274200:
-    symbol: OW20C274200
-    name: OW20C274200
-    short_name: OW20C274200
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4200.00'
-      option_side: CALL
-      option_type: European
-      expiration: 20
-      multiplier: 10.0
-  ow20f274200:
-    symbol: OW20F274200
-    name: OW20F274200
-    short_name: OW20F274200
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4200.00'
-      option_side: CALL
-      option_type: European
-      expiration: 20
-      multiplier: 10.0
-  ow20i274200:
-    symbol: OW20I274200
-    name: OW20I274200
-    short_name: OW20I274200
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4200.00'
-      option_side: CALL
-      option_type: European
-      expiration: 20
-      multiplier: 10.0
-  ow20l264300:
-    symbol: OW20L264300
-    name: OW20L264300
-    short_name: OW20L264300
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4300.00'
-      option_side: CALL
-      option_type: European
-      expiration: 20
-      multiplier: 10.0
-  ow20f274300:
-    symbol: OW20F274300
-    name: OW20F274300
-    short_name: OW20F274300
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4300.00'
-      option_side: CALL
-      option_type: European
-      expiration: 20
-      multiplier: 10.0
-  ow20c274300:
-    symbol: OW20C274300
-    name: OW20C274300
-    short_name: OW20C274300
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4300.00'
-      option_side: CALL
-      option_type: European
-      expiration: 20
-      multiplier: 10.0
-  ow20x264300:
-    symbol: OW20X264300
-    name: OW20X264300
-    short_name: OW20X264300
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4300.00'
-      option_side: PUT
-      option_type: European
-      expiration: 20
-      multiplier: 10.0
-  ow20i274300:
-    symbol: OW20I274300
-    name: OW20I274300
-    short_name: OW20I274300
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4300.00'
-      option_side: CALL
-      option_type: European
-      expiration: 20
-      multiplier: 10.0
-  ow20x264150:
-    symbol: OW20X264150
-    name: OW20X264150
-    short_name: OW20X264150
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4150.00'
-      option_side: PUT
-      option_type: European
-      expiration: 20
-      multiplier: 10.0
-  ow20l264150:
-    symbol: OW20L264150
-    name: OW20L264150
-    short_name: OW20L264150
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4150.00'
-      option_side: CALL
-      option_type: European
-      expiration: 20
-      multiplier: 10.0
-  ow20l264350:
-    symbol: OW20L264350
-    name: OW20L264350
-    short_name: OW20L264350
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4350.00'
-      option_side: CALL
-      option_type: European
-      expiration: 20
-      multiplier: 10.0
-  ow20x264100:
-    symbol: OW20X264100
-    name: OW20X264100
-    short_name: OW20X264100
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4100.00'
+      strike: '4000.00'
       option_side: PUT
       option_type: European
       expiration: 20
@@ -469,19 +559,6 @@ markets:
     symbol: OW20C274100
     name: OW20C274100
     short_name: OW20C274100
-    instrument_class: option
-    market_type: continuous
-    derivatives_config:
-      underlying: wig20
-      strike: '4100.00'
-      option_side: CALL
-      option_type: European
-      expiration: 20
-      multiplier: 10.0
-  ow20l264100:
-    symbol: OW20L264100
-    name: OW20L264100
-    short_name: OW20L264100
     instrument_class: option
     market_type: continuous
     derivatives_config:
@@ -504,10 +581,10 @@ markets:
       option_type: European
       expiration: 20
       multiplier: 10.0
-  ow20o274100:
-    symbol: OW20O274100
-    name: OW20O274100
-    short_name: OW20O274100
+  ow20u274100:
+    symbol: OW20U274100
+    name: OW20U274100
+    short_name: OW20U274100
     instrument_class: option
     market_type: continuous
     derivatives_config:
@@ -517,273 +594,203 @@ markets:
       option_type: European
       expiration: 20
       multiplier: 10.0
-agents:
-  relative_momentum:
-    agent_class: RelativeMomentumAgent
-    instrument_classes:
-    - stock
-    number: 20
-    config:
-      lookback_sessions: 252
-      turnover_sessions: 30
-      min_median_turnover: 250000
-      portfolio_size: 10
-      rebalance_sessions: 5
-      rebalance_offset: 0
-      aggression: 0.003
-      order_validity_ticks: 3
-      base_currency: PLN
-      initial_cash:
-        PLN: 1000000
-  arbitrageurs:
-    agent_class: IndexFuturesArbitrageAgent
-    number: 5
-    config:
-      entry_threshold: 0.0015
-      exit_threshold: 0.0004
-      order_quantity: 25
-      max_order_quantity: 100
-      max_position: 500
-      max_gross_exposure_pln: 100000000
-      volume_aggression: 8.0
-      max_stock_order_quantity: 10000
-      validity_period: 1
-      initial_cash:
-        PLN: 100000000
-  noise_tight:
-    agent_class: NoiseAgent
-    instrument_classes:
-    - stock
-    - future
-    number: 9
-    config:
-      lam: 0.45
-      mean_volume: 150
-      mean_spread: 0.7
-      validity_period: 3
-      volume_fraction: 0.004
-      use_historical_volatility: true
-      historical_volatility_scale: 0.15
-      volume_lookback: 20
-      volatility_lookback: 20
-      max_price_deviation: 0.02
-      volume_basis: notional
-      initial_cash:
-        PLN: 30000000
-      future_lam_multiplier: 1.5
-      future_mean_contracts: 75
-      future_max_order_contracts: 180
-      future_max_position_contracts: 1800
-      future_max_daily_contracts: 2500
-      stock_coverage_fraction: 0.3
-      min_noise_agents_per_stock: 3
-      stock_volume_coverage_scale: 1.0
-      coverage_seed: 67
-  noise_medium:
-    agent_class: NoiseAgent
-    instrument_classes:
-    - stock
-    - future
-    number: 15
-    config:
-      lam: 0.3
-      mean_volume: 200
-      mean_spread: 1.5
-      validity_period: 10
-      volume_fraction: 0.03
-      historical_volatility_scale: 0.2
-      max_price_deviation: 0.02
-      volume_basis: notional
-      initial_cash:
-        PLN: 30000000
-      future_lam_multiplier: 1.8
-      future_mean_contracts: 100
-      future_max_order_contracts: 240
-      future_max_position_contracts: 2400
-      future_max_daily_contracts: 3500
-      stock_coverage_fraction: 0.3
-      min_noise_agents_per_stock: 3
-      stock_volume_coverage_scale: 1.0
-      coverage_seed: 67
-  noise_wide:
-    agent_class: NoiseAgent
-    number: 8
-    config:
-      lam: 0.2
-      mean_volume: 250
-      mean_spread: 4.0
-      validity_period: 20
-      volume_fraction: 0.003
-      historical_volatility_scale: 0.15
-      max_price_deviation: 0.02
-      volume_basis: notional
-      initial_cash:
-        PLN: 30000000
-      future_lam_multiplier: 2.0
-      future_mean_contracts: 130
-      future_max_order_contracts: 300
-      future_max_position_contracts: 3000
-      future_max_daily_contracts: 4500
-      min_noise_agents_per_stock: 3
-      stock_coverage_fraction: 0.3
-      stock_volume_coverage_scale: 1.0
-      coverage_seed: 67
-    instrument_classes:
-    - stock
-    - future
-    - option
-  market_makers:
-    agent_class: MMZOHAgent
-    instrument_classes:
-    - stock
-    - future
-    number: 3
-    config:
-      rebalance_by: time
-      rebalance_period: 4
-      volume_fraction: 0.2
-      historical_volatility_scale: 0.9
-      max_price_deviation: 0.04
-      K: 4
-      xi: 0.1
-      omega: 0.1
-      q_max: 1000000
-      initial_cash:
-        PLN: 100000000
-  option_market_makers:
-    agent_class: OptionMMZOHAgent
-    number: 3
-    instrument_classes:
-    - option
-    - stock
-    markets: ALL
-    config:
-      K: 3
-      xi: 0.1
-      omega: 0.1
-      rebalance_period: 5
-      volume: 2
-      volume_fraction: 0.05
-      q_max: 300
-      option_inventory_fraction: 1.0
-  momentum_fast:
-    agent_class: MomentumAgent
-    instrument_classes:
-    - stock
-    number: 4
-    config:
-      momentum_mode: intraday
-      period: 5
-      threshold: 0.001
-      lam: 0.45
-      mean_volume: 150
-      q_max: 10000
-      aggression: 0.0005
-      volume_fraction: 0.01
-      historical_volatility_scale: 0.7
-      max_price_deviation: 0.07
-      initial_cash:
-        PLN: 10000000
-  momentum_slow:
-    agent_class: MomentumAgent
-    instrument_classes:
-    - stock
-    number: 3
-    config:
-      momentum_mode: daily
-      daily_lookback: 10
-      threshold: 0.01
-      lam: 0.3
-      mean_volume: 150
-      q_max: 5000
-      aggression: 0.0005
-      volume_fraction: 0.008
-      historical_volatility_scale: 0.7
-      max_price_deviation: 0.09
-      initial_cash:
-        PLN: 10000000
-  hbl:
-    agent_class: HBLAgent
-    number: 2
-  regime_traders:
-    agent_class: RegimeTraderAgent
-    instrument_classes:
-    - stock
-    number: 4
-    config:
-      lam: 0.65
-      mean_volume: 200
-      regime_switch_probability: 0.02
-      bullish_probability: 0.45
-      bearish_probability: 0.45
-      aggression_ticks: 10
-      tick_size: 0.01
-      validity_period: 3
-      max_position: 35000
-      volume_fraction: 0.015
-      historical_volatility_scale: 0.6
-      max_price_deviation: 0.08
-      fundamental_price_discovery: true
-      fundamental_gap_threshold: 0.002
-      fundamental_gap_sensitivity: 25.0
-      fundamental_max_activity_multiplier: 3.0
-      fundamental_max_size_multiplier: 3.0
-      initial_cash:
-        PLN: 10000000
+  ow20c273900:
+    symbol: OW20C273900
+    name: OW20C273900
+    short_name: OW20C273900
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '3900.00'
+      option_side: CALL
+      option_type: European
+      expiration: 20
+      multiplier: 10.0
+  ow20f273900:
+    symbol: OW20F273900
+    name: OW20F273900
+    short_name: OW20F273900
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '3900.00'
+      option_side: CALL
+      option_type: European
+      expiration: 20
+      multiplier: 10.0
+  ow20r273900:
+    symbol: OW20R273900
+    name: OW20R273900
+    short_name: OW20R273900
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '3900.00'
+      option_side: PUT
+      option_type: European
+      expiration: 20
+      multiplier: 10.0
+  ow20f274200:
+    symbol: OW20F274200
+    name: OW20F274200
+    short_name: OW20F274200
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4200.00'
+      option_side: CALL
+      option_type: European
+      expiration: 20
+      multiplier: 10.0
+  ow20c274200:
+    symbol: OW20C274200
+    name: OW20C274200
+    short_name: OW20C274200
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4200.00'
+      option_side: CALL
+      option_type: European
+      expiration: 20
+      multiplier: 10.0
+  ow20i274200:
+    symbol: OW20I274200
+    name: OW20I274200
+    short_name: OW20I274200
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4200.00'
+      option_side: CALL
+      option_type: European
+      expiration: 20
+      multiplier: 10.0
+  ow20c273800:
+    symbol: OW20C273800
+    name: OW20C273800
+    short_name: OW20C273800
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '3800.00'
+      option_side: CALL
+      option_type: European
+      expiration: 20
+      multiplier: 10.0
+  ow20r273800:
+    symbol: OW20R273800
+    name: OW20R273800
+    short_name: OW20R273800
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '3800.00'
+      option_side: PUT
+      option_type: European
+      expiration: 20
+      multiplier: 10.0
+  ow20f273800:
+    symbol: OW20F273800
+    name: OW20F273800
+    short_name: OW20F273800
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '3800.00'
+      option_side: CALL
+      option_type: European
+      expiration: 20
+      multiplier: 10.0
+  ow20f274300:
+    symbol: OW20F274300
+    name: OW20F274300
+    short_name: OW20F274300
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '4300.00'
+      option_side: CALL
+      option_type: European
+      expiration: 20
+      multiplier: 10.0
+  ow20c273700:
+    symbol: OW20C273700
+    name: OW20C273700
+    short_name: OW20C273700
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '3700.00'
+      option_side: CALL
+      option_type: European
+      expiration: 20
+      multiplier: 10.0
+  ow20o273700:
+    symbol: OW20O273700
+    name: OW20O273700
+    short_name: OW20O273700
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '3700.00'
+      option_side: PUT
+      option_type: European
+      expiration: 20
+      multiplier: 10.0
+  ow20r273700:
+    symbol: OW20R273700
+    name: OW20R273700
+    short_name: OW20R273700
+    instrument_class: option
+    market_type: continuous
+    derivatives_config:
+      underlying: wig20
+      strike: '3700.00'
+      option_side: PUT
+      option_type: European
+      expiration: 20
+      multiplier: 10.0
 historical_prices:
   enabled: true
   path: market_data/wig20_auto.ohlcv.csv
   lookback_sessions: 252
-  cutoff_date: '2026-11-18'
+  cutoff_date: '2026-11-26'
   allow_short_history:
   - WIG20
   - FW20Z2620
   - FW20H2720
   - FW20M2720
-  - OW20L264250
-  - OW20X264250
-  - OW20L264200
-  - OW20X264200
-  - OW20C274200
-  - OW20F274200
-  - OW20I274200
-  - OW20L264300
-  - OW20F274300
-  - OW20C274300
-  - OW20X264300
-  - OW20I274300
-  - OW20X264150
-  - OW20L264150
-  - OW20L264350
-  - OW20X264100
+  - OW20C274000
+  - OW20U274000
+  - OW20F274000
+  - OW20R274000
   - OW20C274100
-  - OW20L264100
   - OW20F274100
-  - OW20O274100
-start_date: '2026-11-19'
-non_trading_dates:
-- '2026-11-11'
-- '2026-12-24'
-- '2026-12-25'
-- '2026-12-31'
-- '2027-01-01'
-- '2027-01-06'
-risk_var:
-  enabled: true
-  lookback_sessions: 250
-  confidence_levels: [0.95, 0.99]
-  horizons_days: [1, 5, 10]
-  historical_min_scenarios: 30
-  montecarlo_scenarios: 10000
-  montecarlo_seed: 67
-#risk_var:
-#  enabled: true
-#  calibration_id: 5a57f50d01e7f1020a08666d276788b7baa6c768e5b32126e6a4c5ea04ac848a
-#  confidence_level: 0.99
-risk_greeks:
-  enabled: true
-  calibration_id: 5a57f50d01e7f1020a08666d276788b7baa6c768e5b32126e6a4c5ea04ac848a
-  short_rates:
-    PLN: 0.04
-  dividend_yields:
-    WIG20: 0.0
+  - OW20U274100
+  - OW20C273900
+  - OW20F273900
+  - OW20R273900
+  - OW20F274200
+  - OW20C274200
+  - OW20I274200
+  - OW20C273800
+  - OW20R273800
+  - OW20F273800
+  - OW20F274300
+  - OW20C273700
+  - OW20O273700
+  - OW20R273700
+start_date: '2026-11-27'

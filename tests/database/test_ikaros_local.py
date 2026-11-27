@@ -7,7 +7,7 @@ import duckdb
 import pytest
 import yaml
 
-from marketsim.database.ikaros_local import (
+from marketsim.database.ikaros.ikaros_local import (
     CachedIkarosConnection,
     stage_local_ikaros,
     translate_cached_query,

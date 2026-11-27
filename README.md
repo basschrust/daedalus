@@ -9,8 +9,8 @@ You can run a synthetic simulation without a Snowflake account.
 ```powershell
 git clone https://github.com/basschrust/daedalus.git
 cd daedalus
-py -3.12 -m venv .venv
-.\.venv\Scripts\Activate.ps1
+py -3.12 -m venv Daedalus
+.\Daedalus\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 pip install -e .
@@ -19,7 +19,7 @@ python -m run.simulation_main
 
 The last command runs `input/market_structure.yaml`. Each run creates its own directory under `output/run_YYYYMMDD_HHMMSS/` with its configuration and simulation outputs. The available plots and database artifacts depend on the scenario.
 
-If PowerShell blocks activation, use `.\.venv\Scripts\python.exe` instead of `python` in the commands above.
+If PowerShell blocks activation, use `.\Daedalus\Scripts\python.exe` instead of `python` in the commands above.
 
 ## Try another scenario
 
@@ -48,11 +48,29 @@ python -m run.simulation_main --dataset wig20 --prepare-only
 
 These commands require access to the Ikaros Snowflake market-data tables and a configured `.env` file. The connection uses `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, and, for password authentication, `SNOWFLAKE_PASSWORD`. Optional settings include `SNOWFLAKE_WAREHOUSE` (default `DAEDALUS_WH`), `SNOWFLAKE_DATABASE` (default `DAEDALUS`), `SNOWFLAKE_SCHEMA` (default `MARKET_DATA`), `SNOWFLAKE_AUTHENTICATOR`, and `SNOWFLAKE_ROLE`. Never commit `.env` or credentials.
 
-Dataset settings live in `input/wig20.yaml` and `input/gpw.yaml`. Preparation creates `wig20_auto.yaml` or `gpw_auto.yaml`, respectively, in `input/`. You can also run a previously generated configuration directly, without fetching the dataset again:
+Dataset settings live in `input/wig20.yaml` and `input/gpw.yaml`. Preparation creates `wig20_auto.yaml` or `gpw_auto.yaml`, respectively, in `input/`.
+
+### Run WIG20 with one command
 
 ```powershell
 python -m run.simulation_main wig20_auto.yaml
 ```
+
+`wig20_auto.yaml` is a generated **description of a real-market snapshot**, not the price data itself. The OHLCV CSV is intentionally not committed to Git. When that CSV is missing, Daedalus now tries these steps automatically:
+
+1. Restore the **matching**, dated historical snapshot from `input/market_data/market_cache.duckdb` without downloading anything.
+2. If available, prepare from `input/market_data/ikaros.duckdb` or the sibling `Ikaros` project's snapshot.
+3. If Snowflake credentials are already configured, prepare using Ikaros in Snowflake.
+
+The command then runs the simulation with the resulting input. A genuine WIG20 simulation is not possible if **none** of those historical sources is available; in that case, the command explains which source is needed and stops before creating an empty run directory. It does **not** substitute made-up market prices.
+
+For explicit local preparation, you can still use:
+
+```powershell
+python -m run.simulation_main --dataset wig20 --source duckdb
+```
+
+A complete local Ikaros source must contain the WIG20 constituent calendar, securities, index prices, futures, options and their historical prices. Greek calibration also requires the configured immutable L2 statistics, either already cached or accessible through Snowflake.
 
 ## Market realism reports
 

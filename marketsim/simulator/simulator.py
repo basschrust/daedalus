@@ -790,7 +790,7 @@ class Simulator:
             terminal.write(f"Simulation start date: {simulation_start:%Y-%m-%d}\n")
 
         for day in range(self.days):
-            terminal.write(f"\nStarting day {str(day + 1)} out of {self.days}\n")
+            terminal.write(f"\nRunning day {str(day + 1)} out of {self.days}\n")
             self.sod(day=day)  # start of day
 
             for step in range(self.sim_time):

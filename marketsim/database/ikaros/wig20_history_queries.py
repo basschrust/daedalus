@@ -11,7 +11,7 @@ from typing import Any
 
 import pandas as pd
 
-from marketsim.database.ikaros_queries import _query
+from marketsim.database.ikaros.ikaros_queries import _query
 
 
 def fetch_stock_window(

@@ -34,6 +34,7 @@ venv/
 env/
 ENV/
 Daedalus312/
+Daedalus/
 
 # IDE
 .idea/

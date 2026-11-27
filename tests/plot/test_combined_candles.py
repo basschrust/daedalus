@@ -3,7 +3,7 @@ import pandas as pd
 from marketsim.plot.daedalus_plot_extensions import combine_candles
 
 
-def test_combine_candles_with_expired_future():
+def test_combine_candles_with_expired_future() -> None:
     historical = pd.DataFrame(
         {
             "open": [100.0],

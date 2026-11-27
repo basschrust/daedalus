@@ -14,7 +14,7 @@ from typing import Iterable, Sequence
 
 import pandas as pd
 
-from marketsim.database import ikaros_queries
+from marketsim.database.ikaros import ikaros_queries
 
 PRICE_QUANTUM = Decimal("0.01")
 

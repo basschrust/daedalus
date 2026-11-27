@@ -14,7 +14,7 @@ from marketsim.agent.helpers.liquidity_control import (
 
 
 @pytest.mark.parametrize("ticks", [10, 20, 40, 80, 160, 320])
-def test_expected_daily_submitted_volume_is_invariant(ticks):
+def test_expected_daily_submitted_volume_is_invariant(ticks: int):
     policy = LiquidityPolicy(daily_expected_events=8.0, daily_submitted_volume=25000)
     expected = expected_daily_events(policy.daily_expected_events, ticks) * policy.mean_quantity(
         ticks
@@ -23,17 +23,17 @@ def test_expected_daily_submitted_volume_is_invariant(ticks):
 
 
 @pytest.mark.parametrize("ticks", [10, 20, 40, 80, 160, 320])
-def test_arrival_probability_in_range(ticks):
-    assert 0 < tick_probability(8, ticks) < 1
+def test_arrival_probability_in_range(ticks: int):
+    assert 0 < tick_probability(daily_expected_events=8, ticks_per_day=ticks) < 1
 
 
 def test_legacy_activity_preserved_at_reference_tick_count():
     lam = 0.2
     intensity = daily_intensity(lam, reference_ticks=40)
-    assert tick_probability(intensity, 40) == pytest.approx(lam)
+    assert tick_probability(daily_expected_events=intensity, ticks_per_day=40) == pytest.approx(lam)
 
 
-def test_monte_carlo_daily_volume_is_stable_across_tick_counts():
+def test_monte_carlo_daily_volume_is_stable_across_tick_counts() -> None:
     # Orders sampled in native units; test submitted, not executed, volume.
     policy = LiquidityPolicy(daily_expected_events=8, daily_submitted_volume=25000)
     means = []
@@ -43,7 +43,7 @@ def test_monte_carlo_daily_volume_is_stable_across_tick_counts():
         quantities = rng.poisson(policy.mean_quantity(ticks), size=(2000, ticks))
         means.append(float((arrivals * quantities).sum(axis=1).mean()))
     for observed in means:
-        assert observed == pytest.approx(25000, rel=0.06)
+        assert observed == pytest.approx(expected=25000, rel=0.06)
 
 
 def test_zero_historical_volume_does_not_generate_orders():
@@ -54,4 +54,4 @@ def test_zero_historical_volume_does_not_generate_orders():
 @pytest.mark.parametrize("events,ticks", [(-1, 40), (1, 0), (math.nan, 40)])
 def test_invalid_intensity_or_ticks_rejected(events, ticks):
     with pytest.raises(ValueError):
-        tick_probability(events, ticks)
+        tick_probability(daily_expected_events=events, ticks_per_day=ticks)

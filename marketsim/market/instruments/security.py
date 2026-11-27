@@ -370,6 +370,87 @@ class Security(ABC):
     def __str__(self) -> str:
         return f"Security_{self.asset_id}_{self.instrument_class}_{self.short_name}"
 
+    def candle_title(self) -> str:
+        """Human-readable title, overridden by derivative instruments."""
+        return self.name or self.short_name
+
+    def _safe_plot_token(self, value: object) -> str:
+        text = str(value).strip()
+        if not text:
+            return "unknown"
+        token = []
+        for char in text:
+            if char.isalnum():
+                token.append(char)
+            else:
+                token.append("_")
+        compact = "".join(token)
+        while "__" in compact:
+            compact = compact.replace("__", "_")
+        return compact.strip("_") or "unknown"
+
+    def _format_maturity_label(self, value: object) -> str:
+        """Option/future expiry is stored in *trading days*, not calendar years."""
+        if value is None:
+            return "maturity_unknown"
+        if isinstance(value, Decimal) and value == value.to_integral():
+            value = int(value)
+        if isinstance(value, float) and value.is_integer():
+            value = int(value)
+        if isinstance(value, int):
+            if value > 0 and value % 248 == 0:
+                return f"{value // 248}Y"
+            return f"{value}D"
+        return self._safe_plot_token(value)
+
+    def candle_plot_stem(self) -> str:
+        """Sort by numeric instrument ID; describe each contract using its real fields."""
+        prefix = f"{self.asset_id:04d}"
+        kind = self._safe_plot_token(self.instrument_class)
+
+        if self.instrument_class == "stock":
+            ticker = (
+                getattr(self, "symbol", None) or getattr(self, "ticker", None) or self.short_name
+            )
+            return f"{prefix}_stock_{self._safe_plot_token(ticker)}"
+
+        if self.instrument_class == "index":
+            ticker = (
+                getattr(self, "symbol", None) or getattr(self, "ticker", None) or self.short_name
+            )
+            return f"{prefix}_index_{self._safe_plot_token(ticker)}"
+
+        if self.instrument_class in {"option", "future"}:
+            underlying = getattr(self, "underlying", None)
+            ticker = (
+                getattr(underlying, "symbol", None)
+                or getattr(underlying, "ticker", None)
+                or getattr(underlying, "short_name", None)
+                or getattr(self, "underlying_symbol", None)
+                or "underlying"
+            )
+            expiry = getattr(self, "expiration", None)
+            if expiry is None:
+                expiry = getattr(self, "maturity", None)
+            maturity = self._format_maturity_label(expiry)
+            ticker = self._safe_plot_token(ticker)
+            if self.instrument_class == "future":
+                return f"{prefix}_future_{ticker}_{maturity}"
+
+            side = self._safe_plot_token(getattr(self, "option_side", None) or "unknown")
+            strike = getattr(self, "strike", None)
+            strike_value = (
+                format(Decimal(str(strike)).normalize(), "f")
+                if strike is not None
+                else "strike_unknown"
+            )
+            return (
+                f"{prefix}_option_{ticker}_{side}_{self._safe_plot_token(strike_value)}_{maturity}"
+            )
+
+        symbol = getattr(self, "symbol", None) or getattr(self, "ticker", None) or self.short_name
+        return f"{prefix}_{kind}_{self._safe_plot_token(symbol)}"
+
     ## plotting and supporting functions     #######################
 
     def aggregate_order_queue(
@@ -411,8 +492,12 @@ class Security(ABC):
         plot_order_book(
             bids=bids,
             asks=asks,
-            output_file=f"{self.output_dir}/{str(self)}/LOB/LOB_{self.asset_id}_{current_time}.png",
-            title=f"Order book at {current_time}",
+            output_file=str(
+                Path(self.output_dir)
+                / "LOB"
+                / f"lob_{self.asset_id}_d{self.current_day:03d}_t{current_time:04d}.png"
+            ),
+            title=f"{self.short_name} | day {self.current_day}, tick {current_time}",
         )
 
     def calculate_realized_volatility(
@@ -488,8 +573,14 @@ class Security(ABC):
         df_candlestick.index.name = "time"
         self.logger.info(df_candlestick.head())
 
-        candlestick_filename = Path(self.output_dir) / "candle_plots" / f"candlestick_{self}.png"
-        plot_candlestick(df=df_candlestick, output_file=str(candlestick_filename), title=self.name)
+        candlestick_filename = (
+            Path(self.output_dir) / "candle_plots" / f"{self.candle_plot_stem()}.png"
+        )
+        plot_candlestick(
+            df=df_candlestick,
+            output_file=str(candlestick_filename),
+            title=self.candle_title(),
+        )
 
     def show_summary(self):
         self.logger.info(f"\n\nMarket {str(self)} summary:")
@@ -502,7 +593,9 @@ class Security(ABC):
         # Get simulated daily OHLCV from repository
         eod_prices_df = self.repository.get_eod_prices(asset_id=self.asset_id)
 
-        candlestick_filename = Path(self.output_dir) / "candle_plots" / f"candlestick_{self}.png"
+        candlestick_filename = (
+            Path(self.output_dir) / "candle_plots" / f"{self.candle_plot_stem()}.png"
+        )
 
         if self.historical_ohlcv is not None and self.simulation_dates is not None:
             plot_combined_candles(
@@ -510,13 +603,17 @@ class Security(ABC):
                 simulated=eod_prices_df,
                 simulation_dates=self.simulation_dates,
                 output_file=str(candlestick_filename),
-                title=self.name,
+                title=self.candle_title(),
                 theoretical=self.get_theoretical_history(),
             )
         else:
-            # Preserve existing behavior
+            # Derivatives override plot_history to show the theoretical curve.
+            # Keep that specialized plot but normalize its legacy filename here.
             eod_prices = eod_prices_df.set_index("day").to_dict(orient="index")
             self.plot_history(traded_prices=eod_prices)
+            legacy = Path(self.output_dir) / "candle_plots" / f"candlestick_{self}.png"
+            if legacy.is_file() and legacy != candlestick_filename:
+                legacy.replace(candlestick_filename)
 
         # plotting by type - TODO: take overall data from DB:
         # plot_by_type(self.orders_by_agent_type,

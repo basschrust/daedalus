@@ -4,7 +4,7 @@ from datetime import date
 
 import pandas as pd
 
-from marketsim.database import ikaros_queries
+from marketsim.database.ikaros import ikaros_queries
 
 
 def discover_stocks(conn, cutoff: date) -> pd.DataFrame:

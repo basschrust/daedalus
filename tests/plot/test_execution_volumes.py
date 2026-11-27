@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pandas as pd
 import pytest
 
@@ -5,7 +7,7 @@ from marketsim.database.queries.execution_volumes import EXECUTION_VOLUME_SQL
 from marketsim.plot.execution_volumes import plot_execution_volumes_by_asset
 
 
-def test_sql_aggregates_by_group_side_and_mode():
+def test_sql_aggregates_by_group_side_and_mode() -> None:
     duckdb = pytest.importorskip("duckdb")
     conn = duckdb.connect(":memory:")
     conn.execute("CREATE TABLE agents(agent_id INTEGER, group_name VARCHAR)")
@@ -24,7 +26,7 @@ def test_sql_aggregates_by_group_side_and_mode():
     assert int(df["volume"].sum()) == 44
 
 
-def test_plot_creates_one_png_per_asset(tmp_path):
+def test_plot_creates_one_png_per_asset(tmp_path: Path) -> None:
     df = pd.DataFrame(
         [
             (5, "MM", 1, "waited", 17),
@@ -39,5 +41,5 @@ def test_plot_creates_one_png_per_asset(tmp_path):
     assert all(p.exists() and p.stat().st_size > 0 for p in paths)
 
 
-def test_empty_data_does_not_create_plots(tmp_path):
+def test_empty_data_does_not_create_plots(tmp_path: Path) -> None:
     assert plot_execution_volumes_by_asset(pd.DataFrame(), output_dir=tmp_path) == []

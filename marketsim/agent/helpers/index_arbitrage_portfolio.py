@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from decimal import ROUND_HALF_UP, Decimal
 
+from marketsim.market.instruments.future import Future
+
 
 def index_hedge_quantities(
-    future,
+    future: Future,
     contracts: int,
 ) -> dict[int, int]:
     """Whole-share stock hedge for a signed futures position.

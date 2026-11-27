@@ -143,8 +143,6 @@ class Index(Security):
 
     def show_summary(self):
         self.logger.info(f"\n\nIndex {str(self)} summary:")
-        # self.logger.info(f"Orders matched: {len(self.matched_orders)}")
-        # self.logger.info(f"Last index value: {self.last_traded_price}")
 
         # plot the security values history for all period - take data from DB:
         # TODO: for one day simulations plot the daily candlestick
@@ -176,7 +174,9 @@ class Index(Security):
                 historical=history,
                 simulated=eod_prices_df,
                 simulation_dates=self.simulation_dates,
-                output_file=(Path(self.output_dir) / "candle_plots" / f"candlestick_{self}.png"),
+                output_file=str(
+                    Path(self.output_dir) / "candle_plots" / f"{self.candle_plot_stem()}.png"
+                ),
                 title=self.name,
             )
         else:
