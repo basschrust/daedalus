@@ -18,7 +18,7 @@ from marketsim.plot.daedalus_plot_extensions import combine_candles, plot_combin
 
 
 @pytest.fixture
-def historical():
+def historical() -> pd.DataFrame:
     idx = pd.bdate_range(end="2026-10-23", periods=250)
     return pd.DataFrame(
         {
@@ -33,7 +33,7 @@ def historical():
 
 
 @pytest.fixture
-def dates():
+def dates() -> list[date]:
     return pd.to_datetime(
         [
             "2026-10-26",
@@ -51,7 +51,7 @@ def dates():
 
 
 @pytest.fixture
-def simulated():
+def simulated() -> pd.DataFrame:
     return pd.DataFrame(
         {
             "day": range(10),
@@ -64,7 +64,7 @@ def simulated():
     )
 
 
-def test_250_plus_10(historical, simulated, dates):
+def test_250_plus_10(historical: pd.DataFrame, simulated: pd.DataFrame, dates: list[date]) -> None:
     combined, first = combine_candles(historical, simulated, dates)
     assert len(combined) == 260
     assert combined.source.value_counts().to_dict() == {"historical": 250, "simulated": 10}
@@ -72,7 +72,7 @@ def test_250_plus_10(historical, simulated, dates):
     assert combined.index.max() == pd.Timestamp("2026-11-06")
 
 
-def test_day_mapping(historical, simulated, dates):
+def test_day_mapping(historical: pd.DataFrame, simulated: pd.DataFrame, dates: list[date]) -> None:
     combined, _ = combine_candles(historical, simulated, dates)
     assert combined.loc["2026-10-26", "close"] == simulated.loc[0, "close"]
     assert combined.loc["2026-11-06", "close"] == simulated.loc[9, "close"]

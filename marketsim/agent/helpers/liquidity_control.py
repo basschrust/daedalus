@@ -10,7 +10,7 @@ import math
 from dataclasses import dataclass
 
 
-def tick_probability(daily_expected_events: float, ticks_per_day: int) -> float:
+def tick_probability(*, daily_expected_events: float, ticks_per_day: int) -> float:
     """Poisson-arrival probability for one tick; stable across tick counts."""
     if ticks_per_day < 1 or not math.isfinite(daily_expected_events) or daily_expected_events < 0:
         raise ValueError("Invalid daily event intensity or ticks_per_day")

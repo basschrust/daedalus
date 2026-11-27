@@ -1,13 +1,13 @@
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
 import pandas as pd
 
 from marketsim.market.instruments.index import Index
-from pathlib import Path
 
 
-def test_index_summary_uses_zero_padded_filename(tmp_path: Path):
+def test_index_summary_uses_zero_padded_filename(tmp_path: Path) -> None:
     index = object.__new__(Index)
     index.asset_id = 7
     index.index_id = 7
