@@ -54,20 +54,78 @@ def test_lob_plots_share_one_dir_and_day_tick_prevent_overwrites(tmp_path):
 
 
 def test_stock_candle_plot_names_are_short_and_specific():
-    market = object.__new__(Security)
-    market.instrument_class = "stock"
-    market.asset_id = 0
-    market.short_name = "TNT"
-    assert market.candle_plot_stem() == "stock_0_TNT"
+    stock = object.__new__(Security)
+    stock.instrument_class = "stock"
+    stock.asset_id = 0
+    stock.symbol = "TNT"
+    stock.short_name = "stock 0"
+    assert stock.candle_plot_stem() == "0000_stock_TNT"
 
 
-def test_option_candle_plot_names_are_short_and_specific():
-    underlying = SimpleNamespace(short_name="TNT")
+def test_option_filename_uses_real_contract_side_strike_and_days():
+    from decimal import Decimal
+
+    stock = SimpleNamespace(symbol="TNT", short_name="stock 0")
+    option = object.__new__(Security)
+    option.instrument_class = "option"
+    option.asset_id = 1
+    option.short_name = "PUT TNT"  # Deliberately misleading label
+    option.underlying = stock
+    option.option_side = "CALL"
+    option.strike = Decimal("105.00")
+    option.expiration = 20
+    assert option.candle_plot_stem() == "0001_option_TNT_CALL_105_20D"
+    option.expiration = 248
+    option.option_side = "PUT"
+    assert option.candle_plot_stem() == "0001_option_TNT_PUT_105_1Y"
+
+
+def test_future_filename_and_sorting():
+    stock = object.__new__(Security)
+    stock.instrument_class = "stock"
+    stock.asset_id = 0
+    stock.symbol = "TNT"
+    stock.short_name = "stock 0"
+
+    future = object.__new__(Security)
+    future.instrument_class = "future"
+    future.asset_id = 2
+    future.underlying = stock
+    future.expiration = 20
+
+    assert sorted([future.candle_plot_stem(), stock.candle_plot_stem()]) == [
+        "0000_stock_TNT",
+        "0002_future_TNT_20D",
+    ]
+
+
+def test_legacy_derivative_candle_file_is_renamed_by_summary(tmp_path, monkeypatch):
+    # The Option/Future overrides still render theoretical-price curves under
+    # their old paths. Security.show_summary normalizes the final filename.
     market = object.__new__(Security)
+    market.output_dir = tmp_path
     market.instrument_class = "option"
-    market.short_name = "PUT TNT 25 105"
-    market.underlying = underlying
+    market.asset_id = 1
+    market.underlying = SimpleNamespace(symbol="TNT")
     market.option_side = "PUT"
     market.strike = 105
-    market.expiration = 1
-    assert market.candle_plot_stem() == "option_PUT_TNT_105_1Y"
+    market.expiration = 20
+    market.short_name = "PUT TNT 105"
+    market.historical_ohlcv = None
+    market.simulation_dates = None
+    market.logger = Mock()
+    market.last_traded_price = 12
+    market.repository = Mock()
+    market.repository.get_eod_prices.return_value = __import__("pandas").DataFrame(
+        [{"day": 0, "open": 12, "high": 13, "low": 11, "close": 12, "volume": 1}]
+    )
+
+    def legacy_plot(*, traded_prices):
+        directory = tmp_path / "candle_plots"
+        directory.mkdir(parents=True, exist_ok=True)
+        (directory / f"candlestick_{market}.png").write_bytes(b"valid legacy plot")
+
+    monkeypatch.setattr(market, "plot_history", legacy_plot)
+    market.show_summary()
+    assert (tmp_path / "candle_plots" / "0001_option_TNT_PUT_105_20D.png").is_file()
+    assert not (tmp_path / "candle_plots" / f"candlestick_{market}.png").exists()

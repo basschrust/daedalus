@@ -107,6 +107,36 @@ def load_config(filename: str = DEFAULT_CONFIG) -> dict:
             f"Scenario '{_short_path(path)}' must contain a YAML mapping, not a list or empty file."
         )
 
+    # Older generated WIG20 scenarios accidentally embedded the included agent
+    # template one level too deep: agents: {agents: {group: ...}}.
+    # Resolve that known legacy shape in memory so cached historical snapshots
+    # remain runnable without regenerating either YAML or market data.
+    agents = config.get("agents")
+    if agents is not None:
+        if not isinstance(agents, dict):
+            raise ScenarioConfigurationError(
+                f"Scenario '{_short_path(path)}': agents must be a mapping of agent groups."
+            )
+        if set(agents) == {"agents"} and isinstance(agents["agents"], dict):
+            nested = agents["agents"]
+            if nested and all(
+                isinstance(group, dict) and isinstance(group.get("agent_class"), str)
+                for group in nested.values()
+            ):
+                config["agents"] = agents = nested
+                print("Scenario setup: corrected legacy nested WIG20 agent groups.")
+        for group_name, group in agents.items():
+            if (
+                not isinstance(group, dict)
+                or not isinstance(group.get("agent_class"), str)
+                or not group["agent_class"].strip()
+            ):
+                raise ScenarioConfigurationError(
+                    f"Scenario '{_short_path(path)}': agent group '{group_name}' "
+                    "must specify a nonempty agent_class. "
+                    "Check the agents section or its included template."
+                )
+
     seed = config.get("seed", 67)
     if type(seed) is not int or not 0 <= seed < 2**32:
         raise ScenarioConfigurationError(
