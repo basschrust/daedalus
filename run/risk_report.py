@@ -1,4 +1,4 @@
-"""Offline VaR plots, Greeks and one-day Kupiec APL diagnostics from a simulation run.
+"""Offline VaR plots, Greeks and one-day Kupiec APL/HPL diagnostics.
 
 Usage:
     python -m run.risk_report
@@ -19,6 +19,7 @@ from marketsim.database.risk.risk_reporting_queries import (
     load_risk_report_data,
     load_wig20_greeks,
 )
+from marketsim.market.historical_prices import load_historical_prices
 from marketsim.plot.risk_report import (
     add_var_percent,
     agent_ranking_plot,
@@ -29,6 +30,7 @@ from marketsim.plot.risk_report import (
     group_summary,
     select_var,
 )
+from marketsim.risk.backtesting_runner import write_post_run_backtests
 from marketsim.risk.var_backtesting import kupiec_report, one_day_apl
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,11 +45,7 @@ def latest_run_db(*, root: Path = ROOT) -> Path:
 
 
 def _risk_modes(db_path: Path) -> tuple[bool, bool] | None:
-    """Risk settings from the immutable configuration saved with this run.
-
-    Return None for older runs without a saved config: lack of a snapshot is
-    not evidence that risk was disabled.
-    """
+    """Risk settings from the immutable configuration saved with this run."""
     snapshot = db_path.parent / "market_structure.yaml"
     if not snapshot.is_file():
         return None
@@ -90,6 +88,34 @@ def _greeks_only_report(*, db_path: Path, output_dir: Path) -> list[Path]:
     return plots
 
 
+def _historical_reporting_if_enabled(*, db_path: Path, output_dir: Path) -> None:
+    """Invoke the historical walk-forward model from the existing report command.
+
+    Read the run's saved configuration, not the current, possibly modified YAML.
+    Never fetch fresh Ikaros prices here: historical reports must be reproducible.
+    """
+    saved = db_path.parent / "market_structure.yaml"
+    if not saved.is_file():
+        return
+    with saved.open(encoding="utf-8") as stream:
+        config = yaml.safe_load(stream)
+    if not isinstance(config, dict):
+        raise ValueError(f"Invalid saved run configuration: {saved}")
+    settings = config.get("risk_backtesting") or {}
+    if not isinstance(settings, dict):
+        raise ValueError("Invalid risk_backtesting settings in run configuration")
+    if not settings.get("enabled", False):
+        return
+    historical = load_historical_prices(config=config, config_dir=ROOT / "input")
+    write_post_run_backtests(
+        db_path=db_path,
+        output_dir=output_dir,
+        historical=historical,
+        risk_config=config.get("risk_var") or {},
+        settings=settings,
+    )
+
+
 def generate_report(
     *,
     db_path: Path,
@@ -104,8 +130,6 @@ def generate_report(
     if horizon < 1 or not 0.5 < confidence < 1 or top_agents < 1 or max_ranked < 1:
         raise ValueError("Invalid horizon, confidence, top-agents or max-ranked value")
 
-    # The simulation stores its resolved configuration alongside the database.
-    # Absence of risk observations is normal only when VaR wasn't requested.
     modes = _risk_modes(db_path)
     if modes is not None and not modes[0]:
         print("VaR: not enabled in this scenario; skipping VaR plots and Kupiec test.")
@@ -202,6 +226,7 @@ def generate_report(
         print(f"Kupiec one-day APL tests: {len(kupiec)}; LOW_POWER: {low}")
     print("CAUTION: Backtest uses realized equity P&L (APL), not frozen-book HPL.")
     print("A short run has very low power; no model validation is implied.")
+    _historical_reporting_if_enabled(db_path=db_path, output_dir=output_dir)
     return images
 
 
